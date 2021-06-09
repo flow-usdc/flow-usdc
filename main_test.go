@@ -62,9 +62,6 @@ func TestClientConnection(t *testing.T) {
 	err = flowClient.SendTransaction(ctx, *tx)
 	assert.NoError(t, err)
 
-	err = flowClient.SendTransaction(ctx, *tx)
-	assert.NoError(t, err)
-
 	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
 	assert.NoError(t, err)
 
