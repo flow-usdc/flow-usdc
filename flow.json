@@ -2,7 +2,7 @@
 	"emulators": {
 		"default": {
 			"port": 3569,
-			"serviceAccount": "emulator-account"
+			"serviceAccount": "service"
 		}
 	},
 	"contracts": {},
@@ -12,7 +12,7 @@
 		"testnet": "access.devnet.nodes.onflow.org:9000"
 	},
 	"accounts": {
-		"emulator-account": {
+		"service": {
 			"address": "f8d6e0586b0a20c7",
 			"keys": [
         {
