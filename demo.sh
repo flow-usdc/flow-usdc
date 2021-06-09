@@ -5,6 +5,10 @@
 flow emulator &
 EMULATOR_PID=$!
 
+sleep 1
+
+flow accounts add-contract ExampleToken ./contracts/ExampleToken.cdc --signer=service
+
 make test
 
 # Account A, the one that creates the contract itself
