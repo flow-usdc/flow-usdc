@@ -14,7 +14,17 @@
 	"accounts": {
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
-			"keys": "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
+			"keys": [
+        {
+          "type": "hex",
+          "index": 0,
+          "signatureAlgorithm": "ECDSA_P256",
+          "hashAlgorithm": "SHA3_256",
+          "context": {
+            "privateKey": "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
+          }
+        }
+      ]
 		}
 	},
 	"deployments": {}
