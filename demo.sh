@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# Run the emulator with the config in ./flow.json, which
-# includes ./flow.emulator.json as well
+# Run the emulator with the config in ./flow.json
 flow emulator &
 EMULATOR_PID=$!
 
 sleep 1
 
 flow project deploy --network=emulator
-# flow accounts add-contract ExampleToken ./contracts/ExampleToken.cdc --signer=service
 
 go test ./... -cover -v
 
@@ -24,9 +22,6 @@ go test ./... -cover -v
 # PK_C=$(flow keys generate --seed=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz --filter=Public)
 # ACCOUNT_C=$(flow accounts create --key="$PK_C" --signer=emulator-account -o inline --filter=Address)
 
-
-# flow accounts add-contract ExampleToken ./contracts/ExampleToken.cdc --signer=ft-account
-#
 # flow scripts execute ./contracts/scripts/get_supply.cdc
 
 # Minting Account gets a Vault for free
@@ -103,17 +98,15 @@ go test ./... -cover -v
 #   --arg Address:0x"$ACCOUNT_B" \
 #   --arg UFix64:5000.0 \
 #   --signer=receiver-account
-# 
+#
 # flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
-# 
+#
 # flow transactions send ./transactions/burn_tokens.cdc \
 #   --arg UFix64:4000.0 \
 #   --signer=receiver-account
-# 
+#
 # flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
 
-# Clean up, kill the emulator and exit
-# rm -f signed.rlp
-# rm -f transaction.rlp
+# Kill the emulator and exit
 kill $EMULATOR_PID
 
