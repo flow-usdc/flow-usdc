@@ -7,9 +7,10 @@ EMULATOR_PID=$!
 
 sleep 1
 
-flow accounts add-contract ExampleToken ./contracts/ExampleToken.cdc --signer=service
+flow project deploy --network=emulator
+# flow accounts add-contract ExampleToken ./contracts/ExampleToken.cdc --signer=service
 
-make test
+go test ./... -cover -v
 
 # Account A, the one that creates the contract itself
 # PK_A=$(flow keys generate --seed=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --filter=Public)

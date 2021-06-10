@@ -1,20 +1,35 @@
 {
-	"emulators": {
-		"default": {
-			"port": 3569,
-			"serviceAccount": "service"
-		}
-	},
-	"contracts": {},
-	"networks": {
-		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
-	},
-	"accounts": {
-		"service": {
-			"address": "f8d6e0586b0a20c7",
-			"keys": [
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "service"
+    }
+  },
+  "contracts": {
+    "FungibleToken": "./contracts/interfaces/FungibleToken.cdc",
+    "ExampleToken": "./contracts/ExampleToken.cdc"
+  },
+  "deployments": {
+    "emulator": {
+      "service": ["FungibleToken", "ExampleToken"]
+    },
+    "testnet": {
+      "testnet-token-account": ["FungibleToken", "ExampleToken"]
+    }
+  },
+  "networks": {
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "testnet-token-account": {
+      "address": "$TESTNET_ADDRESS",
+      "keys": "$TESTNET_KEYS"
+    },
+    "service": {
+      "address": "f8d6e0586b0a20c7",
+      "keys": [
         {
           "type": "hex",
           "index": 0,
@@ -25,7 +40,6 @@
           }
         }
       ]
-		}
-	},
-	"deployments": {}
+    }
+  }
 }
