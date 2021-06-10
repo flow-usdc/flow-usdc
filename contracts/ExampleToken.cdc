@@ -1,6 +1,4 @@
-import FungibleToken from 0xee82856bf20e2aa6
-                       // 0x9a0766d93b6608b7 on testnet
-                       // 0xf233dcee88fe0abe on mainnet
+import FungibleToken from "./interfaces/FungibleToken.cdc"
 
 pub contract ExampleToken: FungibleToken {
 

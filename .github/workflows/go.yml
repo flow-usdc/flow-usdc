@@ -1,27 +1,40 @@
+---
 name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16
-        
-    - name: Install flow tooling
-      run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
 
-    - name: Install deps
-      run: go get -v ./...
-      
-    - name: Test
-      run: ./demo.sh
+      - name: Install flow tooling
+        run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
+
+      - name: Install deps
+        run: go get ./...
+
+      - name: Test
+        run: ./demo.sh
+
+  testnet-deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+
+      - name:
+        env:
+          TESTNET_KEYS: ${{ secrets.TESTNET_KEYS }}
+          TESTNET_ADDRESS: ${{secrets.TESTNET_ADDRESS }}
+        run: .github/flow project deploy --network=testnet --update
