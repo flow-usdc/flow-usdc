@@ -1,26 +1,20 @@
 #!/bin/bash
 
 # Run the emulator with the config in ./flow.json
-flow emulator &
+flow emulator -f flow.json -f flow.emulator.json --network=emulator &
 EMULATOR_PID=$!
 
 sleep 1
 
-flow project deploy --network=emulator
+flow accounts create -f flow.json -f flow.emulator.json
+# flow accounts create -f flow.json -f flow.emulator.json
+# flow accounts create -f flow.json -f flow.emulator.json
 
-go test ./... -cover -v
+flow project deploy \
+  -f flow.json -f flow.emulator.json \
+  --network=emulator \
 
-# Account A, the one that creates the contract itself
-# PK_A=$(flow keys generate --seed=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx --filter=Public)
-# ACCOUNT_A=$(flow accounts create --key="$PK_A" --signer=emulator-account -o inline --filter=Address)
-
-# Account B, which has the Vault enabled to receive our token
-# PK_B=$(flow keys generate --seed=yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy --filter=Public)
-# ACCOUNT_B=$(flow accounts create --key="$PK_B" --signer=emulator-account -o inline --filter=Address)
-
-# Account C, which does not have the Vault enabled
-# PK_C=$(flow keys generate --seed=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz --filter=Public)
-# ACCOUNT_C=$(flow accounts create --key="$PK_C" --signer=emulator-account -o inline --filter=Address)
+# go test ./... -cover -v
 
 # flow scripts execute ./contracts/scripts/get_supply.cdc
 
