@@ -24,18 +24,6 @@ flow project deploy \
 
 go test ./... -cover -v
 
-# flow scripts execute ./contracts/scripts/get_supply.cdc
-
-# Minting Account gets a Vault for free
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_A"
-
-# Set up a Vault for Account B
-# flow transactions send ./transactions/setup_account.cdc --signer=receiver-account
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
-
-# Non-Vaulted Account, should panic + revert
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_C"
-
 # Transfer from Account A to Account B
 # flow transactions send ./transactions/transfer_tokens.cdc \
 #   --arg UFix64:500.0 \
