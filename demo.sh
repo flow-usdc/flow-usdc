@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Run the emulator with the config in ./flow.json
 flow emulator -f flow.json -f flow.emulator.json --network=emulator &
