@@ -6,7 +6,7 @@ EMULATOR_PID=$!
 
 sleep 1
 
-flow accounts create -f flow.json -f flow.emulator.json
+flow accounts create --key=9e5b55b79e663debe5742c3e1ba53aeb71346c338e89616aa6b8715ab0b6fb92c7a1d7811dd31ae7959687677c2f2918098543b5b1de5fa8725547580ca9dbdd -f flow.json -f flow.emulator.json
 # flow accounts create -f flow.json -f flow.emulator.json
 # flow accounts create -f flow.json -f flow.emulator.json
 
@@ -14,7 +14,7 @@ flow project deploy \
   -f flow.json -f flow.emulator.json \
   --network=emulator \
 
-# go test ./... -cover -v
+ go test ./... -cover -v
 
 # flow scripts execute ./contracts/scripts/get_supply.cdc
 
