@@ -29,7 +29,7 @@ func TestAccountsCreated(t *testing.T) {
 
 func TestGetSupply(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	supply, err := GetSupply(ctx, flowClient)
@@ -38,7 +38,7 @@ func TestGetSupply(t *testing.T) {
 
 func TestGetBalance(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	balance, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
@@ -47,7 +47,7 @@ func TestGetBalance(t *testing.T) {
 
 func TestAddVaultToAccount(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	skString := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
@@ -62,7 +62,7 @@ func TestAddVaultToAccount(t *testing.T) {
 
 func TestNonVaultedAccount(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	_, err = GetBalance(ctx, flowClient, flow.HexToAddress("0xf3fcd2c1a78f5eee"))
@@ -71,7 +71,7 @@ func TestNonVaultedAccount(t *testing.T) {
 
 func TestTransferTokens(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
@@ -103,7 +103,7 @@ func TestTransferTokens(t *testing.T) {
 
 func TestTransferToNonVaulted(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
@@ -120,7 +120,7 @@ func TestTransferToNonVaulted(t *testing.T) {
 
 func TestMintTokens(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
@@ -137,7 +137,7 @@ func TestMintTokens(t *testing.T) {
 
 func TestBurnTokens(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
