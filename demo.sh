@@ -24,22 +24,6 @@ flow project deploy \
 
 go test ./... -cover -v
 
-# Transfer from Account A to Account B
-# flow transactions send ./transactions/transfer_tokens.cdc \
-#   --arg UFix64:500.0 \
-#   --arg Address:0x"$ACCOUNT_B" \
-#   --signer=ft-account
-
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
-
-# Transfer from Account B back to Account A
-# flow transactions send ./transactions/transfer_tokens.cdc \
-#   --arg UFix64:50.0 \
-#   --arg Address:0x"$ACCOUNT_A" \
-#   --signer=receiver-account
-
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_A"
-
 # Transfer from Account A to Account C, should panic + revert
 # flow transactions send ./transactions/transfer_tokens.cdc \
 #   --arg UFix64:50.0 \

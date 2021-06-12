@@ -38,13 +38,7 @@ func TestGetSupply(t *testing.T) {
 	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	script, err := ioutil.ReadFile("./contracts/scripts/get_supply.cdc")
-
-	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
-	assert.NoError(t, err)
-
-	supply := value.(cadence.UFix64)
-
+	supply, err := GetSupply(ctx, flowClient)
 	assert.Equal(t, supply.String(), "1000.00000000")
 }
 
@@ -53,13 +47,7 @@ func TestGetBalance(t *testing.T) {
 	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	script, err := ioutil.ReadFile("./contracts/scripts/get_balance.cdc")
-
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
-	balance, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
-		cadence.Address(accountFT.Address),
-	})
-	assert.NoError(t, err)
+	balance, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
 
 	assert.Equal(t, balance.String(), "1000.00000000")
 }
@@ -98,13 +86,7 @@ func TestAddVaultToAccount(t *testing.T) {
 	err = flowClient.SendTransaction(ctx, *tx)
 	assert.NoError(t, err)
 
-	script, err := ioutil.ReadFile("./contracts/scripts/get_balance.cdc")
-	assert.NoError(t, err)
-
-	balance, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
-		cadence.Address(accountA.Address),
-	})
-	assert.NoError(t, err)
+	balance, err := GetBalance(ctx, flowClient, accountA.Address)
 
 	assert.Equal(t, balance.String(), "0.00000000")
 }
@@ -124,4 +106,60 @@ func TestNonVaultedAccount(t *testing.T) {
 		cadence.Address(accountB.Address),
 	})
 	assert.Error(t, err)
+}
+
+func TestTransferAndTransferBack(t *testing.T) {
+	ctx := context.Background()
+	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+
+	accountA, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	assert.NoError(t, err)
+
+	key1 := accountFT.Keys[0]
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a")
+	assert.NoError(t, err)
+	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
+
+	txScript, err := ioutil.ReadFile("./contracts/scripts/transfer_tokens.cdc")
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	assert.NoError(t, err)
+
+	tx := flow.NewTransaction().
+		SetScript(txScript).
+		SetGasLimit(100).
+		SetProposalKey(accountFT.Address, key1.Index, key1.SequenceNumber).
+		SetPayer(accountFT.Address).
+		SetReferenceBlockID(referenceBlock.ID).
+		AddAuthorizer(accountFT.Address)
+
+	err = tx.AddArgument(cadence.UFix64(10.0))
+	assert.NoError(t, err)
+
+	err = tx.AddArgument(cadence.Address(accountA.Address))
+	assert.NoError(t, err)
+
+	err = tx.SignEnvelope(accountFT.Address, key1.Index, key1Signer)
+	assert.NoError(t, err)
+
+	//  Transfer from Account A to Account B
+	//  flow transactions send ./transactions/transfer_tokens.cdc \
+	//    --arg UFix64:500.0 \
+	//    --arg Address:0x"$ACCOUNT_B" \
+	//    --signer=ft-account
+	//
+	//  flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
+	//
+	//  Transfer from Account B back to Account A
+	//  flow transactions send ./transactions/transfer_tokens.cdc \
+	//    --arg UFix64:50.0 \
+	//    --arg Address:0x"$ACCOUNT_A" \
+	//    --signer=receiver-account
+	//
+	//  flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_A"
 }
