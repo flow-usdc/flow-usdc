@@ -22,7 +22,7 @@ flow project deploy \
   -f flow.json -f flow.emulator.json \
   --network=emulator \
 
-go test ./... -cover -v
+RPC_ADDRESS=localhost:3569 go test ./... -cover -v
 
 # Transfer from Account A to Account C, should panic + revert
 # flow transactions send ./transactions/transfer_tokens.cdc \

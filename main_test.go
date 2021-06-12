@@ -2,20 +2,18 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"testing"
 
-	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
 
 func TestAccountsCreated(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
 	// Using this examples.ServiceAccount helper here
