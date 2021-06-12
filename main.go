@@ -120,3 +120,112 @@ func TransferTokens(
 	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
 	return result, err
 }
+
+func MintTokens(
+	ctx context.Context,
+	flowClient *client.Client,
+	mintingAccount *flow.Account,
+	amount cadence.UFix64,
+	skString string,
+) (*flow.TransactionResult, error) {
+	txScript, err := ioutil.ReadFile("./transactions/mint_tokens.cdc")
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
+	if err != nil {
+		return nil, err
+	}
+
+	key1 := mintingAccount.Keys[0]
+	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := flow.NewTransaction().
+		SetScript(txScript).
+		SetGasLimit(100).
+		SetProposalKey(mintingAccount.Address, key1.Index, key1.SequenceNumber).
+		SetPayer(mintingAccount.Address).
+		SetReferenceBlockID(referenceBlock.ID).
+		AddAuthorizer(mintingAccount.Address)
+
+	err = tx.AddArgument(cadence.Address(mintingAccount.Address))
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.AddArgument(cadence.UFix64(amount))
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.SignEnvelope(mintingAccount.Address, key1.Index, key1Signer)
+	if err != nil {
+		return nil, err
+	}
+
+	err = flowClient.SendTransaction(ctx, *tx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	return result, err
+}
+
+func BurnTokens(
+	ctx context.Context,
+	flowClient *client.Client,
+	burningAccount *flow.Account,
+	amount cadence.UFix64,
+	skString string,
+) (*flow.TransactionResult, error) {
+	txScript, err := ioutil.ReadFile("./transactions/burn_tokens.cdc")
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
+	if err != nil {
+		return nil, err
+	}
+
+	key1 := burningAccount.Keys[0]
+	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := flow.NewTransaction().
+		SetScript(txScript).
+		SetGasLimit(100).
+		SetProposalKey(burningAccount.Address, key1.Index, key1.SequenceNumber).
+		SetPayer(burningAccount.Address).
+		SetReferenceBlockID(referenceBlock.ID).
+		AddAuthorizer(burningAccount.Address)
+
+	err = tx.AddArgument(cadence.UFix64(amount))
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.SignEnvelope(burningAccount.Address, key1.Index, key1Signer)
+	if err != nil {
+		return nil, err
+	}
+
+	err = flowClient.SendTransaction(ctx, *tx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	return result, err
+}

@@ -24,21 +24,6 @@ flow project deploy \
 
 RPC_ADDRESS=localhost:3569 go test ./... -cover -v
 
-# Prints Money
-# flow transactions send ./transactions/mint_tokens.cdc \
-#   --arg Address:0x"$ACCOUNT_A" \
-#   --arg UFix64:5000.0 \
-#   --signer=ft-account
-
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_A"
-
-# Burns Money
-# flow transactions send ./transactions/burn_tokens.cdc \
-#   --arg UFix64:2000.0 \
-#   --signer=ft-account
-
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_A"
-
 # Finally, let's make ACCOUNT_B an admin and test minting and burning with them
 # flow transactions build ./transactions/create_admin.cdc \
 #   --authorizer ft-account \

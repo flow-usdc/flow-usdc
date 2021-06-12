@@ -117,3 +117,37 @@ func TestTransferToNonVaulted(t *testing.T) {
 	result, err := TransferTokens(ctx, flowClient, 100000000, accountFT, accountB.Address, skFT)
 	assert.Error(t, result.Error)
 }
+
+func TestMintTokens(t *testing.T) {
+	ctx := context.Background()
+	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
+	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+
+	result, err := MintTokens(ctx, flowClient, accountFT, 50000000000, skFT)
+	assert.NoError(t, result.Error)
+
+	balanceFT, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+	assert.Equal(t, balanceFT.String(), "1500.00000000")
+}
+
+func TestBurnTokens(t *testing.T) {
+	ctx := context.Background()
+	flowClient, err := client.New("localhost:3569", grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
+	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+
+	result, err := BurnTokens(ctx, flowClient, accountFT, 50000000000, skFT)
+	assert.NoError(t, result.Error)
+
+	balanceFT, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+	assert.Equal(t, balanceFT.String(), "1000.00000000")
+}
