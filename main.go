@@ -70,15 +70,15 @@ func TransferTokens(
 	from *flow.Account,
 	toAddress flow.Address,
 	skString string,
-) error {
+) (*flow.TransactionResult, error) {
 	txScript, err := ioutil.ReadFile("./transactions/transfer_tokens.cdc")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	key1 := from.Keys[0]
@@ -86,7 +86,7 @@ func TransferTokens(
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	tx := flow.NewTransaction().
@@ -99,23 +99,24 @@ func TransferTokens(
 
 	err = tx.AddArgument(cadence.UFix64(amount))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = tx.AddArgument(cadence.Address(toAddress))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = tx.SignEnvelope(from.Address, key1.Index, key1Signer)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	return result, err
 }

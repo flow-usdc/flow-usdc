@@ -24,12 +24,6 @@ flow project deploy \
 
 RPC_ADDRESS=localhost:3569 go test ./... -cover -v
 
-# Transfer from Account A to Account C, should panic + revert
-# flow transactions send ./transactions/transfer_tokens.cdc \
-#   --arg UFix64:50.0 \
-#   --arg Address:0x"$ACCOUNT_C" \
-#   --signer=ft-account
-
 # Prints Money
 # flow transactions send ./transactions/mint_tokens.cdc \
 #   --arg Address:0x"$ACCOUNT_A" \
