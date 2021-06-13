@@ -1,8 +1,8 @@
 // This transaction is a template for a transaction
 // to add a Vault resource to their account
 // so that they can use the exampleToken
-import FungibleToken from 0xee82856bf20e2aa6
-import ExampleToken from 0x01cf0e2f2f715450
+import FungibleToken from 0x{{.FungibleToken}}
+import ExampleToken from 0x{{.ExampleToken}}
 
 transaction {
 

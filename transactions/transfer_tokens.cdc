@@ -5,8 +5,8 @@
 // The withdraw amount and the account from getAccount
 // would be the parameters to the transaction
 
-import FungibleToken from 0xee82856bf20e2aa6
-import ExampleToken from 0x01cf0e2f2f715450
+import FungibleToken from 0x{{.FungibleToken}}
+import ExampleToken from 0x{{.ExampleToken}}
 
 transaction(amount: UFix64, to: Address) {
 

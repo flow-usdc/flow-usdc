@@ -1,14 +1,44 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
+	"log"
+	"os"
+	"text/template"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
+
+type Addresses struct {
+	FungibleToken string
+	ExampleToken  string
+}
+
+func ParseCadenceTemplate(templatePath string) []byte {
+	fb, err := ioutil.ReadFile(templatePath)
+	if err != nil {
+		panic(err)
+	}
+
+	tmpl, err := template.New("Template").Parse(string(fb))
+	if err != nil {
+		panic(err)
+	}
+
+	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, addresses)
+	if err != nil {
+		panic(err)
+	}
+
+	return buf.Bytes()
+}
 
 // TODO: Better sk handling here
 func AddVaultToAccount(
@@ -17,7 +47,7 @@ func AddVaultToAccount(
 	account *flow.Account,
 	skString string,
 ) error {
-	txScript, err := ioutil.ReadFile("./transactions/setup_account.cdc")
+	txScript := ParseCadenceTemplate("./transactions/setup_account.cdc")
 
 	key1 := account.Keys[0]
 
@@ -41,7 +71,8 @@ func AddVaultToAccount(
 }
 
 func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
-	script, err := ioutil.ReadFile("./contracts/scripts/get_supply.cdc")
+	script := ParseCadenceTemplate("./contracts/scripts/get_supply.cdc")
+	log.Println(string(script))
 
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
 
@@ -50,7 +81,7 @@ func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, 
 }
 
 func GetBalance(ctx context.Context, flowClient *client.Client, address flow.Address) (cadence.UFix64, error) {
-	script, err := ioutil.ReadFile("./contracts/scripts/get_balance.cdc")
+	script := ParseCadenceTemplate("./contracts/scripts/get_balance.cdc")
 
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
 		cadence.Address(address),
@@ -71,10 +102,7 @@ func TransferTokens(
 	toAddress flow.Address,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript, err := ioutil.ReadFile("./transactions/transfer_tokens.cdc")
-	if err != nil {
-		return nil, err
-	}
+	txScript := ParseCadenceTemplate("./transactions/transfer_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -128,10 +156,7 @@ func MintTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript, err := ioutil.ReadFile("./transactions/mint_tokens.cdc")
-	if err != nil {
-		return nil, err
-	}
+	txScript := ParseCadenceTemplate("./transactions/mint_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -185,10 +210,7 @@ func BurnTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript, err := ioutil.ReadFile("./transactions/burn_tokens.cdc")
-	if err != nil {
-		return nil, err
-	}
+	txScript := ParseCadenceTemplate("./transactions/burn_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -238,10 +260,7 @@ func CreateAdmin(
 	skOld string,
 	skNew string,
 ) (*flow.TransactionResult, error) {
-	txScript, err := ioutil.ReadFile("./transactions/create_admin.cdc")
-	if err != nil {
-		return nil, err
-	}
+	txScript := ParseCadenceTemplate("./transactions/create_admin.cdc")
 
 	oldPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skOld)
 	if err != nil {
