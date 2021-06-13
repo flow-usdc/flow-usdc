@@ -38,10 +38,11 @@ func TestGetSupply(t *testing.T) {
 
 func TestGetBalance(t *testing.T) {
 	ctx := context.Background()
-	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
+	c, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	balance, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	balance, err := GetBalance(ctx, c, address)
 	assert.Equal(t, balance.String(), "1000.00000000")
 }
 
@@ -74,8 +75,9 @@ func TestTransferTokens(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
 	skA := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
@@ -96,7 +98,8 @@ func TestTransferTokens(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balanceFT, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	address = flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
 	assert.Equal(t, balanceFT.String(), "1000.00000000")
 }
@@ -106,8 +109,9 @@ func TestTransferToNonVaulted(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
 	accountB, err := flowClient.GetAccount(ctx, flow.HexToAddress("0xf3fcd2c1a78f5eee"))
@@ -123,14 +127,15 @@ func TestMintTokens(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
 	result, err := MintTokens(ctx, flowClient, accountFT, 50000000000, skFT)
 	assert.NoError(t, result.Error)
 
-	balanceFT, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
 	assert.Equal(t, balanceFT.String(), "1500.00000000")
 }
@@ -140,14 +145,15 @@ func TestBurnTokens(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
 	result, err := BurnTokens(ctx, flowClient, accountFT, 50000000000, skFT)
 	assert.NoError(t, result.Error)
 
-	balanceFT, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x01cf0e2f2f715450"))
+	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
 	assert.Equal(t, balanceFT.String(), "1000.00000000")
 }
@@ -157,8 +163,9 @@ func TestCreateNewAdmin(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
-	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
 	skA := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
