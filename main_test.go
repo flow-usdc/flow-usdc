@@ -51,9 +51,10 @@ func TestAddVaultToAccount(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	skString := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
-	accountA, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
-	err = AddVaultToAccount(ctx, flowClient, accountA, skString)
+	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
+	accountA, err := flowClient.GetAccount(ctx, addressA)
+	err = AddVaultToAccount(ctx, flowClient, accountA, skA)
 	assert.NoError(t, err)
 
 	balance, err := GetBalance(ctx, flowClient, accountA.Address)
@@ -66,7 +67,8 @@ func TestNonVaultedAccount(t *testing.T) {
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
 	assert.NoError(t, err)
 
-	_, err = GetBalance(ctx, flowClient, flow.HexToAddress("0xf3fcd2c1a78f5eee"))
+	addressB := flow.HexToAddress(os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS"))
+	_, err = GetBalance(ctx, flowClient, addressB)
 	assert.Error(t, err)
 }
 
@@ -80,8 +82,9 @@ func TestTransferTokens(t *testing.T) {
 	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
-	skA := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
-	accountA, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
+	accountA, err := flowClient.GetAccount(ctx, addressA)
 	assert.NoError(t, err)
 
 	// Transfer 1 token from FT minter to Account A
@@ -89,7 +92,7 @@ func TestTransferTokens(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balanceA, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x179b6b1cb6755e31"))
+	balanceA, err := GetBalance(ctx, flowClient, addressA)
 	assert.NoError(t, err)
 	assert.Equal(t, balanceA.String(), "1.00000000")
 
@@ -114,7 +117,8 @@ func TestTransferToNonVaulted(t *testing.T) {
 	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
-	accountB, err := flowClient.GetAccount(ctx, flow.HexToAddress("0xf3fcd2c1a78f5eee"))
+	addressB := flow.HexToAddress(os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS"))
+	accountB, err := flowClient.GetAccount(ctx, addressB)
 	assert.NoError(t, err)
 
 	// Transfer 1 token from FT minter to Account B, which has no vault
@@ -168,28 +172,29 @@ func TestCreateNewAdmin(t *testing.T) {
 	accountFT, err := flowClient.GetAccount(ctx, address)
 	assert.NoError(t, err)
 
-	skA := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
-	accountA, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
+	accountA, err := flowClient.GetAccount(ctx, addressA)
 	assert.NoError(t, err)
 
 	result, err := CreateAdmin(ctx, flowClient, accountFT, accountA, skFT, skA)
 	assert.NoError(t, result.Error)
 
 	// Get the new Sequence Number
-	accountA, err = flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	accountA, err = flowClient.GetAccount(ctx, addressA)
 
 	result, err = MintTokens(ctx, flowClient, accountA, 50000000000, skA)
 	assert.NoError(t, result.Error)
 
-	balance, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x179b6b1cb6755e31"))
+	balance, err := GetBalance(ctx, flowClient, addressA)
 	assert.Equal(t, balance.String(), "500.00000000")
 
 	// Get the new Sequence Number
-	accountA, err = flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	accountA, err = flowClient.GetAccount(ctx, addressA)
 
 	result, err = BurnTokens(ctx, flowClient, accountA, 40000000000, skA)
 	assert.NoError(t, result.Error)
 
-	balance, err = GetBalance(ctx, flowClient, flow.HexToAddress("0x179b6b1cb6755e31"))
+	balance, err = GetBalance(ctx, flowClient, addressA)
 	assert.Equal(t, balance.String(), "100.00000000")
 }
