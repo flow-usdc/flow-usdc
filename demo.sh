@@ -24,42 +24,4 @@ flow project deploy \
 
 RPC_ADDRESS=localhost:3569 go test ./... -cover -v
 
-# Finally, let's make ACCOUNT_B an admin and test minting and burning with them
-# flow transactions build ./transactions/create_admin.cdc \
-#   --authorizer ft-account \
-#   --authorizer receiver-account \
-#   --proposer ft-account \
-#   --payer receiver-account \
-#   --filter payload \
-#   --save transaction.rlp
-
-# Payload Signature
-# flow transactions sign ./transaction.rlp \
-#   --signer ft-account \
-#   --filter payload \
-#   --save signed.rlp
-
-# Envelope Signature
-# flow transactions sign ./signed.rlp \
-#   --signer receiver-account \
-#   --filter payload \
-#   --save signed.rlp
-
-# flow transactions send-signed ./signed.rlp
-
-# flow transactions send ./transactions/mint_tokens.cdc \
-#   --arg Address:0x"$ACCOUNT_B" \
-#   --arg UFix64:5000.0 \
-#   --signer=receiver-account
-#
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
-#
-# flow transactions send ./transactions/burn_tokens.cdc \
-#   --arg UFix64:4000.0 \
-#   --signer=receiver-account
-#
-# flow scripts execute ./contracts/scripts/get_balance.cdc --arg Address:0x"$ACCOUNT_B"
-
-# Kill the emulator and exit
 kill $EMULATOR_PID
-

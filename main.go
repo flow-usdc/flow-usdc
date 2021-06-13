@@ -229,3 +229,66 @@ func BurnTokens(
 	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
 	return result, err
 }
+
+func CreateAdmin(
+	ctx context.Context,
+	flowClient *client.Client,
+	oldAdmin *flow.Account,
+	newAdmin *flow.Account,
+	skOld string,
+	skNew string,
+) (*flow.TransactionResult, error) {
+	txScript, err := ioutil.ReadFile("./transactions/create_admin.cdc")
+	if err != nil {
+		return nil, err
+	}
+
+	oldPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skOld)
+	if err != nil {
+		return nil, err
+	}
+
+	oldKeys := oldAdmin.Keys[0]
+	oldKeySigner := crypto.NewInMemorySigner(oldPrivateKey, oldKeys.HashAlgo)
+
+	newPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skNew)
+	if err != nil {
+		return nil, err
+	}
+
+	newKeys := newAdmin.Keys[0]
+	newKeySigner := crypto.NewInMemorySigner(newPrivateKey, newKeys.HashAlgo)
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+
+	tx := flow.NewTransaction().
+		SetScript(txScript).
+		SetGasLimit(100).
+		SetProposalKey(oldAdmin.Address, oldKeys.Index, oldKeys.SequenceNumber).
+		SetPayer(newAdmin.Address).
+		SetReferenceBlockID(referenceBlock.ID).
+		AddAuthorizer(oldAdmin.Address).
+		AddAuthorizer(newAdmin.Address)
+
+	err = tx.SignPayload(oldAdmin.Address, oldKeys.Index, oldKeySigner)
+	if err != nil {
+		return nil, err
+	}
+
+	// Payer always signs last
+	err = tx.SignEnvelope(newAdmin.Address, newKeys.Index, newKeySigner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = flowClient.SendTransaction(ctx, *tx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	return result, err
+}

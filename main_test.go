@@ -151,3 +151,38 @@ func TestBurnTokens(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, balanceFT.String(), "1000.00000000")
 }
+
+func TestCreateNewAdmin(t *testing.T) {
+	ctx := context.Background()
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	skFT := "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a"
+	accountFT, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x01cf0e2f2f715450"))
+	assert.NoError(t, err)
+
+	skA := "58125e2c18823b7914c625500e76e3006aa2e936bc9b9169f77ab951e84edefd"
+	accountA, err := flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+	assert.NoError(t, err)
+
+	result, err := CreateAdmin(ctx, flowClient, accountFT, accountA, skFT, skA)
+	assert.NoError(t, result.Error)
+
+	// Get the new Sequence Number
+	accountA, err = flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+
+	result, err = MintTokens(ctx, flowClient, accountA, 50000000000, skA)
+	assert.NoError(t, result.Error)
+
+	balance, err := GetBalance(ctx, flowClient, flow.HexToAddress("0x179b6b1cb6755e31"))
+	assert.Equal(t, balance.String(), "500.00000000")
+
+	// Get the new Sequence Number
+	accountA, err = flowClient.GetAccount(ctx, flow.HexToAddress("0x179b6b1cb6755e31"))
+
+	result, err = BurnTokens(ctx, flowClient, accountA, 40000000000, skA)
+	assert.NoError(t, result.Error)
+
+	balance, err = GetBalance(ctx, flowClient, flow.HexToAddress("0x179b6b1cb6755e31"))
+	assert.Equal(t, balance.String(), "100.00000000")
+}
