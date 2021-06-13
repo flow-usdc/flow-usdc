@@ -8,6 +8,9 @@
   "deployments": {
     "emulator": {
       "token-account": ["ExampleToken"]
+    },
+    "testnet": {
+      "token-account": ["ExampleToken"]
     }
   },
   "contracts": {
