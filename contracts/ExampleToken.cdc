@@ -188,7 +188,7 @@ pub contract ExampleToken: FungibleToken {
     }
 
     init() {
-        self.totalSupply = 1000.0
+        self.totalSupply = 0.0
 
         // Create the Vault with the total supply of tokens and save it in storage
         //

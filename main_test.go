@@ -28,6 +28,25 @@ import (
 // 	assert.Equal(t, len(events), 5)
 // }
 
+func TestMintTokens(t *testing.T) {
+	ctx := context.Background()
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
+	accountFT, err := flowClient.GetAccount(ctx, address)
+	assert.NoError(t, err)
+
+	result, err := MintTokens(ctx, flowClient, accountFT, 500000000000, skFT)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balanceFT, err := GetBalance(ctx, flowClient, address)
+	assert.NoError(t, err)
+	assert.Equal(t, balanceFT.String(), "5000.00000000")
+}
+
 func TestGetSupply(t *testing.T) {
 	ctx := context.Background()
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
@@ -35,7 +54,7 @@ func TestGetSupply(t *testing.T) {
 
 	supply, err := GetSupply(ctx, flowClient)
 	assert.NoError(t, err)
-	assert.Equal(t, supply.String(), "1000.00000000")
+	assert.Equal(t, supply.String(), "5000.00000000")
 }
 
 func TestGetBalance(t *testing.T) {
@@ -46,7 +65,7 @@ func TestGetBalance(t *testing.T) {
 	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
 	balance, err := GetBalance(ctx, c, address)
 	assert.NoError(t, err)
-	assert.Equal(t, balance.String(), "1000.00000000")
+	assert.Equal(t, balance.String(), "5000.00000000")
 }
 
 func TestAddVaultToAccount(t *testing.T) {
@@ -109,7 +128,7 @@ func TestTransferTokens(t *testing.T) {
 	address = flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
 	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
-	assert.Equal(t, balanceFT.String(), "1000.00000000")
+	assert.Equal(t, balanceFT.String(), "5000.00000000")
 }
 
 func TestTransferToNonVaulted(t *testing.T) {
@@ -131,25 +150,6 @@ func TestTransferToNonVaulted(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMintTokens(t *testing.T) {
-	ctx := context.Background()
-	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-	assert.NoError(t, err)
-
-	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
-	accountFT, err := flowClient.GetAccount(ctx, address)
-	assert.NoError(t, err)
-
-	result, err := MintTokens(ctx, flowClient, accountFT, 50000000000, skFT)
-	t.Log(result)
-	assert.NoError(t, err)
-
-	balanceFT, err := GetBalance(ctx, flowClient, address)
-	assert.NoError(t, err)
-	assert.Equal(t, balanceFT.String(), "1500.00000000")
-}
-
 func TestBurnTokens(t *testing.T) {
 	ctx := context.Background()
 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
@@ -166,7 +166,7 @@ func TestBurnTokens(t *testing.T) {
 
 	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
-	assert.Equal(t, balanceFT.String(), "1000.00000000")
+	assert.Equal(t, balanceFT.String(), "4500.00000000")
 }
 
 func TestCreateNewAdmin(t *testing.T) {
