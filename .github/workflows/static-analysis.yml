@@ -1,5 +1,5 @@
 ---
-name: Go
+name: Static Analysis
 
 on:
   push:
@@ -7,6 +7,32 @@ on:
   pull_request:
 
 jobs:
+  vet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: go vet
+        run: go vet ./...
+
+  gofmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - uses: Jerome1337/gofmt-action@v1.0.4
+        with:
+          gofmt-flags: '-l -d'
 
   linting:
     runs-on: ubuntu-latest
@@ -17,13 +43,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.16
-
-      - name: Go vet
-        run: go vet ./...
-
-      - uses: Jerome1337/gofmt-action@v1.0.4
-        with:
-          gofmt-flags: '-l -d'
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
