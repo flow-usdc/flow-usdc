@@ -197,15 +197,18 @@ func TestCreateNewAdmin(t *testing.T) {
 	assert.NoError(t, err)
 
 	balance, err := GetBalance(ctx, flowClient, addressA)
+	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "500.00000000")
 
 	// Get the new Sequence Number
 	accountA, err = flowClient.GetAccount(ctx, addressA)
+	assert.NoError(t, err)
 
 	result, err = BurnTokens(ctx, flowClient, accountA, 40000000000, skA)
 	t.Log(result)
 	assert.NoError(t, err)
 
 	balance, err = GetBalance(ctx, flowClient, addressA)
+	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "100.00000000")
 }
