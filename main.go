@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
@@ -40,21 +41,56 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	return buf.Bytes()
 }
 
+func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (result *flow.TransactionResult, err error) {
+	result, err = c.GetTransactionResult(ctx, id)
+	if err != nil {
+		return
+	}
+
+	if result.Error != nil {
+		err = result.Error
+		return
+	}
+
+	for result.Status != flow.TransactionStatusSealed {
+		time.Sleep(time.Second)
+		result, err = c.GetTransactionResult(ctx, id)
+
+		if err != nil {
+			return
+		}
+
+		if result.Error != nil {
+			err = result.Error
+			return
+		}
+	}
+
+	return result, nil
+}
+
 // TODO: Better sk handling here
 func AddVaultToAccount(
 	ctx context.Context,
 	flowClient *client.Client,
 	account *flow.Account,
 	skString string,
-) error {
+) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/setup_account.cdc")
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
+	if err != nil {
+		return nil, err
+	}
+
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	if err != nil {
+		return nil, err
+	}
 
 	tx := flow.NewTransaction().
 		SetScript(txScript).
@@ -67,7 +103,16 @@ func AddVaultToAccount(
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 
 	err = flowClient.SendTransaction(ctx, *tx)
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
@@ -145,7 +190,11 @@ func TransferTokens(
 		return nil, err
 	}
 
-	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
 	return result, err
 }
 
@@ -199,7 +248,11 @@ func MintTokens(
 		return nil, err
 	}
 
-	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
 	return result, err
 }
 
@@ -248,7 +301,11 @@ func BurnTokens(
 		return nil, err
 	}
 
-	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
 	return result, err
 }
 
@@ -308,6 +365,10 @@ func CreateAdmin(
 		return nil, err
 	}
 
-	result, err := flowClient.GetTransactionResult(ctx, tx.ID())
+	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
 	return result, err
 }

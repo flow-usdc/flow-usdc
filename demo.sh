@@ -5,7 +5,8 @@ set -o allexport; source .env; set +o allexport
 
 # Run the emulator with the config in ./flow.json
 if [ "${NETWORK}" == "emulator" ]; then
-  flow emulator &
+  # setting block-time of 1s to emulate testnet + mainnet tempo
+  flow emulator -b 1s &
   EMULATOR_PID=$!
   sleep 1
   SIGNER=emulator-account

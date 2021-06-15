@@ -54,7 +54,8 @@ func TestAddVaultToAccount(t *testing.T) {
 	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
 	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
 	accountA, err := flowClient.GetAccount(ctx, addressA)
-	err = AddVaultToAccount(ctx, flowClient, accountA, skA)
+	result, err := AddVaultToAccount(ctx, flowClient, accountA, skA)
+	t.Log(result)
 	assert.NoError(t, err)
 
 	balance, err := GetBalance(ctx, flowClient, accountA.Address)
@@ -122,8 +123,8 @@ func TestTransferToNonVaulted(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Transfer 1 token from FT minter to Account B, which has no vault
-	result, err := TransferTokens(ctx, flowClient, 100000000, accountFT, accountB.Address, skFT)
-	assert.Error(t, result.Error)
+	_, err = TransferTokens(ctx, flowClient, 100000000, accountFT, accountB.Address, skFT)
+	assert.Error(t, err)
 }
 
 func TestMintTokens(t *testing.T) {
