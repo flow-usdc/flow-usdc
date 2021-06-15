@@ -1,5 +1,8 @@
 #!/bin/bash -x
 
+shopt -s expand_aliases
+alias flow=.github/flow
+
 # Import from env file
 set -o allexport; source .env; set +o allexport
 

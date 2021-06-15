@@ -21,8 +21,12 @@ jobs:
       - name: Test
         env:
           NETWORK: emulator
+          RPC_ADDRESS: localhost:3569
           FUNGIBLE_TOKEN_ADDRESS: ee82856bf20e2aa6
-        run: ./demo.sh
+          TOKEN_ACCOUNT_ADDRESS: ${{ secrets.EMULATOR_ADDRESS }}
+          TOKEN_ACCOUNT_KEYS: ${{ secrets.EMULATOR_KEYS }}
+          TOKEN_ACCOUNT_PK: ${{secrets.EMULATOR_PK }}
+        run: ./test.sh
 
         #   testnet-deploy:
         #     runs-on: ubuntu-latest
