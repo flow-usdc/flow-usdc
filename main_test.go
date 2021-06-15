@@ -139,7 +139,7 @@ func TestMintTokens(t *testing.T) {
 	assert.NoError(t, err)
 
 	result, err := MintTokens(ctx, flowClient, accountFT, 50000000000, skFT)
-	assert.NoError(t, result.Error)
+	assert.NoError(t, err)
 
 	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
@@ -157,7 +157,7 @@ func TestBurnTokens(t *testing.T) {
 	assert.NoError(t, err)
 
 	result, err := BurnTokens(ctx, flowClient, accountFT, 50000000000, skFT)
-	assert.NoError(t, result.Error)
+	assert.NoError(t, err)
 
 	balanceFT, err := GetBalance(ctx, flowClient, address)
 	assert.NoError(t, err)
@@ -180,13 +180,13 @@ func TestCreateNewAdmin(t *testing.T) {
 	assert.NoError(t, err)
 
 	result, err := CreateAdmin(ctx, flowClient, accountFT, accountA, skFT, skA)
-	assert.NoError(t, result.Error)
+	assert.NoError(t, err)
 
 	// Get the new Sequence Number
 	accountA, err = flowClient.GetAccount(ctx, addressA)
 
 	result, err = MintTokens(ctx, flowClient, accountA, 50000000000, skA)
-	assert.NoError(t, result.Error)
+	assert.NoError(t, err)
 
 	balance, err := GetBalance(ctx, flowClient, addressA)
 	assert.Equal(t, balance.String(), "500.00000000")
@@ -195,7 +195,7 @@ func TestCreateNewAdmin(t *testing.T) {
 	accountA, err = flowClient.GetAccount(ctx, addressA)
 
 	result, err = BurnTokens(ctx, flowClient, accountA, 40000000000, skA)
-	assert.NoError(t, result.Error)
+	assert.NoError(t, err)
 
 	balance, err = GetBalance(ctx, flowClient, addressA)
 	assert.Equal(t, balance.String(), "100.00000000")
