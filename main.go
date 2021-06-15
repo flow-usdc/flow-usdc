@@ -128,11 +128,12 @@ func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, 
 	return supply, err
 }
 
-func GetBalance(ctx context.Context, flowClient *client.Client, address flow.Address) (cadence.UFix64, error) {
+func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
 	script := ParseCadenceTemplate("./contracts/scripts/get_balance.cdc")
 
+	flowAddress := flow.HexToAddress(address)
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
-		cadence.Address(address),
+		cadence.Address(flowAddress),
 	})
 	if err != nil {
 		return 0, err
@@ -204,11 +205,17 @@ func TransferTokens(
 func MintTokens(
 	ctx context.Context,
 	flowClient *client.Client,
-	mintingAccount *flow.Account,
+	mintingAccountAddress string,
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/mint_tokens.cdc")
+
+	address := flow.HexToAddress(mintingAccountAddress)
+	mintingAccount, err := flowClient.GetAccount(ctx, address)
+	if err != nil {
+		return nil, err
+	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -262,11 +269,17 @@ func MintTokens(
 func BurnTokens(
 	ctx context.Context,
 	flowClient *client.Client,
-	burningAccount *flow.Account,
+	burningAccountAddress string,
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/burn_tokens.cdc")
+
+	address := flow.HexToAddress(burningAccountAddress)
+	burningAccount, err := flowClient.GetAccount(ctx, address)
+	if err != nil {
+		return nil, err
+	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
