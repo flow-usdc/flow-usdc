@@ -96,42 +96,36 @@ func TestNonVaultedAccount(t *testing.T) {
 	assert.Error(t, err)
 }
 
-//
-// func TestTransferTokens(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-// 	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
-// 	accountFT, err := flowClient.GetAccount(ctx, address)
-// 	assert.NoError(t, err)
-//
-// 	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
-// 	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
-// 	accountA, err := flowClient.GetAccount(ctx, addressA)
-// 	assert.NoError(t, err)
-//
-// 	// Transfer 1 token from FT minter to Account A
-// 	result, err := TransferTokens(ctx, flowClient, 100000000, accountFT, accountA.Address, skFT)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	balanceA, err := GetBalance(ctx, flowClient, addressA)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balanceA.String(), "1.00000000")
-//
-// 	// Transfer the 1 token back from account A to FT minter
-// 	result, err = TransferTokens(ctx, flowClient, 100000000, accountA, accountFT.Address, skA)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	address = flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
-// 	balanceFT, err := GetBalance(ctx, flowClient, address)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balanceFT.String(), "5000.00000000")
-// }
-//
+func TestTransferTokens(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
+
+	newVaultedSk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+	newVaultedAddress := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
+
+	initialBalance, err := GetBalance(ctx, flowClient, tokenAddress)
+	assert.NoError(t, err)
+
+	// Transfer 1 token from FT minter to Account A
+	result, err := TransferTokens(ctx, flowClient, 100000000, tokenAddress, newVaultedAddress, tokenSk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balanceA, err := GetBalance(ctx, flowClient, newVaultedAddress)
+	assert.NoError(t, err)
+	assert.Equal(t, balanceA.String(), "1.00000000")
+
+	// Transfer the 1 token back from account A to FT minter
+	result, err = TransferTokens(ctx, flowClient, 100000000, newVaultedAddress, tokenAddress, newVaultedSk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	finalBalance, err := GetBalance(ctx, flowClient, tokenAddress)
+	assert.NoError(t, err)
+	assert.Equal(t, finalBalance, initialBalance)
+}
+
 // func TestTransferToNonVaulted(t *testing.T) {
 // 	ctx := context.Background()
 // 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
@@ -150,26 +144,7 @@ func TestNonVaultedAccount(t *testing.T) {
 // 	_, err = TransferTokens(ctx, flowClient, 100000000, accountFT, accountB.Address, skFT)
 // 	assert.Error(t, err)
 // }
-//
-// func TestBurnTokens(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-// 	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
-// 	accountFT, err := flowClient.GetAccount(ctx, address)
-// 	assert.NoError(t, err)
-//
-// 	result, err := BurnTokens(ctx, flowClient, accountFT, 50000000000, skFT)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	balanceFT, err := GetBalance(ctx, flowClient, address)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balanceFT.String(), "4500.00000000")
-// }
-//
+
 // func TestCreateNewAdmin(t *testing.T) {
 // 	ctx := context.Background()
 // 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())

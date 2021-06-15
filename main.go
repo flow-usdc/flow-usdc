@@ -152,13 +152,18 @@ func TransferTokens(
 	ctx context.Context,
 	flowClient *client.Client,
 	amount cadence.UFix64,
-	from *flow.Account,
-	toAddress flow.Address,
+	fromAddress string,
+	toAddress string,
 	skString string,
 ) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/transfer_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
+	if err != nil {
+		return nil, err
+	}
+
+	from, err := flowClient.GetAccount(ctx, flow.HexToAddress(fromAddress))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +189,7 @@ func TransferTokens(
 		return nil, err
 	}
 
-	err = tx.AddArgument(cadence.Address(toAddress))
+	err = tx.AddArgument(cadence.Address(flow.HexToAddress(toAddress)))
 	if err != nil {
 		return nil, err
 	}
