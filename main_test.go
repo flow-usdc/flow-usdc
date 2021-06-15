@@ -88,16 +88,14 @@ func TestAddVaultToAccount(t *testing.T) {
 	assert.Equal(t, balance.String(), "0.00000000")
 }
 
-//
-// func TestNonVaultedAccount(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	addressB := flow.HexToAddress(os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS"))
-// 	_, err = GetBalance(ctx, flowClient, addressB)
-// 	assert.Error(t, err)
-// }
+func TestNonVaultedAccount(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+	address := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")
+
+	_, err := GetBalance(ctx, flowClient, address)
+	assert.Error(t, err)
+}
+
 //
 // func TestTransferTokens(t *testing.T) {
 // 	ctx := context.Background()
