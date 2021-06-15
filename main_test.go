@@ -11,21 +11,22 @@ import (
 	"google.golang.org/grpc"
 )
 
-func TestAccountsCreated(t *testing.T) {
-	ctx := context.Background()
-	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-	assert.NoError(t, err)
-
-	events, err := flowClient.GetEventsForHeightRange(ctx, client.EventRangeQuery{
-		Type:        "flow.AccountCreated",
-		StartHeight: 0,
-		EndHeight:   10,
-	})
-	assert.NoError(t, err)
-
-	// Question: Looks like there's a 1-block padding on either side of the events?
-	assert.Equal(t, len(events), 5)
-}
+// func TestAccountsCreated(t *testing.T) {
+// 	ctx := context.Background()
+// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
+// 	assert.NoError(t, err)
+//
+// 	events, err := flowClient.GetEventsForHeightRange(ctx, client.EventRangeQuery{
+// 		Type:        "flow.AccountCreated",
+// 		StartHeight: 0,
+// 		EndHeight:   10,
+// 	})
+// 	assert.NoError(t, err)
+//
+// 	// Question: Looks like there's a 1-block padding on either side of the events?
+// 	t.Log(events)
+// 	assert.Equal(t, len(events), 5)
+// }
 
 func TestGetSupply(t *testing.T) {
 	ctx := context.Background()
