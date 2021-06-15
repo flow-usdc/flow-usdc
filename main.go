@@ -101,6 +101,9 @@ func AddVaultToAccount(
 		AddAuthorizer(account.Address)
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
+	if err != nil {
+		return nil, err
+	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
