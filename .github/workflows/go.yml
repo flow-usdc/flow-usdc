@@ -21,9 +21,6 @@ jobs:
       - name: Install flow tooling
         run: sh -ci "$(curl -fsSL https://storage.googleapis.com/flow-cli/install.sh)"
 
-      - name: Install deps
-        run: go get ./...
-
       - name: Test
         run: ./demo.sh
 

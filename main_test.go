@@ -45,6 +45,7 @@ func TestGetBalance(t *testing.T) {
 
 	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
 	balance, err := GetBalance(ctx, c, address)
+	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "1000.00000000")
 }
 
@@ -56,6 +57,7 @@ func TestAddVaultToAccount(t *testing.T) {
 	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
 	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
 	accountA, err := flowClient.GetAccount(ctx, addressA)
+	assert.NoError(t, err)
 	result, err := AddVaultToAccount(ctx, flowClient, accountA, skA)
 	t.Log(result)
 	assert.NoError(t, err)
@@ -188,6 +190,7 @@ func TestCreateNewAdmin(t *testing.T) {
 
 	// Get the new Sequence Number
 	accountA, err = flowClient.GetAccount(ctx, addressA)
+	assert.NoError(t, err)
 
 	result, err = MintTokens(ctx, flowClient, accountA, 50000000000, skA)
 	t.Log(result)
