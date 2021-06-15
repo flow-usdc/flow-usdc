@@ -74,23 +74,20 @@ func TestMintingAndBurning(t *testing.T) {
 // 	assert.Equal(t, supply.String(), "5000.00000000")
 // }
 //
-// func TestAddVaultToAccount(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
-// 	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
-// 	accountA, err := flowClient.GetAccount(ctx, addressA)
-// 	assert.NoError(t, err)
-// 	result, err := AddVaultToAccount(ctx, flowClient, accountA, skA)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	balance, err := GetBalance(ctx, flowClient, accountA.Address)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balance.String(), "0.00000000")
-// }
+func TestAddVaultToAccount(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+	address := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
+	sk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+
+	result, err := AddVaultToAccount(ctx, flowClient, address, sk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balance, err := GetBalance(ctx, flowClient, address)
+	assert.NoError(t, err)
+	assert.Equal(t, balance.String(), "0.00000000")
+}
+
 //
 // func TestNonVaultedAccount(t *testing.T) {
 // 	ctx := context.Background()

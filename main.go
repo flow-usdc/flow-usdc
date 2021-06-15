@@ -73,10 +73,15 @@ func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (res
 func AddVaultToAccount(
 	ctx context.Context,
 	flowClient *client.Client,
-	account *flow.Account,
+	address string,
 	skString string,
 ) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/setup_account.cdc")
+
+	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
+	if err != nil {
+		return nil, err
+	}
 
 	key1 := account.Keys[0]
 
