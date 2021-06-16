@@ -123,17 +123,6 @@ func TestTransferTokens(t *testing.T) {
 	assert.Equal(t, finalBalance, initialBalance)
 }
 
-func TestTransferToNonVaulted(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
-	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
-	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	nonVaultedAddress := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")
-
-	// Transfer 1 token from FT minter to Account B, which has no vault
-	_, err := TransferTokens(ctx, flowClient, 100000000, tokenAddress, nonVaultedAddress, tokenSk)
-	assert.Error(t, err)
-}
-
 func TestCreateNewAdmin(t *testing.T) {
 	ctx, flowClient := setupTestEnvironment(t)
 	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
@@ -160,4 +149,15 @@ func TestCreateNewAdmin(t *testing.T) {
 	balance, err = GetBalance(ctx, flowClient, newVaultedAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "100.00000000")
+}
+
+func TestTransferToNonVaulted(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
+	nonVaultedAddress := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")
+
+	// Transfer 1 token from FT minter to Account B, which has no vault
+	_, err := TransferTokens(ctx, flowClient, 100000000, tokenAddress, nonVaultedAddress, tokenSk)
+	assert.Error(t, err)
 }
