@@ -364,6 +364,10 @@ func CreateAdmin(
 	}
 
 	newAdmin, err := flowClient.GetAccount(ctx, flow.HexToAddress(newAdminAddress))
+	if err != nil {
+		return nil, err
+	}
+
 	newKeys := newAdmin.Keys[0]
 	newKeySigner := crypto.NewInMemorySigner(newPrivateKey, newKeys.HashAlgo)
 

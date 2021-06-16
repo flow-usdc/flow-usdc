@@ -64,16 +64,13 @@ func TestMintingAndBurning(t *testing.T) {
 	assert.Equal(t, balanceAfterBurning, initialBalance)
 }
 
-// func TestGetSupply(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	supply, err := GetSupply(ctx, flowClient)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, supply.String(), "5000.00000000")
-// }
-//
+func TestGetSupply(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+
+	_, err := GetSupply(ctx, flowClient)
+	assert.NoError(t, err)
+}
+
 func TestAddVaultToAccount(t *testing.T) {
 	ctx, flowClient := setupTestEnvironment(t)
 	address := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
