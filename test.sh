@@ -44,7 +44,10 @@ export NON_VAULTED_ACCOUNT_SK
 export NON_VAULTED_ACCOUNT_ADDRESS
 
 go test ./... -cover -v
+TEST_RESULT=$?
 
 if [ "${NETWORK}" == "emulator" ]; then
   kill $EMULATOR_PID
 fi
+
+exit $TEST_RESULT
