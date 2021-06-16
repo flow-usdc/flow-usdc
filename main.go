@@ -338,14 +338,19 @@ func BurnTokens(
 func CreateAdmin(
 	ctx context.Context,
 	flowClient *client.Client,
-	oldAdmin *flow.Account,
-	newAdmin *flow.Account,
+	oldAdminAddress string,
+	newAdminAddress string,
 	skOld string,
 	skNew string,
 ) (*flow.TransactionResult, error) {
 	txScript := ParseCadenceTemplate("./transactions/create_admin.cdc")
 
 	oldPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skOld)
+	if err != nil {
+		return nil, err
+	}
+
+	oldAdmin, err := flowClient.GetAccount(ctx, flow.HexToAddress(oldAdminAddress))
 	if err != nil {
 		return nil, err
 	}
@@ -358,6 +363,7 @@ func CreateAdmin(
 		return nil, err
 	}
 
+	newAdmin, err := flowClient.GetAccount(ctx, flow.HexToAddress(newAdminAddress))
 	newKeys := newAdmin.Keys[0]
 	newKeySigner := crypto.NewInMemorySigner(newPrivateKey, newKeys.HashAlgo)
 

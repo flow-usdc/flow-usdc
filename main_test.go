@@ -137,46 +137,30 @@ func TestTransferToNonVaulted(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// func TestCreateNewAdmin(t *testing.T) {
-// 	ctx := context.Background()
-// 	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-// 	assert.NoError(t, err)
-//
-// 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-// 	address := flow.HexToAddress(os.Getenv("TOKEN_ACCOUNT_ADDRESS"))
-// 	accountFT, err := flowClient.GetAccount(ctx, address)
-// 	assert.NoError(t, err)
-//
-// 	skA := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
-// 	addressA := flow.HexToAddress(os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS"))
-// 	accountA, err := flowClient.GetAccount(ctx, addressA)
-// 	assert.NoError(t, err)
-//
-// 	result, err := CreateAdmin(ctx, flowClient, accountFT, accountA, skFT, skA)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	// Get the new Sequence Number
-// 	accountA, err = flowClient.GetAccount(ctx, addressA)
-// 	assert.NoError(t, err)
-//
-// 	result, err = MintTokens(ctx, flowClient, accountA, 50000000000, skA)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	balance, err := GetBalance(ctx, flowClient, addressA)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balance.String(), "500.00000000")
-//
-// 	// Get the new Sequence Number
-// 	accountA, err = flowClient.GetAccount(ctx, addressA)
-// 	assert.NoError(t, err)
-//
-// 	result, err = BurnTokens(ctx, flowClient, accountA, 40000000000, skA)
-// 	t.Log(result)
-// 	assert.NoError(t, err)
-//
-// 	balance, err = GetBalance(ctx, flowClient, addressA)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, balance.String(), "100.00000000")
-// }
+func TestCreateNewAdmin(t *testing.T) {
+	ctx, flowClient := setupTestEnvironment(t)
+	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
+	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
+	newVaultedSk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+	newVaultedAddress := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
+
+	result, err := CreateAdmin(ctx, flowClient, tokenAddress, newVaultedAddress, tokenSk, newVaultedSk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	result, err = MintTokens(ctx, flowClient, newVaultedAddress, 50000000000, newVaultedSk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balance, err := GetBalance(ctx, flowClient, newVaultedAddress)
+	assert.NoError(t, err)
+	assert.Equal(t, balance.String(), "500.00000000")
+
+	result, err = BurnTokens(ctx, flowClient, newVaultedAddress, 40000000000, newVaultedSk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balance, err = GetBalance(ctx, flowClient, newVaultedAddress)
+	assert.NoError(t, err)
+	assert.Equal(t, balance.String(), "100.00000000")
+}
