@@ -1,7 +1,11 @@
 #!/bin/bash -x
 
+OS_NAME=$(uname -s | awk '{print tolower($0)}')
+CPU_ARCH=$(uname -m)
+EXEC_PATH=.github/flow-"$OS_NAME"-"$CPU_ARCH"
+
 shopt -s expand_aliases
-alias flow=.github/flow
+alias flow='$EXEC_PATH'
 
 # Import from env file
 set -o allexport; source .env; set +o allexport
