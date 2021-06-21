@@ -18,6 +18,12 @@ if [ "${NETWORK}" == "emulator" ]; then
   sleep 1
   SIGNER=emulator-account
   flow accounts create --network="$NETWORK" --key="$TOKEN_ACCOUNT_PK" --signer="$SIGNER"
+  # update this file to use env address
+  flow transactions send transactions/transfer_flow_tokens_emulator.cdc \
+    --arg=UFix64:100.0 \
+    --arg=Address:0x"$TOKEN_ACCOUNT_ADDRESS" \
+    --signer="$SIGNER" \
+    --network="$NETWORK"
 else
   SIGNER=token-account
 fi
