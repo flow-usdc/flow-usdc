@@ -45,80 +45,73 @@ Acceptance criteria: No open Critical or High findings
 
 ### Interfaces
 
-| Interface                          | Arg(s)                                  | Return  | Event(s)                  | TX?  | FlowFT mapping   |
-| --:                                | ---:                                    | ---:    | ---:                      | ---: | ---:             |
-| totalSupply                        | N/A                                     | amount  | N/A                       | N    | totalSupply      |
-| balanceOf                          | account                                 | amount  |                           | N    | balance          |
-| allowance                          | owner, spender                          | amount  |                           | N    |                  |
-| transfer                           | recipient, amount                       | bool    | Transfer                  | Y    | deposit/withdraw |
-| approve                            | spender, amount                         | bool    | Approve                   | Y    | deposit/withdraw |
-| transferFrom                       | sender, recipient, amount               | bool    | Transfer                  | Y    | deposit/withdraw |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| mint                               |                                         |         | Mint, Transfer            | Y    |                  |
-| burn                               |                                         |         | Burn, Transfer            | Y    |                  |
-| isMinter                           | account                                 | bool    | N/A                       | N    |                  |
-| minterAllowance                    | minter                                  | amount  | N/A                       | N    |                  |
-| configureMinter                    | minter, minterAllowedAmount             | bool    | MinterConfigured          | Y    |                  |
-| removeMinter                       | minter                                  | bool    | MinterRemoved             | Y    |                  |
-| updateMasterMinter                 | newMasterMinter                         | N/A     | MasterMinterChanged       | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| isBlackListed                      | account                                 | bool    | N/A                       | N    |                  |
-| blacklist                          | account                                 | N/A     | Blacklisted               | Y    |                  |
-| unBlacklist                        | account                                 | N/A     | UnBlacklisted             | Y    |                  |
-| updateBlacklister                  | newBlacklister                          | N/A     | BlacklisterChanged        | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| pause                              | N/A                                     | N/A     | Pause                     | Y    |                  |
-| unpause                            | N/A                                     | N/A     | Unpause                   | Y    |                  |
-| updatePauser                       | newPauser                               | N/A     | PauserChanged             | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| owner                              |                                         | owner   |                           | N    |                  |
-| transferOwnership                  | newOwner                                | N/A     | OwnershipTransferred      | Y    |                  |
-| setOwner (internal)                | newOwner                                | N/A     |                           | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| rescuer                            | N/A                                     | rescuer | N/A                       | N    |                  |
-| rescueERC20                        | tokenContract, to, amount               | N/A     | N/A                       | Y    |                  |
-| updateRescuer                      | newRescuer                              | N/A     | RescuerChanged            | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| increaseAllowance                  | spender, increment                      | bool    | Approval (indirect)       | Y    |                  |
-| decreaseAllowance                  | spender, decrement                      | bool    | Approval (indirect)       | Y    |                  |
-| authorizationState                 | authorizer, nonce                       | bool    | N/A                       | N    |                  |
-| transferWithAuthorization          | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                  |
-| cancelAuthorization                | from, to, value, validity, n, sig       | N/A     | AuthorizationCanceled (i) | Y    |                  |
-| recieveWithAuthorization           | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                  |
-| transferWithMultipleAuthorizations | params, sigs, atomic                    | bool    | Transfer (indirect)       | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| nonces                             | owner                                   | nonce   | N/A                       | N    |                  |
-| permit                             | owner, spender, value, deadline, n, sig | N/A     | Approval (indirect)       | Y    |                  |
-| ---                                | ---                                     | ---     | ---                       | ---  | ---              |
-| version                            | N/A                                     | version | N/A                       | N    |                  |
+| Interface                          | Arg(s)                                  | Return  | Event(s)                  | TX?  | FlowFT mapping                   |
+| --:                                | ---:                                    | ---:    | ---:                      | ---: | ---:                             |
+| totalSupply                        | N/A                                     | amount  | N/A                       | N    | totalSupply                      |
+| balanceOf                          | account                                 | amount  |                           | N    | Valut.balance get                |
+| allowance                          | owner, spender                          | amount  |                           | N    |                                  |
+| transfer                           | recipient, amount                       | bool    | Transfer                  | Y    |                                  |
+| approve                            | spender, amount                         | bool    | Approve                   | Y    |                                  |
+| transferFrom                       | sender, recipient, amount               | bool    | Transfer                  | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| mint                               |                                         |         | Mint, Transfer            | Y    | Minter.mint                      |
+| burn                               |                                         |         | Burn, Transfer            | Y    | Minter.burn                      |
+| isMinter                           | account                                 | bool    | N/A                       | N    | minterRestrictions get           |
+| minterAllowance                    | minter                                  | amount  | N/A                       | N    | minterRestrictions get           |
+| configureMinter                    | minter, minterAllowedAmount             | bool    | MinterConfigured          | Y    | minterController.configureMinter |
+| removeMinter                       | minter                                  | bool    | MinterRemoved             | Y    | minterController.removeMinter    |
+| updateMasterMinter                 | newMasterMinter                         | N/A     | MasterMinterChanged       | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| isBlackListed                      | account                                 | bool    | N/A                       | N    | blocklist get                    |
+| blacklist                          | account                                 | N/A     | Blacklisted               | Y    | Blocklister.blocklist            |
+| unBlacklist                        | account                                 | N/A     | UnBlacklisted             | Y    | Blocklister.unblocklist          |
+| updateBlacklister                  | newBlacklister                          | N/A     | BlacklisterChanged        | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| pause                              | N/A                                     | N/A     | Pause                     | Y    | pauser.pause()                   |
+| unpause                            | N/A                                     | N/A     | Unpause                   | Y    | pauser.unpause()                 |
+| updatePauser                       | newPauser                               | N/A     | PauserChanged             | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| owner                              |                                         | owner   |                           | N    | Owner get                        |
+| transferOwnership                  | newOwner                                | N/A     | OwnershipTransferred      | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| increaseAllowance                  | spender, increment                      | bool    | Approval (indirect)       | Y    |                                  |
+| decreaseAllowance                  | spender, decrement                      | bool    | Approval (indirect)       | Y    |                                  |
+| authorizationState                 | authorizer, nonce                       | bool    | N/A                       | N    |                                  |
+| transferWithAuthorization          | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                                  |
+| cancelAuthorization                | from, to, value, validity, n, sig       | N/A     | AuthorizationCanceled (i) | Y    |                                  |
+| recieveWithAuthorization           | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                                  |
+| transferWithMultipleAuthorizations | params, sigs, atomic                    | bool    | Transfer (indirect)       | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| nonces                             | owner                                   | nonce   | N/A                       | N    |                                  |
+| permit                             | owner, spender, value, deadline, n, sig | N/A     | Approval (indirect)       | Y    |                                  |
+| ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
+| version                            | N/A                                     | version | N/A                       | N    |                                  |
 
 ### Events
 
-| Event                | Args                        | FlowFT mapping |
-| --:                  | ---:                        | ---:           |
-| Transfer             | from, to, value             |                |
-| Approval             | owner, spender, value       |                |
-| ---                  | ---                         | ---            |
-| Mint                 | minter, to, amount          |                |
-| Burn                 | minter, amount              |                |
-| MinterConfigured     | minter, minterAllowedAmount |                |
-| MinterRemoved        | oldMinter                   |                |
-| MasterMinterChanged  | newMasterMinter             |                |
-| ---                  | ---                         |                |
-| Blacklisted          | account                     |                |
-| UnBlacklisted        | account                     |                |
-| BlacklisterChanged   | newBlacklister              |                |
-| ---                  | ---                         | ---            |
-| Pause                | N/A                         |                |
-| Unpause              | N/A                         |                |
-| PauserChanged        | newPauser                   |                |
-| ---                  | ---                         | ---            |
-| OwnershipTransferred | owner, newOwner             |                |
-| ---                  | ---                         | ---            |
-| RescuerChanged       | newRescuer                  |                |
-| ---                  | ---                         | ---            |
-| AuthorizationUsed    | authorizer, nonce           |                |
-| AuthorizationCanceled| authorizer, nonce           |                |
+| Event                 | Args                        | FlowFT mapping   |
+| --:                   | ---:                        | ---:             |
+| Transfer              | from, to, value             |                  |
+| Approval              | owner, spender, value       |                  |
+| ---                   | ---                         | ---              |
+| Mint                  | minter, to, amount          | Mint             |
+| Burn                  | minter, amount              | Burn             |
+| MinterConfigured      | minter, minterAllowedAmount | MinterConfigured |
+| MinterRemoved         | oldMinter                   | MinterRemoved    |
+| MasterMinterChanged   | newMasterMinter             |                  |
+| ---                   | ---                         |                  |
+| Blacklisted           | account                     | Blocklisted      |
+| UnBlacklisted         | account                     | UnBlacklisted    |
+| BlacklisterChanged    | newBlacklister              |                  |
+| ---                   | ---                         | ---              |
+| Pause                 | N/A                         | Pause            |
+| Unpause               | N/A                         | UnPause          |
+| PauserChanged         | newPauser                   |                  |
+| ---                   | ---                         | ---              |
+| OwnershipTransferred  | owner, newOwner             |                  |
+| ---                   | ---                         | ---              |
+| AuthorizationUsed     | authorizer, nonce           |                  |
+| AuthorizationCanceled | authorizer, nonce           |                  |
 
 ## Minting in USDC Details
 
@@ -146,15 +139,15 @@ owner --|--- controller_2 ---|
 The MasterMinter contract inherits MintController, which in turn inherits Controller.
 `mintManager` is just the FiatToken contract (since it impl `MinterManagerInterfaces`).
 
-| Interface                | Arg(s)             | Return | Event(s)                   | TX?  | FlowFT mapping |
-| --:                      | ---:               | ---:   | ---:                       | ---: | ---:          |
-| configureController      | controller, minter | N/A    | ControllerConfigured       | Y    |       |
-| removeController         | controller         | N/A    | ControllerRemoved          | Y    |       |
-| setMinterManager         | mintManager        | N/A    | MintManagerSet             | Y    |       |
-| configureMinter*         | allowance          | bool   | MinterConfigured           | Y    |       |
-| incrementMinterAllowance | allowanceIncrement | bool   | MinterAllowanceIncremented | Y    |       |
-| decrementMinterAllowance | allowanceDecrement | bool   | MinterAllowanceDecremented | Y    |       |
-| removeMinter             | N/A                | bool   | MinterRemoved              | Y    |       |
+| Interface                | Arg(s)             | Return | Event(s)                   | TX?  | FlowFT mapping                            |
+| --:                      | ---:               | ---:   | ---:                       | ---: | ---:                                      |
+| configureController      | controller, minter | N/A    | ControllerConfigured       | Y    | MasterMinter.newMinter                    |
+| removeController         | controller         | N/A    | ControllerRemoved          | Y    | MasterMinter.removeController             |
+| configureMinter*         | allowance          | bool   | MinterConfigured           | Y    | MinterController.configureMinter          |
+| incrementMinterAllowance | allowanceIncrement | bool   | MinterAllowanceIncremented | Y    | MinterController.incrementMinterAllowance |
+| decrementMinterAllowance | allowanceDecrement | bool   | MinterAllowanceDecremented | Y    | MinterController.decrementMinterAllowance |
+| removeMinter             | N/A                | bool   | MinterRemoved              | Y    | MinterController.removeMinter             |
+| setMinterManager         | mintManager        | N/A    | MintManagerSet             | Y    | N/A                                       |
 
 `*`: these are called by controller on the MasterMinter, who will call the main fiat token contract.
 Hence might seem duplicate of the main token contract interfaces (minus minter functions since 1 minter per controller)

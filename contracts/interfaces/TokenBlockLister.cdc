@@ -1,16 +1,16 @@
 pub contract interface TokenBlockLister{ 
     
-    // event when Account Blocked 
-    pub event Blocked(account: Address);
+    // event when resource is Blocked 
+    pub event Blocklisted(resourceId: UInt64);
 
-    // event when Account Unblocked 
-    pub event Unblocked(account: Address);
+    // event when resource is Unblocked 
+    pub event Unblocklisted (resourceId: UInt64);
 
     pub resource interface UpdateBlockList {
-        // set paused = true; 
-        pub fun Blocked(account: Address);
+        // add to blocklist 
+        pub fun blocklist(resourceId: UInt64);
         
-        // set paused = false; 
-        pub fun Unblocked(account: Address);
+        // remove from blocklist
+        pub fun unblocklist(resourceId: UInt64);
     }
 }
