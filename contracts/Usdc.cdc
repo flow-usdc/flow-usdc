@@ -1,73 +1,79 @@
 import FungibleToken from "./FungibleToken.cdc"
 import TokenPauser from "./interfaces/TokenPauser.cdc"
-import TokenBlockLister from "./interfaces/TokenBlockedLister.cdc"
+import TokenBlockLister from "./interfaces/TokenBlockLister.cdc"
 
 pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
 
     /// Total supply of usdc in existence
     pub var totalSupply: UFix64;
-    
-    // Pause Interfaces 
+
+    // Pause state and events 
     pub var paused: Bool;
     pub event Paused();
     pub event Unpaused();
-
-    // Blocklist Interfaces
-    pub event Blocked(account: Address);
-    pub event Unblocked(account: Address);
-
-    // Minters Allowance 
-    // Not sure if we revoke minting Capability after certain allowance?
-    pub var mintersAllowance: { Address: UFix64 };
-
-    /// TokensInitialized
-    ///
-    /// The event that is emitted when the contract is created
-    pub event TokensInitialized(initialSupply: UFix64)
-
-    /// TokensWithdrawn
-    ///
-    /// The event that is emitted when tokens are withdrawn from a Vault
-    pub event TokensWithdrawn(amount: UFix64, from: Address?)
-
-    /// TokensDeposited
-    ///
-    /// The event that is emitted when tokens are deposited to a Vault
-    pub event TokensDeposited(amount: UFix64, to: Address?)
-
-    /// TokensMinted
-    ///
-    /// The event that is emitted when new tokens are minted
-    pub event TokensMinted(amount: UFix64)
-
-    /// TokensBurned
-    ///
-    /// The event that is emitted when tokens are destroyed
-    pub event TokensBurned(amount: UFix64)
-
-    /// MinterCreated
-    ///
-    /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64)
-
     /// PauserCreated 
     ///
     /// The event that is emitted when a new minter resource is created
     pub event PauserCreated(allowedAmount: UFix64)
 
-    /// BurnerCreated
-    ///
-    /// The event that is emitted when a new burner resource is created
-    pub event BurnerCreated()
-
+    // Blocklist state and events 
+    pub var blocklist: {UInt64: Bool}
+    pub event Blocklisted(resourceId: UInt64);
+    pub event Unblocklisted(resourceId: UInt64);
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new minter resource is created
     pub event BlocklisterCreated()
 
+    /// Dict of all minters and their allowances
+    pub var minterAllowances: { UInt64: UFix64};
+    /// Dict of all minters and their deadlines
+    pub var minterDeadlines: { UInt64: UInt64};
+    /// Dict of all minters and their restricted vault reciever
+    pub var minterRecievers: { UInt64: UInt64};
+
+    /// MinterCreated
+    ///
+    /// The event that is emitted when a new minter resource is created
+    pub event MinterCreated(allowedAmount: UFix64);
+    pub event MinterControllerCreated();
+    /// Mint
+    ///
+    /// The event that is emitted when new tokens are minted
+    pub event Mint(minter: UInt64, Amount: UFix64);
+    /// Burn
+    ///
+    /// The event that is emitted when tokens are burnt by minter
+    pub event Burn(minter: UInt64, Amount: UFix64);
+    pub event MinterConfigured(minter: UInt64);
+    pub event MinterRemoved(minter: UInt64);
+    pub event MinterAllowanceIncreased(minter: UInt64, newAllowance: UFix64);
+    pub event MinterAllowanceDecreased(minter: UInt64, newAllowance: UFix64);
+    pub event ControllerConfigured(controller: UInt64, minter: UInt64);
+    pub event ControllerRemoved(contorller: UInt64);
+    
+   /// TokensInitialized
+    ///
+    /// The event that is emitted when the contract is created
+    ///
+    pub event TokensInitialized(initialSupply: UFix64)
+
+    /// TokensWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a Vault
+    ///
+    pub event TokensWithdrawn(amount: UFix64, from: Address?)
+
+    /// TokensDeposited
+    ///
+    /// The event that is emitted when tokens are deposited into a Vault
+    ///
+    pub event TokensDeposited(amount: UFix64, to: Address?)
+ 
     // ============ USDC Resources: ==============
     // 
     // 
+    
     pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
         /// The total balance of this vault
@@ -79,86 +85,159 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         }
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
-            self.balance = self.balance - amount
-            emit TokensWithdrawn(amount: amount, from: self.owner?.address)
-            return <-create Vault(balance: amount)
+            // todo check blocklist and pause state
+            // if (Blocklist[self.id]){
+            //     self.balance = self.balance - amount
+            //         emit TokensWithdrawn(amount: amount, from: self.owner?.address)
+            //         return <-create Vault(balance: amount)
+            // } else {
+            //     return Error
+            // }
+             return <-create Vault(balance: 0.0);
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
-            let vault <- from as! @USDC.Vault
-            self.balance = self.balance + vault.balance
-            emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
-            vault.balance = 0.0
-            destroy vault
+            // todo check blocklist and pause state 
+            // let vault <- from as! @USDC.Vault
+            // self.balance = self.balance + vault.balance
+            // emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
+            // vault.balance = 0.0
+            destroy from 
         }
 
         destroy() {
             USDC.totalSupply = USDC.totalSupply - self.balance
         }
     }
+    
+    
 
-    pub resource MasterMinter {
+    pub resource Owner {
 
-        // TO DISCUSS:
-        // Perhaps the MasterMinter creates all the below
-        // then link / unlink capability for each resource 
-
-        pub fun createNewBurner(): @Burner {
-            emit BurnerCreated()
-            return <-create Burner()
+        pub fun createNewPauserExecutor(): @PauseExecutor{
+            // todo set cap
+            return <-create PauseExecutor()
         }
 
-        pub fun createNewBlockLister(): @BlockedLister{
-            emit BurnerCreated()
-            return <-create BlockedLister()
+        pub fun createNewBlockListerExecutor(): @BlockListExecutor{
+            // todo set cap
+            return <-create BlockListExecutor()
         }
 
-        pub fun createNewPauser(): @Pauser{
-            emit PauserCreated()
-            return <-create Pauser()
+        pub fun createNewMasterMinter(): @MasterMinter{
+            // todo set cap
+            return <-create MasterMinter()
         }
 
-        // TODO: does masterminter also creates minter? 
-        pub fun createNewMinterController(): @MinterController{
-            emit MinterCreated()
-            return <-create MinterController()
-        }
+
     }
 
-    pub resource MinterController {
-        // TODO make sure it can only control 1 minter
-        // Similar to controller in solidity impl
-
+    pub resource MasterMinter {
+        /// createNewMinterController
+        ///  
+        /// Allows MinterController to create, configure and remove Minter
+        /// To be used when the Minter is created
+        access(self) fun createNewMinterController(minter: UInt64): @MinterController{
+            emit MinterControllerCreated()
+            // todo set Minter for this controller cap
+            return <-create MinterController(managedMinter: minter)
+        }
+     
         /// Function that creates and returns a new minter resource
-        pub fun createNewMinter(allowedAmount: UFix64): @Minter {
+        pub fun createNewMinter(allowance: UFix64): @Minter {
+            // can only create 1
             // update minterAllowance 
             return <- create Minter();
         }
+        
+        /// removeMinterController
+        /// 
+        /// Function to remove MinterController
+        /// This should remove the capability from the MasterMinter
+        pub fun removeMinterController(minter: UInt64){
+            // todo
+        }
+    }
+
+    /// This is a resource to manage minters, delegated from MasterMinter
+    pub resource MinterController {
+
+        /// The resourceId this MinterController manages
+        pub var managedMinter: UInt64;
 
         /// configureMinter 
         ///
-        /// Function that updates existing minter allowance 
-        /// How to revoke access automatically when all minted?
-        pub fun configureMinterAllowance(newAllowedAmount: UFix64) {
+        /// Function that updates existing minter restrictions 
+        pub fun configureMinter(allowance: UFix64) {
+            // todo, time, destination vault
+        }
+        
+        pub fun incrementMinterAllowance(amount: UFix64) {
+            // todo
         }
 
+        pub fun decrementMinterAllowance(amount: UFix64) {
+            // todo
+        }
+        
+        /// removeMinter
+        /// 
+        /// Function to remove minter
+        pub fun removeMinter(minter: UInt64){
+            // todo
+        }
+        
+        init(managedMinter: UInt64) {
+            self.managedMinter = managedMinter;
+         }
+    }
+
+    pub resource Minter {
+        // todo: check allowance
+        pub fun mint(amount: UFix64): @FungibleToken.Vault {
+            return <-create Vault(balance: amount);
+        }
+        pub fun burn(vault: @Vault) {
+            //todo
+            destroy vault;
+        }
+    }
+
+    pub resource BlockListExecutor: TokenBlockLister.UpdateBlockList {
+        pub fun blocklist(resourceId: UInt64){
+            // todo
+        };
+        pub fun unblocklist(resourceId: UInt64){
+            // todo
+        };
     }
 
     pub resource BlockedLister: TokenBlockLister.UpdateBlockList {
-        pub fun block(account: Address){// TODO};
-        pub fun unblock(account: Address){// TODO};
+        access(self) var blocklistcap: Capability<&BlockListExecutor>;
+        pub fun blocklist(resourceId: UInt64){
+            // todo
+        };
+        pub fun unblocklist(resourceId: UInt64){
+            // todo
+        };
+        
+        pub fun setCapability(blocklistcap: Capability<&BlockListExecutor>){
+            self.blocklistcap = blocklistcap;
+        }
+        
+        init(blocklistcap: Capability<&BlockListExecutor>) {
+           self.blocklistcap = blocklistcap;
+        }
     }
 
     pub resource PauseExecutor: TokenPauser.Execute {
         // Note: this only sets the state of the pause of the contract
-        // 
-        // In order to pause transactions, each Vault will have to have their capabilities removed?
         pub fun pause() { 
-            self.paused = true;
+            USDC.paused = true;
             emit Paused();
          }
         pub fun unpause() { 
-            self.paused = false;
+            USDC.paused = false;
             emit Unpaused();
          }
     }
@@ -166,7 +245,7 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
     pub resource Pauser {
         // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
         // MasterMinter will call setPauseCapability to provide it.
-        access(self) var pauseCapability:  Capbility<&PauseExecutor>;
+        access(self) var pauseCap:  Capability<&PauseExecutor>;
         
         // Called by the Account that owns PauseExecutor
         // (since they are the only account that can create such Capability as input arg)
@@ -174,55 +253,27 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         // 
         // The Account that owns PauseExecutor will be set in init() of the contract
         // and will probably be the MasterMinter/Admin
-        pub setPauseCapability(pauseCap: Capability<&PauseExecutor>) {
-            self.pauseCapbility = pauseCap;
+        pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) {
+            self.pauseCap = pauseCap;
         }
 
         // Pauser can borrow the pauseCapability, if it exists, and pause and unpause the contract
-        pub pause(){
-            let cap = self.pauseCapbility.borrow()!
+        pub fun pause(){
+            let cap = self.pauseCap.borrow()!
             cap.pause();
         } 
         
-        pub unpause(){
-            let cap = self.pauseCapbility.borrow()!
+        pub fun unpause(){
+            let cap = self.pauseCap.borrow()!
             cap.unpause();
-        } 
+        }
 
-    }
-
-    pub resource Minter {
-        // check allowance
-        pub fun mintTokens(amount: UFix64): @FungibleToken.Vault {
-            // do we create these for others to store
-            // or keep and and only link capability and check address?
-            return <-create Vault(balance: amount);
+        init(pauseCap: Capability<&PauseExecutor>) {
+            self.pauseCap = pauseCap;
         }
     }
 
-    pub resource Burner {
-        /// burnTokens
-        ///
-        /// Function that destroys a Vault instance, effectively burning the tokens.
-        ///
-        /// Note: the burned tokens are automatically subtracted from the
-        /// total supply in the Vault destructor.
-        ///
-        // BELOW has not been changed  
-        pub fun burnTokens(from: @FungibleToken.Vault) {
-            let vault <- from as! @USDC.Vault
-            let amount = vault.balance
-            destroy vault
-            emit TokensBurned(amount: amount)
-        }
-    }
-    
     // ============ USDC METHODS: ==============
-    // 
-    // 
-    pub fun createNewMasterMinter(): @MasterMinter{
-        return <-create MasterMinter()
-    }
 
     /// createEmptyVault
     ///
@@ -235,39 +286,42 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         return <-create Vault(balance: 0.0)
     }
 
-    init() {
-        self.totalSupply = 1000.0
+    init(){
         self.paused = true;
-        self.blockedlist = {};
-        self.mintersAllowance = {};
+        self.blocklist = {};
+        self.totalSupply = 10000.0;
+        self.minterAllowances = {};
+        self.minterDeadlines = {};
+        self.minterRecievers = {};
 
         // Create the Vault with the total supply of tokens and save it in storage
         //
-        // let vault <- create Vault(balance: self.totalSupply)
-        // self.account.save(<-vault, to: /storage/exampleTokenVault)
+        let vault <- create Vault(balance: self.totalSupply)
+        self.account.save(<-vault, to: /storage/UsdcInitVault)
 
         // Create a public capability to the stored Vault that only exposes
         // the `deposit` method through the `Receiver` interface
         //
-        // self.account.link<&{FungibleToken.Receiver}>(
-        //     /public/exampleTokenReceiver,
-        //     target: /storage/exampleTokenVault
-        // )
+        self.account.link<&USDC.Vault{FungibleToken.Receiver}>(
+            /public/UsdcInitVaultReceiver,
+            target: /storage/UsdcInitVault
+        )
 
         // Create a public capability to the stored Vault that only exposes
         // the `balance` field through the `Balance` interface
         //
-        // self.account.link<&ExampleToken.Vault{FungibleToken.Balance}>(
-        //     /public/exampleTokenBalance,
-        //     target: /storage/exampleTokenVault
-        // )
+        self.account.link<&USDC.Vault{FungibleToken.Balance}>(
+            /public/UsdcInitVaultBalance,
+            target: /storage/UsdcInitVault
+        )
 
-        // let admin <- create Administrator()
-        // self.account.save(<-admin, to: /storage/exampleTokenAdmin)
+        let owner <- create Owner()
+        self.account.save(<-owner, to: /storage/UsdcOwner);
+
 
         // Emit an event that shows that the contract was initialized
         //
-        emit TokensInitialized(initialSupply: self.totalSupply)
-    }
-}
+        emit TokensInitialized(initialSupply: self.totalSupply)       
 
+    }
+} 
