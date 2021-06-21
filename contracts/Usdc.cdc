@@ -1,8 +1,6 @@
 import FungibleToken from "./FungibleToken.cdc"
-import TokenPauser from "./interfaces/TokenPauser.cdc"
-import TokenBlockLister from "./interfaces/TokenBlockLister.cdc"
 
-pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
+pub contract USDC: FungibleToken {
 
     /// Total supply of usdc in existence
     pub var totalSupply: UFix64;
@@ -203,7 +201,7 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         }
     }
 
-    pub resource BlockListExecutor: TokenBlockLister.UpdateBlockList {
+    pub resource BlockListExecutor {
         pub fun blocklist(resourceId: UInt64){
             // todo
         };
@@ -212,7 +210,7 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         };
     }
 
-    pub resource BlockedLister: TokenBlockLister.UpdateBlockList {
+    pub resource BlockedLister {
         access(self) var blocklistcap: Capability<&BlockListExecutor>;
         pub fun blocklist(resourceId: UInt64){
             // todo
@@ -230,7 +228,7 @@ pub contract USDC: FungibleToken, TokenPauser, TokenBlockLister {
         }
     }
 
-    pub resource PauseExecutor: TokenPauser.Execute {
+    pub resource PauseExecutor {
         // Note: this only sets the state of the pause of the contract
         pub fun pause() { 
             USDC.paused = true;
