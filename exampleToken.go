@@ -1,71 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
-	"os"
-	"text/template"
-	"time"
+	"log"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/onflow/flow-go-sdk/crypto"
 )
 
-type Addresses struct {
-	FungibleToken string
-	ExampleToken  string
-}
-
-func ParseCadenceTemplate(templatePath string) []byte {
-	fb, err := ioutil.ReadFile(templatePath)
-	if err != nil {
-		panic(err)
-	}
-
-	tmpl, err := template.New("Template").Parse(string(fb))
-	if err != nil {
-		panic(err)
-	}
-
-	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, addresses)
-	if err != nil {
-		panic(err)
-	}
-
-	return buf.Bytes()
-}
-
-func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (result *flow.TransactionResult, err error) {
-	result, err = c.GetTransactionResult(ctx, id)
-	if err != nil {
-		return
-	}
-
-	if result.Error != nil {
-		err = result.Error
-		return
-	}
-
-	for result.Status != flow.TransactionStatusSealed {
-		time.Sleep(time.Second)
-		result, err = c.GetTransactionResult(ctx, id)
-
-		if err != nil {
-			return
-		}
-
-		if result.Error != nil {
-			err = result.Error
-			return
-		}
-	}
-
-	return result, nil
-}
-<<<<<<< HEAD:test/main.go
 
 // TODO: Better sk handling here
 func AddVaultToAccount(
@@ -74,7 +18,7 @@ func AddVaultToAccount(
 	address string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/setup_account.cdc")
+	txScript := ParseCadenceTemplate("./transactions/setup_account.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
@@ -122,7 +66,7 @@ func AddVaultToAccount(
 }
 
 func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
-	script := ParseCadenceTemplate("../contracts/scripts/get_supply.cdc")
+	script := ParseCadenceTemplate("./contracts/scripts/get_supply.cdc")
 	log.Println(string(script))
 
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
@@ -132,7 +76,7 @@ func GetSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, 
 }
 
 func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
-	script := ParseCadenceTemplate("../contracts/scripts/get_balance.cdc")
+	script := ParseCadenceTemplate("./contracts/scripts/get_balance.cdc")
 
 	flowAddress := flow.HexToAddress(address)
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
@@ -154,7 +98,7 @@ func TransferTokens(
 	toAddress string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/transfer_tokens.cdc")
+	txScript := ParseCadenceTemplate("./transactions/transfer_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -217,7 +161,7 @@ func MintTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/mint_tokens.cdc")
+	txScript := ParseCadenceTemplate("./transactions/mint_tokens.cdc")
 
 	address := flow.HexToAddress(mintingAccountAddress)
 	mintingAccount, err := flowClient.GetAccount(ctx, address)
@@ -281,7 +225,7 @@ func BurnTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/burn_tokens.cdc")
+	txScript := ParseCadenceTemplate("./transactions/burn_tokens.cdc")
 
 	address := flow.HexToAddress(burningAccountAddress)
 	burningAccount, err := flowClient.GetAccount(ctx, address)
@@ -341,7 +285,7 @@ func CreateAdmin(
 	skOld string,
 	skNew string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/create_admin.cdc")
+	txScript := ParseCadenceTemplate("./transactions/create_admin.cdc")
 
 	oldPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skOld)
 	if err != nil {
@@ -406,5 +350,3 @@ func CreateAdmin(
 
 	return result, err
 }
-=======
->>>>>>> 3573389 (chore: moving current tests to exampleToken files):main.go
