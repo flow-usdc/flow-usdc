@@ -1,7 +1,10 @@
 # USD Coin (USDC), on Flow _(flow-usdc)_
+
 > A `FungibleToken`-compatible fiat coin on Flow, with additional support for pausing and blocklisting.
 
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-rightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+<!-- markdownlint-configure-file { "MD013": { "line_length": 100 } } -->
+
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-lightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![Tests](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests.yml)
 [![Static Analysis](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml)
 
@@ -32,14 +35,14 @@ For more information, please see the [Requirements doc](./doc/requirements.md).
 ## Table of Contents
 
 * [Install](#install)
-  + [Prerequisites](#prerequisites)
-  + [Installing `flow-usdc`](#installing-flow-usdc)
+  * [Prerequisites](#prerequisites)
+  * [Installing `flow-usdc`](#installing-flow-usdc)
 * [Usage](#usage)
-  + [On Testnet](#on-testnet)
-  + [Environment Variables](#environment-variables)
-  + [Testing Script](#testing-script)
+  * [On Testnet](#on-testnet)
+  * [Environment Variables](#environment-variables)
+  * [Testing Script](#testing-script)
 * [Contributing](#contributing)
-  + [Repo Layout](#repo-layout)
+  * [Repo Layout](#repo-layout)
 * [License](#license)
 
 ## Install
@@ -53,8 +56,8 @@ section.
 
 To run and test the code in this repo, it's required that you install:
 
-- The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
-- The [Go](https://golang.org/doc/install) programming language, to run the automated tests
+* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
+* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
 
 ### Installing `flow-usdc`
 
@@ -104,11 +107,10 @@ To generate the necessary values, choose a 32 byte seed (can use a random hex st
 pass it to the `flow keygen` tool:
 
 ```bash
-NETWORK="emulator" # or "testnet"
 SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random) # Non-safe but usable random numbers
 TOKEN_ACCOUNT_KEYS=$(flow keys generate --seed="$SEED" -o inline --filter=Private)
 TOKEN_ACCOUNT_PK=$(flow keys generate --seed="$SEED" -o inline --filter=Private)
-TOKEN_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$TOKEN_ACCOUNT_PK" -o inline --filter=Address)
+TOKEN_ACCOUNT_ADDRESS=$(flow accounts create --key="$TOKEN_ACCOUNT_PK" -o inline --filter=Address)
 ```
 
 You can see this in action in our testing script, described in the next section.
@@ -131,11 +133,11 @@ Issues and PRs accepted. Over time more details will be added here.
 
 ### Repo Layout
 
-- `contracts` - contains all of the contracts and the scripts required to interact with them
-- `env.example` - example file to be populated with values and copied to `.env`
-- `flow.json` - configuration file for the `flow` CLI tool.
-- `test` - Test code in Golang.
-- `transactions` - contains examples of transactions one can perform with the contract
+* `contracts` - contains all of the contracts and the scripts required to interact with them
+* `env.example` - example file to be populated with values and copied to `.env`
+* `flow.json` - configuration file for the `flow` CLI tool.
+* `test` - Test code in Golang.
+* `transactions` - contains examples of transactions one can perform with the contract
 
 ## License
 
