@@ -154,14 +154,14 @@ Hence might seem duplicate of the main token contract interfaces (minus minter f
 
 ### Master Minter Events
 
-| Event                      | Args                                 | FlowFT mapping |
-| --:                        | ---:                                 | ---:           |
-| ControllerConfigured       | controller, worker                   |           |
-| ControllerRemoved          | controller                           |           |
-| MinterConfigured           | controller, minter, newAllowance     |           |
-| MinterAllowanceIncremented | controller, minter inc, newAllowance |           |
-| MinterAllowanceDecremented | controller, minter dec, newAllowance |           |
-| MinterRemoved              | controller, minter                   |           |
+| Event                      | Args                                 | FlowFT mapping             |
+| --:                        | ---:                                 | ---:                       |
+| ControllerConfigured       | controller, worker                   | ControllerConfigured       |
+| ControllerRemoved          | controller                           | ControllerRemoved          |
+| MinterConfigured           | controller, minter, newAllowance     | MinterConfigured           |
+| MinterAllowanceIncremented | controller, minter inc, newAllowance | MinterAllowanceIncremented |
+| MinterAllowanceDecremented | controller, minter dec, newAllowance | MinterAllowanceDecremented |
+| MinterRemoved              | controller, minter                   | MinterRemoved              |
 
 #### TODOS
 
