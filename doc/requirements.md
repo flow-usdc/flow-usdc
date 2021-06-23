@@ -1,5 +1,7 @@
 # Requirements
 
+<!-- markdownlint-configure-file { "MD013": { "line_length": 200} } -->
+
 This documents the requirements for implementing USDC on Flow with Cadence.
 Specifically, the implementation must be compatible with both the [Flow Fungible Token Standard] and the [Centre Tokens] and by extension [ERC20].
 Compatible means interfaces, events and functionality have to be compatible.
@@ -167,11 +169,13 @@ Hence might seem duplicate of the main token contract interfaces (minus minter f
 
 - [x] IERC20 non-optional only
 
-- [x] contracts/minting
-    - [x] controller
-    - [x] masterminter
-    - [x] Mintercontroller
-    - [x] mintermanagementInterface
+*contracts/minting:*
+
+- [x] controller
+- [x] masterminter
+- [x] Mintercontroller
+- [x] mintermanagementInterface
+
 - [x] V1
 - [x] V1.1
 - [x] V2 - minus migration & lostandfound
