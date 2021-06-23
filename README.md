@@ -134,7 +134,7 @@ Issues and PRs accepted. Over time more details will be added here.
 ### Repo Layout
 
 * `contracts` - contains all of the contracts and the scripts required to interact with them
-* `env.example` - example file to be populated with values and copied to `.env`
+* `env.example` - example file to be populated with values and copied to `./test/.env`
 * `flow.json` - configuration file for the `flow` CLI tool.
 * `test` - Test code in Golang.
 * `transactions` - contains examples of transactions one can perform with the contract
