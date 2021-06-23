@@ -1,6 +1,7 @@
 import FungibleToken from "./FungibleToken.cdc"
+import USDCInterface from "./USDCInterface.cdc"
 
-pub contract USDC: FungibleToken {
+pub contract USDC: USDCInterface, FungibleToken {
 
     // ===== Pause state and events =====
     
@@ -176,7 +177,7 @@ pub contract USDC: FungibleToken {
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
     /// The master minter creates minter controller resources to delegate control for minters
-    pub resource MasterMinter {
+    pub resource MasterMinter: USDCInterface.MasterMinter {
 
         /// Allows MinterController to create, configure and remove Minter
         /// To be used when the Minter is created
@@ -193,16 +194,22 @@ pub contract USDC: FungibleToken {
             // update minterAllowance 
             return <- create Minter();
         }
+
+        /// Function to configure MinterController
+        /// This should configure the minter for the controller 
+        pub fun configureMinterController(minter: UInt64, mintController: UInt64) {
+            // todo
+        }
         
         /// Function to remove MinterController
         /// This should remove the capability from the MasterMinter
-        pub fun removeMinterController(minter: UInt64){
+        pub fun removeMinterController(minterController: UInt64){
             // todo
         }
     }
 
     /// This is a resource to manage minters, delegated from MasterMinter
-    pub resource MinterController {
+    pub resource MinterController: USDCInterface.MinterController {
 
         /// The resourceId this MinterController manages
         pub var managedMinter: UInt64;
@@ -232,17 +239,20 @@ pub contract USDC: FungibleToken {
         init(managedMinter: UInt64) {
             self.managedMinter = managedMinter;
          }
+
+        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64) {
+        }
     }
 
     /// The actual minter resource, the resourceId must be added to the minter restrictions lists
     /// for minter to successfully mint / burn within restrictions
-    pub resource Minter {
+    pub resource Minter: USDCInterface.Minter {
         // todo: check allowance
         // todo: check block
-        pub fun mint(amount: UFix64): @FungibleToken.Vault {
+        pub fun mint(amount: UFix64): @FungibleToken.Vault{
             return <-create Vault(balance: amount);
         }
-        pub fun burn(vault: @Vault) {
+        pub fun burn(vault: @FungibleToken.Vault) {
             //todo
             destroy vault;
         }
@@ -250,7 +260,7 @@ pub contract USDC: FungibleToken {
 
     /// The blocklist execution resource, account with this resource must share / unlink its capability
     /// with BlockLister to managed permission for block
-    pub resource BlockListExecutor {
+    pub resource BlockListExecutor: USDCInterface.BlockLister{
         pub fun blocklist(resourceId: UInt64){
             // todo
         };
@@ -280,7 +290,7 @@ pub contract USDC: FungibleToken {
 
     /// The pause execution resource, account with this resource must share / unlink its capability
     /// with Pauser to managed permission for block
-    pub resource PauseExecutor {
+    pub resource PauseExecutor: USDCInterface.Pauser {
         // Note: this only sets the state of the pause of the contract
         pub fun pause() { 
             USDC.paused = true;
