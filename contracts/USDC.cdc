@@ -2,38 +2,62 @@ import FungibleToken from "./FungibleToken.cdc"
 
 pub contract USDC: FungibleToken {
 
-    /// Total supply of usdc in existence
-    pub var totalSupply: UFix64;
-
-    // Pause state and events 
+    // ===== Pause state and events =====
+    
+    /// Contract is paused if `paused` is `true`
+    /// All transactions must check this value
+    /// No transaction, apart from unpaused, can occur when paused
     pub var paused: Bool;
+    /// Paused
+    ///
+    /// The event that is emitted when the contract is set to be paused 
     pub event Paused();
+    /// Unpaused
+    ///
+    /// The event that is emitted when the contract is set from paused to unpaused 
     pub event Unpaused();
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
     pub event PauserCreated(allowedAmount: UFix64)
 
-    // Blocklist state and events 
+    // ===== Blocklist state and events =====
+
+    /// Dict of all blocklisted
+    /// This is managed by the blocklister
+    /// Resources such as Vaults and Minters can be blocked
     pub var blocklist: {UInt64: Bool}
+    /// Blocklisted
+    ///
+    /// The event that is emitted when new resource has been blocklisted 
     pub event Blocklisted(resourceId: UInt64);
+    /// Unblocklisted
+    ///
+    /// The event that is emitted when new resource has been unblocklisted 
     pub event Unblocklisted(resourceId: UInt64);
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
     pub event BlocklisterCreated()
 
+
+    // ===== Minting states and events =====
+
+    /// Minting restrictions include allowance, deadline, vault reciever
     /// Dict of all minters and their allowances
     pub var minterAllowances: { UInt64: UFix64};
-    /// Dict of all minters and their deadlines
+    /// Dict of all minters and their deadlines in terms of block height 
     pub var minterDeadlines: { UInt64: UInt64};
     /// Dict of all minters and their restricted vault reciever
     pub var minterRecievers: { UInt64: UInt64};
-
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
     pub event MinterCreated(allowedAmount: UFix64);
+    /// MinterControllerCreated
+    ///
+    /// The event that is emitted when a new minter controller resource is created
+    /// A minter controller manages the restrictions of exactly 1 minter.
     pub event MinterControllerCreated();
     /// Mint
     ///
@@ -43,34 +67,52 @@ pub contract USDC: FungibleToken {
     ///
     /// The event that is emitted when tokens are burnt by minter
     pub event Burn(minter: UInt64, Amount: UFix64);
+    /// MinterConfigured 
+    ///
+    /// The event that is emitted when minter controller has configured a minter's restrictions 
     pub event MinterConfigured(minter: UInt64);
+    /// MinterRemoved
+    ///
+    /// The event that is emitted when minter controller has removed the minter 
     pub event MinterRemoved(minter: UInt64);
+    /// MinterAllowanceIncreased
+    ///
+    /// The event that is emitted when minter controller has increase the minter's allowance
     pub event MinterAllowanceIncreased(minter: UInt64, newAllowance: UFix64);
+    /// MinterAllowanceDecreased
+    ///
+    /// The event that is emitted when minter controller has decrease the minter's allowance
     pub event MinterAllowanceDecreased(minter: UInt64, newAllowance: UFix64);
+    /// ControllerConfigured
+    ///
+    /// The event that is emitted when master minter has set the mint controller's minter 
     pub event ControllerConfigured(controller: UInt64, minter: UInt64);
+    /// ControllerRemoved
+    ///
+    /// The event that is emitted when master minter has removed the mint controller 
     pub event ControllerRemoved(contorller: UInt64);
     
-   /// TokensInitialized
+    // ===== Fungible Token state and events =====
+
+    /// Total supply of usdc in existence
+    pub var totalSupply: UFix64;
+
+    /// TokensInitialized
     ///
     /// The event that is emitted when the contract is created
-    ///
     pub event TokensInitialized(initialSupply: UFix64)
 
     /// TokensWithdrawn
     ///
     /// The event that is emitted when tokens are withdrawn from a Vault
-    ///
     pub event TokensWithdrawn(amount: UFix64, from: Address?)
 
     /// TokensDeposited
     ///
     /// The event that is emitted when tokens are deposited into a Vault
-    ///
     pub event TokensDeposited(amount: UFix64, to: Address?)
  
-    // ============ USDC Resources: ==============
-    // 
-    // 
+    // ===== USDC Resources: =====
     
     pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
@@ -110,6 +152,9 @@ pub contract USDC: FungibleToken {
     
     
 
+    /// The owner is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
+    ///
+    /// Owner can assign all roles
     pub resource Owner {
 
         pub fun createNewPauserExecutor(): @PauseExecutor{
@@ -126,13 +171,13 @@ pub contract USDC: FungibleToken {
             // todo set cap
             return <-create MasterMinter()
         }
-
-
     }
 
+    /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
+    ///
+    /// The master minter creates minter controller resources to delegate control for minters
     pub resource MasterMinter {
-        /// createNewMinterController
-        ///  
+
         /// Allows MinterController to create, configure and remove Minter
         /// To be used when the Minter is created
         access(self) fun createNewMinterController(minter: UInt64): @MinterController{
@@ -142,14 +187,13 @@ pub contract USDC: FungibleToken {
         }
      
         /// Function that creates and returns a new minter resource
+        /// The controller should be set here too
         pub fun createNewMinter(allowance: UFix64): @Minter {
             // can only create 1
             // update minterAllowance 
             return <- create Minter();
         }
         
-        /// removeMinterController
-        /// 
         /// Function to remove MinterController
         /// This should remove the capability from the MasterMinter
         pub fun removeMinterController(minter: UInt64){
@@ -165,7 +209,7 @@ pub contract USDC: FungibleToken {
 
         /// configureMinter 
         ///
-        /// Function that updates existing minter restrictions 
+        /// Function that updates existing minter restrictions
         pub fun configureMinter(allowance: UFix64) {
             // todo, time, destination vault
         }
@@ -190,8 +234,11 @@ pub contract USDC: FungibleToken {
          }
     }
 
+    /// The actual minter resource, the resourceId must be added to the minter restrictions lists
+    /// for minter to successfully mint / burn within restrictions
     pub resource Minter {
         // todo: check allowance
+        // todo: check block
         pub fun mint(amount: UFix64): @FungibleToken.Vault {
             return <-create Vault(balance: amount);
         }
@@ -201,6 +248,8 @@ pub contract USDC: FungibleToken {
         }
     }
 
+    /// The blocklist execution resource, account with this resource must share / unlink its capability
+    /// with BlockLister to managed permission for block
     pub resource BlockListExecutor {
         pub fun blocklist(resourceId: UInt64){
             // todo
@@ -210,6 +259,7 @@ pub contract USDC: FungibleToken {
         };
     }
 
+    /// Delegate blocklister
     pub resource BlockedLister {
         access(self) var blocklistcap: Capability<&BlockListExecutor>;
         pub fun blocklist(resourceId: UInt64){
@@ -228,6 +278,8 @@ pub contract USDC: FungibleToken {
         }
     }
 
+    /// The pause execution resource, account with this resource must share / unlink its capability
+    /// with Pauser to managed permission for block
     pub resource PauseExecutor {
         // Note: this only sets the state of the pause of the contract
         pub fun pause() { 
@@ -240,6 +292,7 @@ pub contract USDC: FungibleToken {
          }
     }
 
+    /// Delegate pauser 
     pub resource Pauser {
         // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
         // MasterMinter will call setPauseCapability to provide it.
@@ -313,6 +366,8 @@ pub contract USDC: FungibleToken {
             target: /storage/UsdcInitVault
         )
 
+        /// Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
+        /// Saving the owner here means the admin and the owner is under management of the same account
         let owner <- create Owner()
         self.account.save(<-owner, to: /storage/UsdcOwner);
 
