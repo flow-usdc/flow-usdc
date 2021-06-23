@@ -18,6 +18,7 @@ jobs:
           go-version: 1.16
 
       - name: go vet
+        working-directory: ./test
         run: go vet ./...
 
   gofmt:
@@ -47,6 +48,8 @@ jobs:
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
+        with:
+          working-directory: ./test
 
   markdown-linting:
     name: linting (Markdown)
