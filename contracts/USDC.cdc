@@ -11,7 +11,7 @@ pub contract USDC: FungibleToken {
     pub event Unpaused();
     /// PauserCreated 
     ///
-    /// The event that is emitted when a new minter resource is created
+    /// The event that is emitted when a new pauser resource is created
     pub event PauserCreated(allowedAmount: UFix64)
 
     // Blocklist state and events 
@@ -20,7 +20,7 @@ pub contract USDC: FungibleToken {
     pub event Unblocklisted(resourceId: UInt64);
     /// BlocklisterCreated
     ///
-    /// The event that is emitted when a new minter resource is created
+    /// The event that is emitted when a new blocklister resource is created
     pub event BlocklisterCreated()
 
     /// Dict of all minters and their allowances
