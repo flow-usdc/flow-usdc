@@ -118,13 +118,13 @@ You can see this in action in our testing script, described in the next section.
 ### Testing Script
 
 In order to mitigate skew between emulator testing and testnet testing, this repo provides a
-script, `test.sh`, that automates all of the necessary setup and teardown for running the Go
+script, `./test/test.sh`, that automates all of the necessary setup and teardown for running the Go
 tests. This includes running and stopping the Flow emulator if necessary. Once the environment
 variables described above are properly set up, you can simply run this script from the repo
 root.
 
 ```bash
-./test.sh
+./test/test.sh
 ```
 
 ## Contributing
@@ -134,7 +134,7 @@ Issues and PRs accepted. Over time more details will be added here.
 ### Repo Layout
 
 * `contracts` - contains all of the contracts and the scripts required to interact with them
-* `env.example` - example file to be populated with values and copied to `.env`
+* `env.example` - example file to be populated with values and copied to `./test/.env`
 * `flow.json` - configuration file for the `flow` CLI tool.
 * `test` - Test code in Golang.
 * `transactions` - contains examples of transactions one can perform with the contract
