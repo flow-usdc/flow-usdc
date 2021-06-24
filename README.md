@@ -141,4 +141,4 @@ Issues and PRs accepted. Over time more details will be added here.
 
 ## License
 
-TBD
+[MIT License](./LICENSE), Copyright (c) 2018-2021 CENTRE SECZ
