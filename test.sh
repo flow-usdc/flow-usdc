@@ -18,6 +18,12 @@ if [ "${NETWORK}" == "emulator" ]; then
   sleep 1
   SIGNER=emulator-account
   flow accounts create --network="$NETWORK" --key="$TOKEN_ACCOUNT_PK" --signer="$SIGNER"
+  # update this file to use env address
+  flow transactions send transactions/transfer_flow_tokens_emulator.cdc \
+    --arg=UFix64:100.0 \
+    --arg=Address:0x"$TOKEN_ACCOUNT_ADDRESS" \
+    --signer="$SIGNER" \
+    --network="$NETWORK"
 else
   SIGNER=token-account
 fi
@@ -28,7 +34,7 @@ NEW_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -
 NEW_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NEW_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
 
 if [ "${NETWORK}" == "testnet" ]; then
-  flow transactions send transactions/transfer_flow_tokens.cdc \
+  flow transactions send transactions/transfer_flow_tokens_testnet.cdc \
     --arg=UFix64:0.001 \
     --arg=Address:0x"$NEW_VAULTED_ACCOUNT_ADDRESS" \
     --signer=token-account \
