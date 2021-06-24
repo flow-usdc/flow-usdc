@@ -51,10 +51,10 @@ Acceptance criteria: No open Critical or High findings
 | --:                                | ---:                                    | ---:    | ---:                      | ---: | ---:                             |
 | totalSupply                        | N/A                                     | amount  | N/A                       | N    | totalSupply                      |
 | balanceOf                          | account                                 | amount  |                           | N    | Valut.balance get                |
-| allowance                          | owner, spender                          | amount  |                           | N    |                                  |
-| transfer                           | recipient, amount                       | bool    | Transfer                  | Y    |                                  |
-| approve                            | spender, amount                         | bool    | Approve                   | Y    |                                  |
-| transferFrom                       | sender, recipient, amount               | bool    | Transfer                  | Y    |                                  |
+| allowance                          | owner, spender                          | amount  |                           | N    | **                               |
+| transfer                           | recipient, amount                       | bool    | Transfer                  | Y    | **                               |
+| approve                            | spender, amount                         | bool    | Approve                   | Y    | **                               |
+| transferFrom                       | sender, recipient, amount               | bool    | Transfer                  | Y    | **                               |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
 | mint                               |                                         |         | Mint, Transfer            | Y    | Minter.mint                      |
 | burn                               |                                         |         | Burn, Transfer            | Y    | Minter.burn                      |
@@ -62,58 +62,65 @@ Acceptance criteria: No open Critical or High findings
 | minterAllowance                    | minter                                  | amount  | N/A                       | N    | minterRestrictions get           |
 | configureMinter                    | minter, minterAllowedAmount             | bool    | MinterConfigured          | Y    | minterController.configureMinter |
 | removeMinter                       | minter                                  | bool    | MinterRemoved             | Y    | minterController.removeMinter    |
-| updateMasterMinter                 | newMasterMinter                         | N/A     | MasterMinterChanged       | Y    |                                  |
+| updateMasterMinter                 | newMasterMinter                         | N/A     | MasterMinterChanged       | Y    | *                                |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
 | isBlackListed                      | account                                 | bool    | N/A                       | N    | blocklist get                    |
 | blacklist                          | account                                 | N/A     | Blacklisted               | Y    | Blocklister.blocklist            |
 | unBlacklist                        | account                                 | N/A     | UnBlacklisted             | Y    | Blocklister.unblocklist          |
-| updateBlacklister                  | newBlacklister                          | N/A     | BlacklisterChanged        | Y    |                                  |
+| updateBlacklister                  | newBlacklister                          | N/A     | BlacklisterChanged        | Y    | *                                |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
 | pause                              | N/A                                     | N/A     | Pause                     | Y    | pauser.pause()                   |
 | unpause                            | N/A                                     | N/A     | Unpause                   | Y    | pauser.unpause()                 |
-| updatePauser                       | newPauser                               | N/A     | PauserChanged             | Y    |                                  |
+| updatePauser                       | newPauser                               | N/A     | PauserChanged             | Y    | *                                |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
 | owner                              |                                         | owner   |                           | N    | Owner get                        |
-| transferOwnership                  | newOwner                                | N/A     | OwnershipTransferred      | Y    |                                  |
+| transferOwnership                  | newOwner                                | N/A     | OwnershipTransferred      | Y    | *                                |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
-| increaseAllowance                  | spender, increment                      | bool    | Approval (indirect)       | Y    |                                  |
-| decreaseAllowance                  | spender, decrement                      | bool    | Approval (indirect)       | Y    |                                  |
-| authorizationState                 | authorizer, nonce                       | bool    | N/A                       | N    |                                  |
-| transferWithAuthorization          | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                                  |
-| cancelAuthorization                | from, to, value, validity, n, sig       | N/A     | AuthorizationCanceled (i) | Y    |                                  |
-| recieveWithAuthorization           | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    |                                  |
-| transferWithMultipleAuthorizations | params, sigs, atomic                    | bool    | Transfer (indirect)       | Y    |                                  |
+| increaseAllowance                  | spender, increment                      | bool    | Approval (indirect)       | Y    | **                               |
+| decreaseAllowance                  | spender, decrement                      | bool    | Approval (indirect)       | Y    | **                               |
+| authorizationState                 | authorizer, nonce                       | bool    | N/A                       | N    | **                               |
+| transferWithAuthorization          | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    | **                               |
+| cancelAuthorization                | from, to, value, validity, n, sig       | N/A     | AuthorizationCanceled (i) | Y    | **                               |
+| recieveWithAuthorization           | from, to, value, validity, n, sig       | N/A     | AuthorizationUsed (i)     | Y    | **                               |
+| transferWithMultipleAuthorizations | params, sigs, atomic                    | bool    | Transfer (indirect)       | Y    | **                               |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
-| nonces                             | owner                                   | nonce   | N/A                       | N    |                                  |
-| permit                             | owner, spender, value, deadline, n, sig | N/A     | Approval (indirect)       | Y    |                                  |
+| nonces                             | owner                                   | nonce   | N/A                       | N    | sequence number get              |
+| permit                             | owner, spender, value, deadline, n, sig | N/A     | Approval (indirect)       | Y    | *                                |
 | ---                                | ---                                     | ---     | ---                       | ---  | ---                              |
-| version                            | N/A                                     | version | N/A                       | N    |                                  |
+| version                            | N/A                                     | version | N/A                       | N    | *                                |
 
 ### Events
 
 | Event                 | Args                        | FlowFT mapping   |
 | --:                   | ---:                        | ---:             |
-| Transfer              | from, to, value             |                  |
-| Approval              | owner, spender, value       |                  |
+| Transfer              | from, to, value             | **               |
+| Approval              | owner, spender, value       | **               |
 | ---                   | ---                         | ---              |
 | Mint                  | minter, to, amount          | Mint             |
 | Burn                  | minter, amount              | Burn             |
 | MinterConfigured      | minter, minterAllowedAmount | MinterConfigured |
 | MinterRemoved         | oldMinter                   | MinterRemoved    |
-| MasterMinterChanged   | newMasterMinter             |                  |
-| ---                   | ---                         |                  |
+| MasterMinterChanged   | newMasterMinter             | *                |
+| ---                   | ---                         | ---              |
 | Blacklisted           | account                     | Blocklisted      |
 | UnBlacklisted         | account                     | UnBlacklisted    |
-| BlacklisterChanged    | newBlacklister              |                  |
+| BlacklisterChanged    | newBlacklister              | *                |
 | ---                   | ---                         | ---              |
 | Pause                 | N/A                         | Pause            |
 | Unpause               | N/A                         | UnPause          |
-| PauserChanged         | newPauser                   |                  |
+| PauserChanged         | newPauser                   | *                |
 | ---                   | ---                         | ---              |
-| OwnershipTransferred  | owner, newOwner             |                  |
+| OwnershipTransferred  | owner, newOwner             | *                |
 | ---                   | ---                         | ---              |
-| AuthorizationUsed     | authorizer, nonce           |                  |
-| AuthorizationCanceled | authorizer, nonce           |                  |
+| AuthorizationUsed     | authorizer, nonce           | **               |
+| AuthorizationCanceled | authorizer, nonce           | **               |
+
+#### NOTE
+
+Some interfaces and events are yet to be defined since they may not be mapped to the ledger based interfaces directly. These include:
+
+- \*  These functions and events are related to changing capabilities for resources and may be done with transactions
+- \**  These functions and events are related to direct, indirect, allowance transfer of USDC through capabilities of the vault resources
 
 ## Minting in USDC Details
 
