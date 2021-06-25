@@ -4,6 +4,17 @@ import USDCInterface from 0x{{.USDCInterface}}
 pub contract USDC: USDCInterface, FungibleToken {
 
     // ===== Pause state and events =====
+    pub let OwnerStoragePath: StoragePath;
+    pub let PauseExecutorStoragePath: StoragePath;
+    pub let BlockListExecutorStoragePath: StoragePath;
+    pub let MasterMinsterStoragePath: StoragePath;
+
+    pub let OwnerPrivPath: PrivatePath;
+    pub let PauseExecutorPrivPath: PrivatePath;
+    pub let BlockListExecutorPrivPath: PrivatePath;
+    pub let MasterMinterPrivPath: PrivatePath;
+
+    // ===== Pause state and events =====
     
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
@@ -372,7 +383,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         // the `deposit` method through the `Receiver` interface
         //
         adminAccount.link<&USDC.Vault{FungibleToken.Receiver}>(
-            /public/UsdcInitVaultReceiver,
+            /public/UsdcReciever,
             target: /storage/UsdcInitVault
         )
 
@@ -380,27 +391,38 @@ pub contract USDC: USDCInterface, FungibleToken {
         // the `balance` field through the `Balance` interface
         //
         adminAccount.link<&USDC.Vault{FungibleToken.Balance}>(
-            /public/UsdcInitVaultBalance,
+            /public/UsdcBalance,
             target: /storage/UsdcInitVault
         )
 
         // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
         // Saving the owner here means the admin and the owner is under management of the same account
         //
+
+        self.OwnerStoragePath = /storage/UsdcOwner;
+        self.PauseExecutorStoragePath = /storage/UsdcPauseExec;
+        self.BlockListExecutorStoragePath = /storage/UsdcBlockListExec;
+        self.MasterMinterStoragePath = /storage/UsdcMasterMinter;
+
+        self.OwnerPrivPath: /storage/UsdcOwner;
+        self.PauseExecutorPrivPath: /storage/UsdcPauserExec;
+        self.BlockListExecutorPrivPath: /storage/UsdcBlockListExec;
+        self.MasterMinterPrivPath: /storage/UsdcMasterMinter;
+
         let owner <- create Owner()
         adminAccount.save(<-owner, to: /storage/UsdcOwner);
-        adminAccount.link<&Owner>(/private/UsdcOwner, target: /storage/UsdcOwner);
+        adminAccount.link<&Owner>(/private/UsdcOwner, target: self.OwnerPrivPath);
         
 
         // Create all the owner resources where capabilities can be shared.
-        let ownerCap = adminAccount.getCapability<&Owner>(/private/UsdcOwner);
-        adminAccount.save(<-ownerCap.borrow()?.createNewPauseExecutor(), to: /storage/UsdcPauseExec);
-        adminAccount.save(<-ownerCap.borrow()?.createNewBlockListExecutor(), to: /storage/UsdcBlockListExec);
-        adminAccount.save(<-ownerCap.borrow()?.createNewMasterMinter(), to: /storage/UsdcMasterMinter);
+        let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerStoragePath);
+        adminAccount.save(<-ownerCap.borrow()?.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
+        adminAccount.save(<-ownerCap.borrow()?.createNewBlockListExecutor(), to: self.BlockListExecutorStoragePath);
+        adminAccount.save(<-ownerCap.borrow()?.createNewMasterMinter(), to: self.MasterMinterStoragePath);
         
-        adminAccount.link<&PauseExecutor>(/private/UsdcPauserExec, target: /storage/UsdcPauserExec);
-        adminAccount.link<&BlockListExecutor>(/private/UsdcBlockListExec, target: /storage/UsdcBlockListExec);
-        adminAccount.link<&MasterMinter>(/private/UsdcMasterMinter, target: /storage/UsdcMasterMinter);
+        adminAccount.link<&PauseExecutor>(/private/UsdcPauserExec, target: self.PauseExecutorPrivPath);
+        adminAccount.link<&BlockListExecutor>(/private/UsdcBlockListExec, target: self.BlockListExecutorPrivPath);
+        adminAccount.link<&MasterMinter>(/private/UsdcMasterMinter, target: self.MasterMinterPrivPath);
 
         // Emit an event that shows that the contract was initialized
         //
