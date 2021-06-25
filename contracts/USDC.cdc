@@ -1,5 +1,5 @@
-import FungibleToken from "./FungibleToken.cdc"
-import USDCInterface from "./USDCInterface.cdc"
+import FungibleToken from 0x{{.FungibleToken}} 
+import USDCInterface from 0x{{.USDCInterface}} 
 
 pub contract USDC: USDCInterface, FungibleToken {
 
@@ -158,12 +158,12 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// Owner can assign all roles
     pub resource Owner {
 
-        pub fun createNewPauserExecutor(): @PauseExecutor{
+        pub fun createNewPauseExecutor(): @PauseExecutor{
             // todo set cap
             return <-create PauseExecutor()
         }
 
-        pub fun createNewBlockListerExecutor(): @BlockListExecutor{
+        pub fun createNewBlockListExecutor(): @BlockListExecutor{
             // todo set cap
             return <-create BlockListExecutor()
         }
@@ -179,13 +179,6 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// The master minter creates minter controller resources to delegate control for minters
     pub resource MasterMinter: USDCInterface.MasterMinter {
 
-        /// Allows MinterController to create, configure and remove Minter
-        /// To be used when the Minter is created
-        access(self) fun createNewMinterController(minter: UInt64): @MinterController{
-            emit MinterControllerCreated()
-            // todo set Minter for this controller cap
-            return <-create MinterController(managedMinter: minter)
-        }
      
         /// Function that creates and returns a new minter resource
         /// The controller should be set here too
@@ -212,7 +205,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     pub resource MinterController: USDCInterface.MinterController {
 
         /// The resourceId this MinterController manages
-        pub var managedMinter: UInt64;
+        pub var managedMinter: UInt64?;
 
         /// configureMinter 
         ///
@@ -236,11 +229,11 @@ pub contract USDC: USDCInterface, FungibleToken {
             // todo
         }
         
-        init(managedMinter: UInt64) {
-            self.managedMinter = managedMinter;
-         }
-
-        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64) {
+        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
+        }
+        
+        init(){
+            self.managedMinter = nil;
         }
     }
 
@@ -270,8 +263,8 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     /// Delegate blocklister
-    pub resource BlockedLister {
-        access(self) var blocklistcap: Capability<&BlockListExecutor>;
+    pub resource BlockLister {
+        access(self) var blocklistcap: Capability<&BlockListExecutor>?;
         pub fun blocklist(resourceId: UInt64){
             // todo
         };
@@ -283,8 +276,8 @@ pub contract USDC: USDCInterface, FungibleToken {
             self.blocklistcap = blocklistcap;
         }
         
-        init(blocklistcap: Capability<&BlockListExecutor>) {
-           self.blocklistcap = blocklistcap;
+        init(){
+            self.blocklistcap = nil;
         }
     }
 
@@ -306,7 +299,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     pub resource Pauser {
         // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
         // MasterMinter will call setPauseCapability to provide it.
-        access(self) var pauseCap:  Capability<&PauseExecutor>;
+        access(self) var pauseCap:  Capability<&PauseExecutor>?;
         
         // Called by the Account that owns PauseExecutor
         // (since they are the only account that can create such Capability as input arg)
@@ -320,17 +313,17 @@ pub contract USDC: USDCInterface, FungibleToken {
 
         // Pauser can borrow the pauseCapability, if it exists, and pause and unpause the contract
         pub fun pause(){
-            let cap = self.pauseCap.borrow()!
+            let cap = self.pauseCap!.borrow()!
             cap.pause();
         } 
         
         pub fun unpause(){
-            let cap = self.pauseCap.borrow()!
+            let cap = self.pauseCap!.borrow()!
             cap.unpause();
         }
 
-        init(pauseCap: Capability<&PauseExecutor>) {
-            self.pauseCap = pauseCap;
+        init(){
+            self.pauseCap = nil;
         }
     }
 
@@ -347,7 +340,22 @@ pub contract USDC: USDCInterface, FungibleToken {
         return <-create Vault(balance: 0.0)
     }
 
-    init(){
+    pub fun createNewPauser(): @Pauser{
+        // todo set cap
+        return <-create Pauser()
+    }
+
+    pub fun createMinterController(): @MinterController{
+        // todo set cap
+        return <-create MinterController()
+    }
+
+    pub fun createNewBlockLister(): @BlockLister{
+        // todo set cap
+        return <-create BlockLister()
+    }
+
+    init(adminAccount: AuthAccount){
         self.paused = true;
         self.blocklist = {};
         self.totalSupply = 10000.0;
@@ -363,7 +371,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Create a public capability to the stored Vault that only exposes
         // the `deposit` method through the `Receiver` interface
         //
-        self.account.link<&USDC.Vault{FungibleToken.Receiver}>(
+        adminAccount.link<&USDC.Vault{FungibleToken.Receiver}>(
             /public/UsdcInitVaultReceiver,
             target: /storage/UsdcInitVault
         )
@@ -371,16 +379,28 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Create a public capability to the stored Vault that only exposes
         // the `balance` field through the `Balance` interface
         //
-        self.account.link<&USDC.Vault{FungibleToken.Balance}>(
+        adminAccount.link<&USDC.Vault{FungibleToken.Balance}>(
             /public/UsdcInitVaultBalance,
             target: /storage/UsdcInitVault
         )
 
-        /// Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
-        /// Saving the owner here means the admin and the owner is under management of the same account
+        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
+        // Saving the owner here means the admin and the owner is under management of the same account
+        //
         let owner <- create Owner()
-        self.account.save(<-owner, to: /storage/UsdcOwner);
+        adminAccount.save(<-owner, to: /storage/UsdcOwner);
+        adminAccount.link<&Owner>(/private/UsdcOwner, target: /storage/UsdcOwner);
+        
 
+        // Create all the owner resources where capabilities can be shared.
+        let ownerCap = adminAccount.getCapability<&Owner>(/private/UsdcOwner);
+        adminAccount.save(<-ownerCap.borrow()?.createNewPauseExecutor(), to: /storage/UsdcPauseExec);
+        adminAccount.save(<-ownerCap.borrow()?.createNewBlockListExecutor(), to: /storage/UsdcBlockListExec);
+        adminAccount.save(<-ownerCap.borrow()?.createNewMasterMinter(), to: /storage/UsdcMasterMinter);
+        
+        adminAccount.link<&PauseExecutor>(/private/UsdcPauserExec, target: /storage/UsdcPauserExec);
+        adminAccount.link<&BlockListExecutor>(/private/UsdcBlockListExec, target: /storage/UsdcBlockListExec);
+        adminAccount.link<&MasterMinter>(/private/UsdcMasterMinter, target: /storage/UsdcMasterMinter);
 
         // Emit an event that shows that the contract was initialized
         //
