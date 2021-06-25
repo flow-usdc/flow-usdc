@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-    "github.com/flow-usdc/flow-usdc"
+	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +25,6 @@ import (
 // 	t.Log(events)
 // 	assert.Equal(t, len(events), 5)
 // }
-
 
 func TestMintingAndBurning(t *testing.T) {
 	ctx, flowClient := util.SetupTestEnvironment(t)
