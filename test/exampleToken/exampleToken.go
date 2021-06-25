@@ -64,8 +64,8 @@ func AddVaultToAccount(
 	return result, nil
 }
 
-func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
-	script := util.ParseCadenceTemplate("../../contracts/scripts/get_balance.cdc")
+func GetBalanceET(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
+	script := util.ParseCadenceTemplate("../../contracts/scripts/get_balance_exampleToken.cdc")
 
 	flowAddress := flow.HexToAddress(address)
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
