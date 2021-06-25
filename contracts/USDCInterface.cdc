@@ -2,7 +2,20 @@ import FungibleToken from "./FungibleToken.cdc"
 
 pub contract interface USDCInterface {
 
+    // ===== Paths =====
+    
+
     // ===== Pause state and events =====
+    pub let OwnerStoragePath: StoragePath;
+    pub let PauseExecutorStoragePath: StoragePath;
+    pub let BlockListExecutorStoragePath: StoragePath;
+    pub let MasterMinsterStoragePath: StoragePath;
+
+    pub let OwnerPrivPath: PrivatePath;
+    pub let PauseExecutorPrivPath: PrivatePath;
+    pub let BlockListExecutorPrivPath: PrivatePath;
+    pub let MasterMinterPrivPath: PrivatePath;
+
     
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
