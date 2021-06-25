@@ -1,27 +1,26 @@
-package usdc 
+package deploy
 
 import (
 	"context"
-    "encoding/hex"
+	"encoding/hex"
 
-    "github.com/flow-usdc/flow-usdc"
+	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
 
 func DeployUSDCContract(
 	ctx context.Context,
 	flowClient *client.Client,
 	ownerAcctAddr string,
 	skString string,
-    )(*flow.TransactionResult, error){
+) (*flow.TransactionResult, error) {
 
-    code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
-    encodedStr := hex.EncodeToString(code)
-	txScript:= util.ParseCadenceTemplate("../../transactions/deploy_contract_with_auth.cdc")
+	code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
+	encodedStr := hex.EncodeToString(code)
+	txScript := util.ParseCadenceTemplate("../../transactions/deploy_contract_with_auth.cdc")
 
 	address := flow.HexToAddress(ownerAcctAddr)
 	ownerAccount, err := flowClient.GetAccount(ctx, address)
@@ -84,5 +83,3 @@ func GetTotalSupply(ctx context.Context, flowClient *client.Client) (cadence.UFi
 	supply := value.(cadence.UFix64)
 	return supply, err
 }
-
-
