@@ -15,7 +15,8 @@ import (
 type Addresses struct {
 	FungibleToken string
 	ExampleToken  string
-	UsdcToken     string
+	USDCInterface string
+	USDCToken string
 }
 
 func ParseCadenceTemplate(templatePath string) []byte {
@@ -29,7 +30,7 @@ func ParseCadenceTemplate(templatePath string) []byte {
 		panic(err)
 	}
 
-	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
+	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
 	if err != nil {
@@ -37,6 +38,14 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+func ReadCadenceCode(ContractPath string) []byte {
+	b, err := ioutil.ReadFile(ContractPath)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (result *flow.TransactionResult, err error) {

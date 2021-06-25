@@ -111,7 +111,7 @@ pub contract interface USDCInterface {
     pub resource interface MinterController {
 
         /// The resourceId this MinterController manages
-        pub var managedMinter: UInt64;
+        pub var managedMinter: UInt64?;
 
         /// configureMinter 
         ///
@@ -125,13 +125,9 @@ pub contract interface USDCInterface {
         ///
         /// Function that updates managedMinter 
         /// only the MasterMinter will have this capability so it is configured by such resource 
-        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64) {
+        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
             post{self.managedMinter == newManagedMinter: "Must set managed minter to new resourceID"}
         }
-        
-        init(managedMinter: UInt64){
-            post{self.managedMinter == managedMinter: "Must set managed minter" }
-        };
     }
 
     /// The minter is controlled by at least 1 minter controller

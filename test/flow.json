@@ -7,7 +7,7 @@
   },
   "deployments": {
     "emulator": {
-      "token-account": ["ExampleToken", "USDC", "USDCInterface"]
+      "token-account": ["ExampleToken", "USDCInterface"]
     },
     "testnet": {
       "token-account": ["ExampleToken"]
@@ -23,7 +23,6 @@
       }
     },
     "ExampleToken": "../contracts/ExampleToken.cdc",
-    "USDC": "../contracts/USDC.cdc",
     "USDCInterface": "../contracts/USDCInterface.cdc"
   },
   "networks": {

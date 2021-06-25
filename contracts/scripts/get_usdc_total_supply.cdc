@@ -1,7 +1,7 @@
 // This script reads the total supply field
 // of the USDC smart contract
 
-import USDC from 0x{{.UsdcToken}}
+import USDC from 0x{{.USDCToken}}
 
 pub fun main(): UFix64 {
 
