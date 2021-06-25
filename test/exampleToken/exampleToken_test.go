@@ -33,14 +33,14 @@ func TestMintingAndBurning(t *testing.T) {
 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
 	amount := cadence.UFix64(500000000000)
 
-	initialBalance, err := GetBalance(ctx, flowClient, tokenAddress)
+	initialBalance, err := GetBalanceET(ctx, flowClient, tokenAddress)
 	assert.NoError(t, err)
 
 	result, err := MintTokens(ctx, flowClient, tokenAddress, amount, skFT)
 	assert.NoError(t, err)
 	t.Log(result.Events)
 
-	balanceAfterMinting, err := GetBalance(ctx, flowClient, tokenAddress)
+	balanceAfterMinting, err := GetBalanceET(ctx, flowClient, tokenAddress)
 	assert.NoError(t, err)
 
 	assert.Equal(t, balanceAfterMinting, initialBalance+amount)
@@ -49,7 +49,7 @@ func TestMintingAndBurning(t *testing.T) {
 	assert.NoError(t, err)
 	t.Log(result.Events)
 
-	balanceAfterBurning, err := GetBalance(ctx, flowClient, tokenAddress)
+	balanceAfterBurning, err := GetBalanceET(ctx, flowClient, tokenAddress)
 	assert.NoError(t, err)
 
 	assert.Equal(t, balanceAfterBurning, initialBalance)
@@ -64,7 +64,7 @@ func TestAddVaultToAccount(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balance, err := GetBalance(ctx, flowClient, address)
+	balance, err := GetBalanceET(ctx, flowClient, address)
 	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "0.00000000")
 }
@@ -73,7 +73,7 @@ func TestNonVaultedAccount(t *testing.T) {
 	ctx, flowClient := util.SetupTestEnvironment(t)
 	address := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")
 
-	_, err := GetBalance(ctx, flowClient, address)
+	_, err := GetBalanceET(ctx, flowClient, address)
 	assert.Error(t, err)
 }
 
@@ -85,7 +85,7 @@ func TestTransferTokens(t *testing.T) {
 	newVaultedSk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
 	newVaultedAddress := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
 
-	initialBalance, err := GetBalance(ctx, flowClient, tokenAddress)
+	initialBalance, err := GetBalanceET(ctx, flowClient, tokenAddress)
 	assert.NoError(t, err)
 
 	// Transfer 1 token from FT minter to Account A
@@ -93,7 +93,7 @@ func TestTransferTokens(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balanceA, err := GetBalance(ctx, flowClient, newVaultedAddress)
+	balanceA, err := GetBalanceET(ctx, flowClient, newVaultedAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, balanceA.String(), "1.00000000")
 
@@ -102,7 +102,7 @@ func TestTransferTokens(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	finalBalance, err := GetBalance(ctx, flowClient, tokenAddress)
+	finalBalance, err := GetBalanceET(ctx, flowClient, tokenAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, finalBalance, initialBalance)
 }
@@ -122,7 +122,7 @@ func TestCreateNewAdmin(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balance, err := GetBalance(ctx, flowClient, newVaultedAddress)
+	balance, err := GetBalanceET(ctx, flowClient, newVaultedAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "500.00000000")
 
@@ -130,7 +130,7 @@ func TestCreateNewAdmin(t *testing.T) {
 	t.Log(result)
 	assert.NoError(t, err)
 
-	balance, err = GetBalance(ctx, flowClient, newVaultedAddress)
+	balance, err = GetBalanceET(ctx, flowClient, newVaultedAddress)
 	assert.NoError(t, err)
 	assert.Equal(t, balance.String(), "100.00000000")
 }

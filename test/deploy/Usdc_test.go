@@ -20,24 +20,14 @@ func TestDeployUSDCContract(t *testing.T) {
 	t.Log(result.Events)
 }
 
-func TestGetUSDCTotalSupply(t *testing.T) {
+func TestUSDCTotalSupplyInOwnerVault(t *testing.T) {
 	ctx, flowClient := util.SetupTestEnvironment(t)
-
 	supply, err := GetTotalSupply(ctx, flowClient)
 	assert.NoError(t, err)
     assert.Equal(t, "10000.00000000", supply.String());
+
+    ownerAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
+    balance, err := util.GetBalance(ctx, flowClient, ownerAddress)
+    assert.NoError(t, err)
+    assert.Equal(t, "10000.00000000", balance.String());
 }
-
-// TestOwnerInitBalanceAndCapbilities
-
-// TestOwnerInitBalanceAndCapbilities
-
-// CreatePauser
-
-// CreateBlocker
-
-//
-// TestMasterMinterCreateMinters
-
-// TestNewMintersCannotMint
-

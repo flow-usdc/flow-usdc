@@ -1,14 +1,15 @@
-package util 
+package util
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"os"
+	"testing"
 	"text/template"
 	"time"
-	"testing"
-    "bytes"
 
+	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ type Addresses struct {
 	FungibleToken string
 	ExampleToken  string
 	USDCInterface string
-	USDCToken string
+	USDCToken     string
 }
 
 func ParseCadenceTemplate(templatePath string) []byte {
@@ -87,3 +88,17 @@ func SetupTestEnvironment(t *testing.T) (context.Context, *client.Client) {
 	return ctx, flowClient
 }
 
+func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
+	script := ParseCadenceTemplate("../../contracts/scripts/get_balance.cdc")
+
+	flowAddress := flow.HexToAddress(address)
+	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
+		cadence.Address(flowAddress),
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	balance := value.(cadence.UFix64)
+	return balance, nil
+}
