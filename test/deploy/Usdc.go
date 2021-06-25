@@ -1,10 +1,10 @@
-package main
+package usdc 
 
 import (
 	"context"
-	"log"
     "encoding/hex"
 
+    "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk"
@@ -19,9 +19,9 @@ func DeployUSDCContract(
 	skString string,
     )(*flow.TransactionResult, error){
 
-    code := ParseCadenceTemplate("../contracts/USDC.cdc")
+    code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
     encodedStr := hex.EncodeToString(code)
-	txScript:= ParseCadenceTemplate("../transactions/deploy_contract_with_auth.cdc")
+	txScript:= util.ParseCadenceTemplate("../../transactions/deploy_contract_with_auth.cdc")
 
 	address := flow.HexToAddress(ownerAcctAddr)
 	ownerAccount, err := flowClient.GetAccount(ctx, address)
@@ -70,7 +70,7 @@ func DeployUSDCContract(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +79,12 @@ func DeployUSDCContract(
 }
 
 func GetTotalSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
-	script := ParseCadenceTemplate("../contracts/scripts/get_usdc_total_supply.cdc")
-	log.Println(string(script))
+	script := util.ParseCadenceTemplate("../../contracts/scripts/get_usdc_total_supply.cdc")
 
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
 
 	supply := value.(cadence.UFix64)
 	return supply, err
 }
+
+

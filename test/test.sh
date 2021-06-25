@@ -53,7 +53,8 @@ export NEW_VAULTED_ACCOUNT_ADDRESS
 export NON_VAULTED_ACCOUNT_SK
 export NON_VAULTED_ACCOUNT_ADDRESS
 
-go test ./... -cover -v
+go test ./deploy -cover -v
+go test ./exampleToken -cover -v
 TEST_RESULT=$?
 
 if [ "${NETWORK}" == "emulator" ]; then
