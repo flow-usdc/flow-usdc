@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+    "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,7 +28,7 @@ import (
 
 
 func TestMintingAndBurning(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
 	amount := cadence.UFix64(500000000000)
@@ -55,7 +56,7 @@ func TestMintingAndBurning(t *testing.T) {
 }
 
 func TestAddVaultToAccount(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	address := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
 	sk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
 
@@ -69,7 +70,7 @@ func TestAddVaultToAccount(t *testing.T) {
 }
 
 func TestNonVaultedAccount(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	address := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")
 
 	_, err := GetBalance(ctx, flowClient, address)
@@ -77,7 +78,7 @@ func TestNonVaultedAccount(t *testing.T) {
 }
 
 func TestTransferTokens(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
 	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
 
@@ -107,7 +108,7 @@ func TestTransferTokens(t *testing.T) {
 }
 
 func TestCreateNewAdmin(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
 	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
 	newVaultedSk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
@@ -135,7 +136,7 @@ func TestCreateNewAdmin(t *testing.T) {
 }
 
 func TestTransferToNonVaulted(t *testing.T) {
-	ctx, flowClient := setupTestEnvironment(t)
+	ctx, flowClient := util.SetupTestEnvironment(t)
 	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
 	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
 	nonVaultedAddress := os.Getenv("NON_VAULTED_ACCOUNT_ADDRESS")

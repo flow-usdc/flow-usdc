@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+    "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
@@ -16,7 +17,7 @@ func AddVaultToAccount(
 	address string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/setup_account.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/setup_account.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
@@ -55,7 +56,7 @@ func AddVaultToAccount(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func AddVaultToAccount(
 }
 
 func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
-	script := ParseCadenceTemplate("../contracts/scripts/get_balance.cdc")
+	script := util.ParseCadenceTemplate("../../contracts/scripts/get_balance.cdc")
 
 	flowAddress := flow.HexToAddress(address)
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
@@ -86,7 +87,7 @@ func TransferTokens(
 	toAddress string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/transfer_tokens.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/transfer_tokens.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
@@ -134,7 +135,7 @@ func TransferTokens(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +150,7 @@ func MintTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/mint_tokens.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/mint_tokens.cdc")
 
 	address := flow.HexToAddress(mintingAccountAddress)
 	mintingAccount, err := flowClient.GetAccount(ctx, address)
@@ -198,7 +199,7 @@ func MintTokens(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +214,7 @@ func BurnTokens(
 	amount cadence.UFix64,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/burn_tokens.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/burn_tokens.cdc")
 
 	address := flow.HexToAddress(burningAccountAddress)
 	burningAccount, err := flowClient.GetAccount(ctx, address)
@@ -257,7 +258,7 @@ func BurnTokens(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +274,7 @@ func CreateAdmin(
 	skOld string,
 	skNew string,
 ) (*flow.TransactionResult, error) {
-	txScript := ParseCadenceTemplate("../transactions/create_admin.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/create_admin.cdc")
 
 	oldPrivateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skOld)
 	if err != nil {
@@ -331,7 +332,7 @@ func CreateAdmin(
 		return nil, err
 	}
 
-	result, err := WaitForSeal(ctx, flowClient, tx.ID())
+	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-module github.com/eqlabs/flow-usdc
+module github.com/flow-usdc/flow-usdc
 
 go 1.16
 

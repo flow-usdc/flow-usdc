@@ -1,15 +1,18 @@
-package main
+package util 
 
 import (
-	"bytes"
 	"context"
 	"io/ioutil"
 	"os"
 	"text/template"
 	"time"
+	"testing"
+    "bytes"
 
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 type Addresses struct {
@@ -75,3 +78,12 @@ func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (res
 
 	return result, nil
 }
+
+func SetupTestEnvironment(t *testing.T) (context.Context, *client.Client) {
+	ctx := context.Background()
+	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
+	assert.NoError(t, err)
+
+	return ctx, flowClient
+}
+
