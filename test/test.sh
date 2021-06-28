@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 OS_NAME=$(uname -s | awk '{print tolower($0)}')
 CPU_ARCH=$(uname -m)
@@ -15,6 +15,12 @@ if [ "${NETWORK}" == "emulator" ]; then
   # setting block-time of 1s to emulate testnet + mainnet tempo
   flow emulator -b 1s &
   EMULATOR_PID=$!
+
+  function tearDown {
+    kill $EMULATOR_PID
+  }
+
+  trap tearDown EXIT
   sleep 1
   SIGNER=emulator-account
   flow accounts create --network="$NETWORK" --key="$TOKEN_ACCOUNT_PK" --signer="$SIGNER"
@@ -53,13 +59,5 @@ export NEW_VAULTED_ACCOUNT_ADDRESS
 export NON_VAULTED_ACCOUNT_SK
 export NON_VAULTED_ACCOUNT_ADDRESS
 
-TEST_RESULT=0
-
-if go test ./deploy -v; then true; else TEST_RESULT=1; fi
-if go test ./vault  -v; then true; else TEST_RESULT=1; fi
-
-if [ "${NETWORK}" == "emulator" ]; then
-  kill $EMULATOR_PID
-fi
-
-exit $TEST_RESULT
+go test ./deploy -v
+go test ./vault  -v
