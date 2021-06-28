@@ -7,7 +7,7 @@
   },
   "deployments": {
     "emulator": {
-      "token-account": ["ExampleToken", "USDCInterface"]
+      "token-account": ["USDCInterface"]
     },
     "testnet": {
       "token-account": ["ExampleToken"]

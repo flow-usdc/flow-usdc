@@ -6,7 +6,7 @@
 // would be the parameters to the transaction
 
 import FungibleToken from 0x{{.FungibleToken}}
-import ExampleToken from 0x{{.ExampleToken}}
+import USDC from 0x{{.USDCToken}}
 
 transaction(amount: UFix64, to: Address) {
 
@@ -16,7 +16,7 @@ transaction(amount: UFix64, to: Address) {
     prepare(signer: AuthAccount) {
 
         // Get a reference to the signer's stored vault
-        let vaultRef = signer.borrow<&ExampleToken.Vault>(from: /storage/exampleTokenVault)
+        let vaultRef = signer.borrow<&USDC.Vault>(from: /storage/UsdcVault)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
         // Withdraw tokens from the signer's stored vault
@@ -29,7 +29,7 @@ transaction(amount: UFix64, to: Address) {
         let recipient = getAccount(to)
 
         // Get a reference to the recipient's Receiver
-        let receiverRef = recipient.getCapability(/public/exampleTokenReceiver)
+        let receiverRef = recipient.getCapability(/public/UsdcReceiver)
             .borrow<&{FungibleToken.Receiver}>()
             ?? panic("Could not borrow receiver reference to the recipient's Vault")
 

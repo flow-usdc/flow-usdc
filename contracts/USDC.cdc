@@ -138,25 +138,19 @@ pub contract USDC: USDCInterface, FungibleToken {
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             // todo check blocklist and pause state
-            // if (Blocklist[self.id]){
-            //     self.balance = self.balance - amount
-            //         emit TokensWithdrawn(amount: amount, from: self.owner?.address)
-            //         return <-create Vault(balance: amount)
-            // } else {
-            //     return Error
-            // }
-             return <-create Vault(balance: 0.0);
+            self.balance = self.balance - amount
+            emit TokensWithdrawn(amount: amount, from: self.owner?.address)
+            return <-create Vault(balance: amount)
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
             // todo check blocklist and pause state 
-            // let vault <- from as! @USDC.Vault
-            // self.balance = self.balance + vault.balance
-            // emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
-            // vault.balance = 0.0
-            destroy from 
+            let vault <- from as! @USDC.Vault
+            self.balance = self.balance + vault.balance
+            emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
+            vault.balance = 0.0
+            destroy vault 
         }
-
         destroy() {
             USDC.totalSupply = USDC.totalSupply - self.balance
         }
@@ -377,14 +371,14 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Create the Vault with the total supply of tokens and save it in storage
         //
         let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/UsdcInitVault)
+        self.account.save(<-vault, to: /storage/UsdcVault)
 
         // Create a public capability to the stored Vault that only exposes
         // the `deposit` method through the `Receiver` interface
         //
         adminAccount.link<&USDC.Vault{FungibleToken.Receiver}>(
-            /public/UsdcReciever,
-            target: /storage/UsdcInitVault
+            /public/UsdcReceiver,
+            target: /storage/UsdcVault
         )
 
         // Create a public capability to the stored Vault that only exposes
@@ -392,7 +386,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         //
         adminAccount.link<&USDC.Vault{FungibleToken.Balance}>(
             /public/UsdcBalance,
-            target: /storage/UsdcInitVault
+            target: /storage/UsdcVault
         )
 
         // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
