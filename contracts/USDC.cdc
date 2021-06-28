@@ -7,7 +7,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
     pub let BlockListExecutorStoragePath: StoragePath;
-    pub let MasterMinsterStoragePath: StoragePath;
+    pub let MasterMinterStoragePath: StoragePath;
 
     pub let OwnerPrivPath: PrivatePath;
     pub let PauseExecutorPrivPath: PrivatePath;
@@ -404,29 +404,29 @@ pub contract USDC: USDCInterface, FungibleToken {
         self.BlockListExecutorStoragePath = /storage/UsdcBlockListExec;
         self.MasterMinterStoragePath = /storage/UsdcMasterMinter;
 
-        self.OwnerPrivPath: /storage/UsdcOwner;
-        self.PauseExecutorPrivPath: /storage/UsdcPauserExec;
-        self.BlockListExecutorPrivPath: /storage/UsdcBlockListExec;
-        self.MasterMinterPrivPath: /storage/UsdcMasterMinter;
+        self.OwnerPrivPath = /private/UsdcOwner;
+        self.PauseExecutorPrivPath = /private/UsdcPauserExec;
+        self.BlockListExecutorPrivPath = /private/UsdcBlockListExec;
+        self.MasterMinterPrivPath = /private/UsdcMasterMinter;
 
         let owner <- create Owner()
         adminAccount.save(<-owner, to: /storage/UsdcOwner);
-        adminAccount.link<&Owner>(/private/UsdcOwner, target: self.OwnerPrivPath);
+        adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);
         
 
         // Create all the owner resources where capabilities can be shared.
-        let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerStoragePath);
+        let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerPrivPath);
         adminAccount.save(<-ownerCap.borrow()?.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()?.createNewBlockListExecutor(), to: self.BlockListExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()?.createNewMasterMinter(), to: self.MasterMinterStoragePath);
         
-        adminAccount.link<&PauseExecutor>(/private/UsdcPauserExec, target: self.PauseExecutorPrivPath);
-        adminAccount.link<&BlockListExecutor>(/private/UsdcBlockListExec, target: self.BlockListExecutorPrivPath);
-        adminAccount.link<&MasterMinter>(/private/UsdcMasterMinter, target: self.MasterMinterPrivPath);
+        adminAccount.link<&PauseExecutor>(self.PauseExecutorPrivPath, target: self.PauseExecutorStoragePath);
+        adminAccount.link<&BlockListExecutor>(self.BlockListExecutorPrivPath, target: self.BlockListExecutorStoragePath);
+        adminAccount.link<&MasterMinter>(self.MasterMinterPrivPath, target: self.MasterMinterStoragePath);
 
         // Emit an event that shows that the contract was initialized
         //
-        emit TokensInitialized(initialSupply: self.totalSupply)       
+        emit TokensInitialized(initialSupply: self.totalSupply)
 
     }
 } 

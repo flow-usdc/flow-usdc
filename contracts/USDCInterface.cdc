@@ -9,7 +9,7 @@ pub contract interface USDCInterface {
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
     pub let BlockListExecutorStoragePath: StoragePath;
-    pub let MasterMinsterStoragePath: StoragePath;
+    pub let MasterMinterStoragePath: StoragePath;
 
     pub let OwnerPrivPath: PrivatePath;
     pub let PauseExecutorPrivPath: PrivatePath;
