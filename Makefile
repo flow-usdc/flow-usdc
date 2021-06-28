@@ -1,4 +1,8 @@
-.PHONY: test
+# export vars from root env file
+ifneq (,$(wildcard ./.env))
+	include .env
+	export
+endif
 
 test:
-	cd test && ./test.sh
+	cd lib/go && ./test.sh
