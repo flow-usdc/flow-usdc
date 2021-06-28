@@ -55,8 +55,8 @@ export NON_VAULTED_ACCOUNT_ADDRESS
 
 TEST_RESULT=0
 
-if go test ./deploy -cover -v; then true; else TEST_RESULT=1; fi
-if go test ./exampleToken -cover -v; then true; else TEST_RESULT=1; fi
+if go test ./deploy -v; then true; else TEST_RESULT=1; fi
+if go test ./vault  -v; then true; else TEST_RESULT=1; fi
 
 if [ "${NETWORK}" == "emulator" ]; then
   kill $EMULATOR_PID
