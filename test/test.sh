@@ -1,4 +1,7 @@
-#!/bin/bash -ex
+#!/bin/bash
+
+set -o allexport; source .env; set +o allexport
+set +ex
 
 OS_NAME=$(uname -s | awk '{print tolower($0)}')
 CPU_ARCH=$(uname -m)
@@ -8,7 +11,6 @@ shopt -s expand_aliases
 alias flow='$EXEC_PATH'
 
 # Import from env file
-set -o allexport; source .env; set +o allexport
 
 # Run the emulator with the config in ./flow.json
 if [ "${NETWORK}" == "emulator" ]; then
