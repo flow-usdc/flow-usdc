@@ -5,19 +5,8 @@ import (
 	"testing"
 
 	util "github.com/flow-usdc/flow-usdc"
-	deploy "github.com/flow-usdc/flow-usdc/deploy"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestDeployContractForVaultTests(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-
-	ownerAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-
-	_, err := deploy.DeployUSDCContract(ctx, flowClient, ownerAddress, skFT)
-	assert.NoError(t, err)
-}
 
 func TestAddVaultToAccount(t *testing.T) {
 	ctx, flowClient := util.SetupTestEnvironment(t)
