@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 
-    "github.com/flow-usdc/flow-usdc"
+	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/onflow/flow-go-sdk/crypto"
 )
-
 
 func AddVaultToAccount(
 	ctx context.Context,
