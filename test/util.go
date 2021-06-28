@@ -102,15 +102,3 @@ func GetBalance(ctx context.Context, flowClient *client.Client, address string) 
 	balance := value.(cadence.UFix64)
 	return balance, nil
 }
-
-// func CheckPathExists(ctx context.Context, flowClient *client.Client, address string, domain string, identifier string) (bool){
-// 	script := ParseCadenceTemplate("../../contracts/scripts/check_publich_path.cdc")
-//
-// 	addr:= flow.HexToAddress(address)
-//     path := cadence.Path{Domain: domain, Identifier: identifier}
-// 	_, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{ cadence.Address(addr), path })
-// 	if err != nil {
-// 		return false
-// 	}
-//     return true
-// }
