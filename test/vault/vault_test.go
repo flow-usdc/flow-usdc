@@ -19,19 +19,19 @@ func TestDeployContractForVaultTests(t *testing.T) {
 	assert.NoError(t, err)
 }
 
- func TestAddVaultToAccount(t *testing.T) {
- 	ctx, flowClient := util.SetupTestEnvironment(t)
- 	address := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
- 	sk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
+func TestAddVaultToAccount(t *testing.T) {
+	ctx, flowClient := util.SetupTestEnvironment(t)
+	address := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
+	sk := os.Getenv("NEW_VAULTED_ACCOUNT_SK")
 
- 	result, err := AddVaultToAccount(ctx, flowClient, address, sk)
- 	t.Log(result)
- 	assert.NoError(t, err)
- 
- 	balance, err := util.GetBalance(ctx, flowClient, address)
- 	assert.NoError(t, err)
- 	assert.Equal(t, balance.String(), "0.00000000")
- }
+	result, err := AddVaultToAccount(ctx, flowClient, address, sk)
+	t.Log(result)
+	assert.NoError(t, err)
+
+	balance, err := util.GetBalance(ctx, flowClient, address)
+	assert.NoError(t, err)
+	assert.Equal(t, balance.String(), "0.00000000")
+}
 
 func TestNonVaultedAccount(t *testing.T) {
 	ctx, flowClient := util.SetupTestEnvironment(t)
