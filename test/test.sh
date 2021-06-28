@@ -53,11 +53,11 @@ NON_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NON_VAULTED_ACCOUNT_SEED" -
 NON_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NON_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
 
 flow project deploy --network="$NETWORK" --update
+go run scripts/deploy.go
 
 export NEW_VAULTED_ACCOUNT_SK
 export NEW_VAULTED_ACCOUNT_ADDRESS
 export NON_VAULTED_ACCOUNT_SK
 export NON_VAULTED_ACCOUNT_ADDRESS
 
-go test ./deploy -v
 go test ./vault  -v
