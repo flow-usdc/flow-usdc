@@ -10,7 +10,7 @@
       "token-account": ["USDCInterface"]
     },
     "testnet": {
-      "token-account": ["ExampleToken"]
+      "token-account": ["USDCInterface"]
     }
   },
   "contracts": {
@@ -22,7 +22,6 @@
         "mainnet": "0xf233dcee88fe0abe"
       }
     },
-    "ExampleToken": "../contracts/ExampleToken.cdc",
     "USDCInterface": "../contracts/USDCInterface.cdc"
   },
   "networks": {
