@@ -15,14 +15,14 @@
   },
   "contracts": {
     "FungibleToken": {
-      "source": "../contracts/FungibleToken.cdc",
+      "source": "./contracts/FungibleToken.cdc",
       "aliases": {
         "emulator": "0xee82856bf20e2aa6",
         "testnet": "0x9a0766d93b6608b7",
         "mainnet": "0xf233dcee88fe0abe"
       }
     },
-    "USDCInterface": "../contracts/USDCInterface.cdc"
+    "USDCInterface": "./contracts/USDCInterface.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",

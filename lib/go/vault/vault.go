@@ -16,7 +16,7 @@ func AddVaultToAccount(
 	address string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := util.ParseCadenceTemplate("../../transactions/create_vault.cdc")
+	txScript := util.ParseCadenceTemplate("../../../transactions/create_vault.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
@@ -71,7 +71,7 @@ func TransferTokens(
 	toAddress string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := util.ParseCadenceTemplate("../../transactions/transfer_USDC.cdc")
+	txScript := util.ParseCadenceTemplate("../../../transactions/transfer_USDC.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
