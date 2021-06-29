@@ -1,7 +1,13 @@
 #!/bin/bash
 
-set -o allexport; source .env; set +o allexport
-set +ex
+# Check to see if it's running in the right directory
+if [ ! -f "./flow.json" ]; then
+  echo "IMPORTANT: This script must be run from the 'flow-usdc' root folder, not a subdirectory"
+  exit 1
+fi
+
+# errexit + xtrace
+set -ex
 
 OS_NAME=$(uname -s | awk '{print tolower($0)}')
 CPU_ARCH=$(uname -m)

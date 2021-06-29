@@ -4,5 +4,7 @@ ifneq (,$(wildcard ./.env))
 	export
 endif
 
-local:
+.PHONY: test
+
+test:
 	./lib/go/test.sh
