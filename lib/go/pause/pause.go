@@ -16,7 +16,7 @@ func CreatePauser(
 	address string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := util.ParseCadenceTemplate("../../transactions/pause/create_new_pauser.cdc")
+	txScript := util.ParseCadenceTemplate("../../../transactions/pause/create_new_pauser.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
@@ -70,7 +70,7 @@ func SetPauserCapability(
 	ownerAddress string,
 	skString string,
 ) (*flow.TransactionResult, error) {
-	txScript := util.ParseCadenceTemplate("../../transactions/owner/set_pause_cap.cdc")
+	txScript := util.ParseCadenceTemplate("../../../transactions/owner/set_pause_cap.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(ownerAddress))
 	if err != nil {

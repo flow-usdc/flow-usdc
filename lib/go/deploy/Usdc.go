@@ -18,9 +18,9 @@ func DeployUSDCContract(
 	skString string,
 ) (*flow.TransactionResult, error) {
 
-	code := util.ParseCadenceTemplate("../contracts/USDC.cdc")
+	code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
 	encodedStr := hex.EncodeToString(code)
-	txScript := util.ParseCadenceTemplate("../transactions/deploy_contract_with_auth.cdc")
+	txScript := util.ParseCadenceTemplate("../../transactions/deploy_contract_with_auth.cdc")
 
 	address := flow.HexToAddress(ownerAcctAddr)
 	ownerAccount, err := flowClient.GetAccount(ctx, address)
@@ -78,7 +78,7 @@ func DeployUSDCContract(
 }
 
 func GetTotalSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
-	script := util.ParseCadenceTemplate("../../contracts/scripts/get_total_supply.cdc")
+	script := util.ParseCadenceTemplate("../../../contracts/scripts/get_total_supply.cdc")
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, nil)
 	supply := value.(cadence.UFix64)
 	return supply, err
