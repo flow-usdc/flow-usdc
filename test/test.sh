@@ -36,6 +36,20 @@ else
   SIGNER=token-account
 fi
 
+
+flow project deploy --network="$NETWORK" --update
+go run scripts/deploy.go
+go test ./deploy -v
+
+PAUSER_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
+PAUSER_SK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Private)
+PAUSER_PK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Public)
+PAUSER_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$PAUSER_PK" --signer="$SIGNER" -o inline --filter=Address)
+
+export PAUSER_ADDRESS
+export PAUSER_SK
+go test ./pause -v
+
 NEW_VAULTED_ACCOUNT_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
 NEW_VAULTED_ACCOUNT_SK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -o inline --filter=Private)
 NEW_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -o inline --filter=Public)
@@ -53,10 +67,6 @@ NON_VAULTED_ACCOUNT_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
 NON_VAULTED_ACCOUNT_SK=$(flow keys generate --seed="$NON_VAULTED_ACCOUNT_SEED" -o inline --filter=Private)
 NON_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NON_VAULTED_ACCOUNT_SEED" -o inline --filter=Public)
 NON_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NON_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
-
-flow project deploy --network="$NETWORK" --update
-go run scripts/deploy.go
-
 export NEW_VAULTED_ACCOUNT_SK
 export NEW_VAULTED_ACCOUNT_ADDRESS
 export NON_VAULTED_ACCOUNT_SK

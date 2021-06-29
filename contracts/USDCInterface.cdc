@@ -32,7 +32,7 @@ pub contract interface USDCInterface {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated(allowedAmount: UFix64)
+    pub event PauserCreated()
 
     // ===== Blocklist state and events =====
 
@@ -161,4 +161,5 @@ pub contract interface USDCInterface {
         pub fun pause(); 
         pub fun unpause();
     }
+
 }
