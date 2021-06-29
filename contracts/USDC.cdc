@@ -31,7 +31,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated(allowedAmount: UFix64)
+    pub event PauserCreated()
 
     // ===== Blocklist state and events =====
 
@@ -300,8 +300,13 @@ pub contract USDC: USDCInterface, FungibleToken {
          }
     }
 
+    pub resource interface PauseCapReceiver {
+        // Note: this only sets the state of the pause of the contract
+        pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) 
+    }
+
     /// Delegate pauser 
-    pub resource Pauser {
+    pub resource Pauser: PauseCapReceiver {
         // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
         // MasterMinter will call setPauseCapability to provide it.
         access(self) var pauseCap:  Capability<&PauseExecutor>?;
@@ -346,7 +351,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     pub fun createNewPauser(): @Pauser{
-        // todo set cap
+        emit PauserCreated();
         return <-create Pauser()
     }
 
