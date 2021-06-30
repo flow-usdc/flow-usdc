@@ -16,7 +16,7 @@ func DeployUSDCContract(
 	flowClient *client.Client,
 	ownerAcctAddr string,
 	skString string,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 
 	code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
 	encodedStr := hex.EncodeToString(code)
@@ -25,12 +25,12 @@ func DeployUSDCContract(
 	address := flow.HexToAddress(ownerAcctAddr)
 	ownerAccount, err := flowClient.GetAccount(ctx, address)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	key1 := ownerAccount.Keys[0]
@@ -38,7 +38,7 @@ func DeployUSDCContract(
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	tx := flow.NewTransaction().
@@ -51,30 +51,30 @@ func DeployUSDCContract(
 
 	err = tx.AddArgument(cadence.String("USDC"))
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	err = tx.AddArgument(cadence.String(encodedStr))
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	err = tx.SignEnvelope(ownerAccount.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+        return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
 		return nil, err
 	}
 
-	return result, err
+	return 
 }
 
 func GetTotalSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
