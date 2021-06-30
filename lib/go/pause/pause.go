@@ -15,26 +15,26 @@ func CreatePauser(
 	flowClient *client.Client,
 	address string,
 	skString string,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 	txScript := util.ParseCadenceTemplate("../../../transactions/pause/create_new_pauser.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	tx := flow.NewTransaction().
@@ -47,25 +47,25 @@ func CreatePauser(
 
 	err = tx.AddArgument(cadence.Address(flow.HexToAddress(address)))
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+        return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+        return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return result, nil
+	return
 }
 
 func SetPauserCapability(
@@ -74,26 +74,26 @@ func SetPauserCapability(
 	pauserAddress string,
 	ownerAddress string,
 	skString string,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 	txScript := util.ParseCadenceTemplate("../../../transactions/owner/set_pause_cap.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(ownerAddress))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	tx := flow.NewTransaction().
@@ -106,30 +106,30 @@ func SetPauserCapability(
 
 	err = tx.AddArgument(cadence.Address(flow.HexToAddress(pauserAddress)))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = tx.AddArgument(cadence.Path{Domain: "public", Identifier: "UsdcPauseCapReceiver"})
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return result, nil
+	return
 }
 
 func PauseOrUnpauseContract(
@@ -138,7 +138,7 @@ func PauseOrUnpauseContract(
 	pauserAddress string,
 	skString string,
 	pause uint,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 
 	var txScript []byte
 
@@ -150,21 +150,21 @@ func PauseOrUnpauseContract(
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(pauserAddress))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	tx := flow.NewTransaction().
@@ -177,20 +177,20 @@ func PauseOrUnpauseContract(
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return result, nil
+	return
 }
 
 func GetPaused(ctx context.Context, flowClient *client.Client) (cadence.Bool, error) {
@@ -202,5 +202,5 @@ func GetPaused(ctx context.Context, flowClient *client.Client) (cadence.Bool, er
 	}
 
 	paused := value.(cadence.Bool)
-	return paused, nil
+	return paused, err 
 }

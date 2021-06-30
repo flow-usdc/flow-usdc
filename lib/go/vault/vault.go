@@ -15,26 +15,26 @@ func AddVaultToAccount(
 	flowClient *client.Client,
 	address string,
 	skString string,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 	txScript := util.ParseCadenceTemplate("../../../transactions/create_vault.cdc")
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	tx := flow.NewTransaction().
@@ -47,20 +47,20 @@ func AddVaultToAccount(
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return result, nil
+	return
 }
 
 func TransferTokens(
@@ -70,17 +70,17 @@ func TransferTokens(
 	fromAddress string,
 	toAddress string,
 	skString string,
-) (*flow.TransactionResult, error) {
+) (result *flow.TransactionResult, err error) {
 	txScript := util.ParseCadenceTemplate("../../../transactions/transfer_USDC.cdc")
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	from, err := flowClient.GetAccount(ctx, flow.HexToAddress(fromAddress))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	key1 := from.Keys[0]
@@ -88,7 +88,7 @@ func TransferTokens(
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	tx := flow.NewTransaction().
@@ -101,28 +101,28 @@ func TransferTokens(
 
 	err = tx.AddArgument(cadence.UFix64(amount))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = tx.AddArgument(cadence.Address(flow.HexToAddress(toAddress)))
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = tx.SignEnvelope(from.Address, key1.Index, key1Signer)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	result, err := util.WaitForSeal(ctx, flowClient, tx.ID())
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return result, err
+	return
 }
