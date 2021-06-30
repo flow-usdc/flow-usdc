@@ -1,6 +1,6 @@
 import USDC from 0x{{.USDCToken}}
 
-transaction {
+transaction(pauserAddr: Address) {
     prepare (pauser: AuthAccount) {
         
         // Check and return if they already have a pauser resource
@@ -17,4 +17,9 @@ transaction {
         ??  panic("Could not link pauserCap");
         
     } 
+
+    post {
+        getAccount(pauserAddr).getCapability<&USDC.Pauser{USDC.PauseCapReceiver}>(/public/UsdcPauseCapReceiver).check() :
+        "PauserCapReceiver link not set"
+    }
 }
