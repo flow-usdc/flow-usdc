@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -64,6 +65,10 @@ func WaitForSeal(ctx context.Context, c *client.Client, id flow.Identifier) (res
 	}
 
 	for result.Status != flow.TransactionStatusSealed {
+		if result.Status == flow.TransactionStatusExpired {
+			return result, errors.New("transaction expired")
+		}
+
 		time.Sleep(time.Second)
 		result, err = c.GetTransactionResult(ctx, id)
 

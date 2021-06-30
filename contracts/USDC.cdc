@@ -3,7 +3,7 @@ import USDCInterface from 0x{{.USDCInterface}}
 
 pub contract USDC: USDCInterface, FungibleToken {
 
-    // ===== Pause state and events =====
+    // ===== Contract Paths =====
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
     pub let BlockListExecutorStoragePath: StoragePath;
@@ -240,7 +240,7 @@ pub contract USDC: USDCInterface, FungibleToken {
             // todo
         }
         
-        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
+        pub fun configureManagedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
         }
         
         init(){
