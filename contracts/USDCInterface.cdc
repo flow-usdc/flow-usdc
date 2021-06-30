@@ -2,10 +2,7 @@ import FungibleToken from "./FungibleToken.cdc"
 
 pub contract interface USDCInterface {
 
-    // ===== Paths =====
-    
-
-    // ===== Pause state and events =====
+    // ===== Contract Paths =====
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
     pub let BlockListExecutorStoragePath: StoragePath;
@@ -17,6 +14,7 @@ pub contract interface USDCInterface {
     pub let MasterMinterPrivPath: PrivatePath;
 
     
+    // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
     /// No transaction, apart from unpaused, can occur when paused
@@ -138,7 +136,7 @@ pub contract interface USDCInterface {
         ///
         /// Function that updates managedMinter 
         /// only the MasterMinter will have this capability so it is configured by such resource 
-        pub fun configureMangedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
+        pub fun configureManagedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
             post{self.managedMinter == newManagedMinter: "Must set managed minter to new resourceID"}
         }
     }
