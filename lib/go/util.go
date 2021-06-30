@@ -89,7 +89,7 @@ func SetupTestEnvironment(t *testing.T) (context.Context, *client.Client) {
 }
 
 func GetBalance(ctx context.Context, flowClient *client.Client, address string) (cadence.UFix64, error) {
-	script := ParseCadenceTemplate("../../../contracts/scripts/get_balance.cdc")
+	script := ParseCadenceTemplate("../../../scripts/get_balance.cdc")
 
 	flowAddress := flow.HexToAddress(address)
 	value, err := flowClient.ExecuteScriptAtLatestBlock(ctx, script, []cadence.Value{
