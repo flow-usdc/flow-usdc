@@ -7,12 +7,11 @@ transaction (pauser: Address, pauseCapPath: PublicPath) {
     prepare(pauseExe: AuthAccount) {
         let cap = pauseExe.getCapability<&USDC.PauseExecutor>(USDC.PauseExecutorPrivPath);
         if !cap.check() {
-            return
+            panic ("cannot borrow such capability") 
         } else {
             let setCapRef = getAccount(pauser).getCapability<&USDC.Pauser{USDC.PauseCapReceiver}>(pauseCapPath).borrow() ?? panic("Cannot get pauseCapReceiver");
             setCapRef.setPauseCap(pauseCap: cap);
         }
-
     }
 
 }

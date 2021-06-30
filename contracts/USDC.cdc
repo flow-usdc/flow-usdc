@@ -137,6 +137,9 @@ pub contract USDC: USDCInterface, FungibleToken {
         }
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
+            pre {
+                !USDC.paused: "USDC contract paused" 
+            }
             // todo check blocklist and pause state
             self.balance = self.balance - amount
             emit TokensWithdrawn(amount: amount, from: self.owner?.address)
@@ -144,6 +147,9 @@ pub contract USDC: USDCInterface, FungibleToken {
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
+            pre {
+                !USDC.paused: "USDC contract paused" 
+            }
             // todo check blocklist and pause state 
             let vault <- from as! @USDC.Vault
             self.balance = self.balance + vault.balance
@@ -290,7 +296,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// with Pauser to managed permission for block
     pub resource PauseExecutor: USDCInterface.Pauser {
         // Note: this only sets the state of the pause of the contract
-        pub fun pause() { 
+        pub fun pause() {
             USDC.paused = true;
             emit Paused();
          }
@@ -318,6 +324,9 @@ pub contract USDC: USDCInterface, FungibleToken {
         // The Account that owns PauseExecutor will be set in init() of the contract
         // and will probably be the MasterMinter/Admin
         pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) {
+            pre {
+                pauseCap.borrow() != nil: "Invalid PauseCap capability"
+            }
             self.pauseCap = pauseCap;
         }
 
@@ -366,7 +375,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     init(adminAccount: AuthAccount){
-        self.paused = true;
+        self.paused = false;
         self.blocklist = {};
         self.totalSupply = 10000.0;
         self.minterAllowances = {};
@@ -409,15 +418,15 @@ pub contract USDC: USDCInterface, FungibleToken {
         self.MasterMinterPrivPath = /private/UsdcMasterMinter;
 
         let owner <- create Owner()
-        adminAccount.save(<-owner, to: /storage/UsdcOwner);
+        adminAccount.save(<-owner, to: self.OwnerStoragePath);
         adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);
         
 
         // Create all the owner resources where capabilities can be shared.
         let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerPrivPath);
-        adminAccount.save(<-ownerCap.borrow()?.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
-        adminAccount.save(<-ownerCap.borrow()?.createNewBlockListExecutor(), to: self.BlockListExecutorStoragePath);
-        adminAccount.save(<-ownerCap.borrow()?.createNewMasterMinter(), to: self.MasterMinterStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewBlockListExecutor(), to: self.BlockListExecutorStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(), to: self.MasterMinterStoragePath);
         
         adminAccount.link<&PauseExecutor>(self.PauseExecutorPrivPath, target: self.PauseExecutorStoragePath);
         adminAccount.link<&BlockListExecutor>(self.BlockListExecutorPrivPath, target: self.BlockListExecutorStoragePath);
