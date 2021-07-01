@@ -4,6 +4,10 @@ name: Tests
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - './doc/**'
+      - './README.md'
+      - 'LICENSE'
 
 jobs:
 
