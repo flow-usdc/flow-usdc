@@ -10,7 +10,8 @@ transaction(contractName: String, code: String) {
         if (existingContract == nil) {
             owner.contracts.add(name: contractName, code: code.decodeHex(), owner)
         } else {
-            owner.contracts.update__experimental(name: contractName, code: code.decodeHex())
+            owner.contracts.remove(name: contractName)
+            owner.contracts.add(name: contractName, code: code.decodeHex(), owner)
         }
     }
 }
