@@ -20,21 +20,21 @@ func CreatePauser(
 
 	account, err := flowClient.GetAccount(ctx, flow.HexToAddress(address))
 	if err != nil {
-        return
+		return
 	}
 
 	key1 := account.Keys[0]
 
 	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
 	if err != nil {
-        return
+		return
 	}
 
 	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
 
 	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
 	if err != nil {
-        return
+		return
 	}
 
 	tx := flow.NewTransaction().
@@ -47,17 +47,17 @@ func CreatePauser(
 
 	err = tx.AddArgument(cadence.Address(flow.HexToAddress(address)))
 	if err != nil {
-        return
+		return
 	}
 
 	err = tx.SignEnvelope(account.Address, key1.Index, key1Signer)
 	if err != nil {
-        return
+		return
 	}
 
 	err = flowClient.SendTransaction(ctx, *tx)
 	if err != nil {
-        return
+		return
 	}
 
 	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
@@ -202,5 +202,5 @@ func GetPaused(ctx context.Context, flowClient *client.Client) (cadence.Bool, er
 	}
 
 	paused := value.(cadence.Bool)
-	return paused, err 
+	return paused, err
 }
