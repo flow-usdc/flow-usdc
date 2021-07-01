@@ -48,7 +48,11 @@ flow project deploy --network="$NETWORK" --update
 # NOW we switch to the go folder, where commands _can_ be run in place.
 cd lib/go;
 
+if [ "${NETWORK}" == "testnet" ]; then
+  go run scripts/remove.go
+fi
 go run scripts/deploy.go
+
 go test ./deploy -v
 
 NEW_VAULTED_ACCOUNT_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
@@ -57,7 +61,7 @@ NEW_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -
 NEW_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NEW_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
 
 if [ "${NETWORK}" == "testnet" ]; then
-  flow transactions send ./transactions/transfer_flow_tokens_testnet.cdc \
+  flow transactions send ../../transactions/transfer_flow_tokens_testnet.cdc \
     -f "$FLOW_CONFIG_PATH" \
     --arg=UFix64:0.001 \
     --arg=Address:0x"$NEW_VAULTED_ACCOUNT_ADDRESS" \

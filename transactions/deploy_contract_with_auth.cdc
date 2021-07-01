@@ -5,13 +5,6 @@
 //
 transaction(contractName: String, code: String) {
     prepare(owner: AuthAccount) {
-        let existingContract = owner.contracts.get(name: contractName)
-
-        if (existingContract == nil) {
-            owner.contracts.add(name: contractName, code: code.decodeHex(), owner)
-        } else {
-            owner.contracts.remove(name: contractName)
-            owner.contracts.add(name: contractName, code: code.decodeHex(), owner)
-        }
+        owner.contracts.add(name: contractName, code: code.decodeHex(), owner)
     }
 }

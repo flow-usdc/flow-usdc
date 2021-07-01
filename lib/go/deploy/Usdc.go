@@ -11,6 +11,64 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 )
 
+func RemoveUSDCContract(
+	ctx context.Context,
+	flowClient *client.Client,
+	ownerAcctAddr string,
+	skString string,
+) (result *flow.TransactionResult, err error) {
+	txScript := util.ParseCadenceTemplate("../../transactions/remove_contract_with_auth.cdc")
+
+	address := flow.HexToAddress(ownerAcctAddr)
+	ownerAccount, err := flowClient.GetAccount(ctx, address)
+	if err != nil {
+		return
+	}
+
+	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
+	if err != nil {
+		return
+	}
+
+	key1 := ownerAccount.Keys[0]
+	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
+
+	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
+	if err != nil {
+		return
+	}
+
+	tx := flow.NewTransaction().
+		SetScript(txScript).
+		SetGasLimit(100).
+		SetProposalKey(ownerAccount.Address, key1.Index, key1.SequenceNumber).
+		SetPayer(ownerAccount.Address).
+		SetReferenceBlockID(referenceBlock.ID).
+		AddAuthorizer(ownerAccount.Address)
+
+	err = tx.AddArgument(cadence.String("USDC"))
+	if err != nil {
+		return
+	}
+
+	err = tx.SignEnvelope(ownerAccount.Address, key1.Index, key1Signer)
+	if err != nil {
+		return
+	}
+
+	err = flowClient.SendTransaction(ctx, *tx)
+	if err != nil {
+		return
+	}
+
+	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+
 func DeployUSDCContract(
 	ctx context.Context,
 	flowClient *client.Client,
