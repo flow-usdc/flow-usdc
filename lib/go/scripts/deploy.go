@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/flow-usdc/flow-usdc/deploy"
@@ -20,10 +19,5 @@ func main() {
 	ownerAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
 	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
 
-	result, err := deploy.DeployUSDCContract(ctx, flowClient, ownerAddress, skFT)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(result.Events)
+	deploy.DeployUSDCContract(ctx, flowClient, ownerAddress, skFT)
 }

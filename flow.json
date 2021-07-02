@@ -32,29 +32,15 @@
   "accounts": {
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "keys": [
-        {
-          "type": "hex",
-          "index": 0,
-          "signatureAlgorithm": "ECDSA_P256",
-          "hashAlgorithm": "SHA3_256",
-          "context": {
-            "privateKey": "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
-          }
-        }
-      ]
+      "keys" : "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
     },
     "token-account": {
-      "address": "$TOKEN_ACCOUNT_ADDRESS",
-      "keys": [{
-        "type": "hex",
-        "index": 0,
-        "signatureAlgorithm": "ECDSA_P256",
-        "hashAlgorithm": "SHA3_256",
-        "context": {
-          "privateKey": "$TOKEN_ACCOUNT_KEYS"
-        }
-      }]
+      "address": "01cf0e2f2f715450",
+      "keys": "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a" 
+    },
+    "second" : {
+	    "address": "179b6b1cb6755e31",
+        "keys": "1cd391b90c98671d3f07c7104f016c4704242704d8a7ad7d2126c6d5331516e8"
     }
   }
 }
