@@ -6,75 +6,22 @@ import (
 
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
-	"github.com/onflow/flow-go-sdk/crypto"
+
+	//	"github.com/onflow/flow-go-sdk/crypto"
+	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func DeployUSDCContract(
 	ctx context.Context,
 	flowClient *client.Client,
 	ownerAcctAddr string,
-	skString string,
-) (result *flow.TransactionResult, err error) {
-
+	skString string) {
+	g := gwtf.
+		NewGoWithTheFlow("/Users/belsy/flow/flow-usdc/flow.json")
 	code := util.ParseCadenceTemplate("../../contracts/USDC.cdc")
 	encodedStr := hex.EncodeToString(code)
-	txScript := util.ParseCadenceTemplate("../../transactions/deploy_contract_with_auth.cdc")
-
-	address := flow.HexToAddress(ownerAcctAddr)
-	ownerAccount, err := flowClient.GetAccount(ctx, address)
-	if err != nil {
-		return
-	}
-
-	privateKey, err := crypto.DecodePrivateKeyHex(crypto.ECDSA_P256, skString)
-	if err != nil {
-		return
-	}
-
-	key1 := ownerAccount.Keys[0]
-	key1Signer := crypto.NewInMemorySigner(privateKey, key1.HashAlgo)
-
-	referenceBlock, err := flowClient.GetLatestBlock(ctx, true)
-	if err != nil {
-		return
-	}
-
-	tx := flow.NewTransaction().
-		SetScript(txScript).
-		SetGasLimit(100).
-		SetProposalKey(ownerAccount.Address, key1.Index, key1.SequenceNumber).
-		SetPayer(ownerAccount.Address).
-		SetReferenceBlockID(referenceBlock.ID).
-		AddAuthorizer(ownerAccount.Address)
-
-	err = tx.AddArgument(cadence.String("USDC"))
-	if err != nil {
-		return
-	}
-
-	err = tx.AddArgument(cadence.String(encodedStr))
-	if err != nil {
-		return
-	}
-
-	err = tx.SignEnvelope(ownerAccount.Address, key1.Index, key1Signer)
-	if err != nil {
-		return
-	}
-
-	err = flowClient.SendTransaction(ctx, *tx)
-	if err != nil {
-		return
-	}
-
-	result, err = util.WaitForSeal(ctx, flowClient, tx.ID())
-	if err != nil {
-		return nil, err
-	}
-
-	return
+	g.TransactionFromFile("../../transactions/deploy_contract_with_auth.cdc").SignProposeAndPayAs("token-account").StringArgument("USDC").StringArgument(encodedStr).RunPrintEventsFull()
 }
 
 func GetTotalSupply(ctx context.Context, flowClient *client.Client) (cadence.UFix64, error) {
