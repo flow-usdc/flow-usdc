@@ -2,7 +2,7 @@ module github.com/flow-usdc/flow-usdc
 
 go 1.16
 
-replace github.com/bjartek/go-with-the-flow => ./gwtf
+replace github.com/bjartek/go-with-the-flow => github.com/flow-usdc/go-with-the-flow v1.18.2-0.20210704164324-b8b5228ea755
 
 require (
 	github.com/bjartek/go-with-the-flow v1.18.1
