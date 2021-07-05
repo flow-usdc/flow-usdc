@@ -5,7 +5,7 @@
 <!-- markdownlint-configure-file { "MD013": { "line_length": 100 } } -->
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-lightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![Tests](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests.yml)
+[![Tests](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests-main.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/tests-main.yml)
 [![Static Analysis](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml)
 
 <!-- TODO: Banner? -->
