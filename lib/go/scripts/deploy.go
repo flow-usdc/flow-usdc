@@ -1,23 +1,13 @@
 package main
 
 import (
-	"context"
-	"os"
-
 	"github.com/flow-usdc/flow-usdc/deploy"
-	"github.com/onflow/flow-go-sdk/client"
-	"google.golang.org/grpc"
+	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func main() {
-	ctx := context.Background()
-	flowClient, err := client.New(os.Getenv("RPC_ADDRESS"), grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
+    // This relative path to flow.json is  different in tests as it is the main package
+	g := gwtf.NewGoWithTheFlow("../../flow.json")
 
-	ownerAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	skFT := os.Getenv("TOKEN_ACCOUNT_KEYS")
-
-	deploy.DeployUSDCContract(ctx, flowClient, ownerAddress, skFT)
+	deploy.DeployUSDCContract(g, "owner")
 }

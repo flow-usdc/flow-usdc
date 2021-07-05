@@ -7,10 +7,10 @@
   },
   "deployments": {
     "emulator": {
-      "token-account": ["USDCInterface"]
+      "owner": ["USDCInterface"]
     },
     "testnet": {
-      "token-account": ["USDCInterface"]
+      "owner": ["USDCInterface"]
     }
   },
   "contracts": {
@@ -34,13 +34,25 @@
       "address": "f8d6e0586b0a20c7",
       "keys" : "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
     },
-    "token-account": {
+    "owner": {
       "address": "01cf0e2f2f715450",
-      "keys": "5eb8df48667ac74981f4faaf8b425a6403c8729e90319a4cbfd7942b10e4622a" 
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "second" : {
-	    "address": "179b6b1cb6755e31",
-        "keys": "1cd391b90c98671d3f07c7104f016c4704242704d8a7ad7d2126c6d5331516e8"
+    "vaulted-account" : {
+	  "address": "179b6b1cb6755e31",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "non-vaulted-account" : {
+	  "address": "f3fcd2c1a78f5eee",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "pauser" : {
+	  "address": "e03daebed8ca0615",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "non-pauser" : {
+	  "address": "045a1763c93006ca",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     }
   }
 }
