@@ -1,84 +1,63 @@
 package pause
 
 import (
-	"os"
 	"testing"
 
-	util "github.com/flow-usdc/flow-usdc"
 	"github.com/flow-usdc/flow-usdc/vault"
 	"github.com/stretchr/testify/assert"
-	// "github.com/onflow/cadence"
+	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func TestCreatePauser(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-	address := os.Getenv("PAUSER_ADDRESS")
-	sk := os.Getenv("PAUSER_SK")
-
-	result, err := CreatePauser(ctx, flowClient, address, sk)
-	t.Log(result)
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	err := CreatePauser(g, "pauser")
 	assert.NoError(t, err)
 }
 
 func TestSetPauserCapability(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-	ownerAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	pauserAddress := os.Getenv("PAUSER_ADDRESS")
-	sk := os.Getenv("TOKEN_ACCOUNT_KEYS")
-
-	result, err := SetPauserCapability(ctx, flowClient, pauserAddress, ownerAddress, sk)
-	t.Log(result)
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	err := SetPauserCapability(g, "pauser", "owner")
 	assert.NoError(t, err)
 }
 
 func TestPauserContractWithCap(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-	pauserAddress := os.Getenv("PAUSER_ADDRESS")
-	sk := os.Getenv("PAUSER_SK")
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	result, err := PauseOrUnpauseContract(ctx, flowClient, pauserAddress, sk, 1)
-	t.Log(result)
+	err := PauseOrUnpauseContract(g, "pauser", 1)
 	assert.NoError(t, err)
 
-	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
-	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	newVaultedAddress := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
-
-	paused, pauseerr := GetPaused(ctx, flowClient)
-	t.Log(result, "paused", paused.String())
+	paused, pauseerr := GetPaused(g)
 	assert.NoError(t, pauseerr)
 	assert.Equal(t, paused.String(), "true")
 
-	_, terr := vault.TransferTokens(ctx, flowClient, 100000000, tokenAddress, newVaultedAddress, tokenSk)
-	assert.Error(t, terr)
+	err = vault.AddVaultToAccount(g, "vaulted-account")
+	assert.NoError(t, err)
+
+	err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+	assert.Error(t, err)
 }
 
 func TestPauserContractWithoutCap(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-	nonPauserAddress := os.Getenv("NON_PAUSER_ADDRESS")
-	sk := os.Getenv("NON_PAUSER_SK")
-
-	result, err := CreatePauser(ctx, flowClient, nonPauserAddress, sk)
-	t.Log(result)
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	err := CreatePauser(g, "non-pauser")
 	assert.NoError(t, err)
 
-	_, pauseErr := PauseOrUnpauseContract(ctx, flowClient, nonPauserAddress, sk, 1)
+	pauseErr := PauseOrUnpauseContract(g, "non-pauser", 1)
 	assert.Error(t, pauseErr)
 }
 
 func TestUnPauserContractWithCap(t *testing.T) {
-	ctx, flowClient := util.SetupTestEnvironment(t)
-	pauserAddress := os.Getenv("PAUSER_ADDRESS")
-	sk := os.Getenv("PAUSER_SK")
-
-	result, err := PauseOrUnpauseContract(ctx, flowClient, pauserAddress, sk, 0)
-	t.Log(result)
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	err := PauseOrUnpauseContract(g, "pauser", 0)
 	assert.NoError(t, err)
 
-	tokenSk := os.Getenv("TOKEN_ACCOUNT_KEYS")
-	tokenAddress := os.Getenv("TOKEN_ACCOUNT_ADDRESS")
-	newVaultedAddress := os.Getenv("NEW_VAULTED_ACCOUNT_ADDRESS")
+	paused, pauseerr := GetPaused(g)
+	assert.NoError(t, pauseerr)
+	assert.Equal(t, paused.String(), "false")
 
-	_, terr := vault.TransferTokens(ctx, flowClient, 100000000, tokenAddress, newVaultedAddress, tokenSk)
-	assert.NoError(t, terr)
+	err = vault.AddVaultToAccount(g, "vaulted-account")
+	assert.NoError(t, err)
+
+	err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+    assert.NoError(t, err)
 }

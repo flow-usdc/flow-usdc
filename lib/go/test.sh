@@ -30,15 +30,24 @@ if [ "${NETWORK}" == "emulator" ]; then
   trap tearDown EXIT
   sleep 1
   SIGNER=emulator-account
-  flow accounts create --network="$NETWORK" --key="$TOKEN_ACCOUNT_PK" --signer="$SIGNER"
-  # update this file to use env address
+  OWNER_PK="46acb0e0918e09a50fc2a6b12f14fc00822ad7dac6c6fd92427ec675b9745cbe5ae93d790e6fdd0683d7dd17b6156cc4201def8d6a992807796a5ce4a789005f"
+  # we create the first account and transfer flow tokens to it
+  # the first account is the USDC owner
+  flow accounts create --network="$NETWORK" --key="$OWNER_PK" --signer="$SIGNER"
   flow transactions send ./transactions/transfer_flow_tokens_emulator.cdc \
     --arg=UFix64:100.0 \
     --arg=Address:0x"$TOKEN_ACCOUNT_ADDRESS" \
     --signer="$SIGNER" \
     --network="$NETWORK"
-else
-  SIGNER=token-account
+fi
+if [ "${NETWORK}" == "testnet" ]; then
+  SIGNER=owner
+#   flow transactions send ./transactions/transfer_flow_tokens_testnet.cdc \
+#     -f "$FLOW_CONFIG_PATH" \
+#     --arg=UFix64:0.001 \
+#     --arg=Address:0x"$NEW_VAULTED_ACCOUNT_ADDRESS" \
+#     --signer=owner \
+#     --network=testnet
 fi
 
 
@@ -46,48 +55,10 @@ flow project deploy --network="$NETWORK" --update
 
 
 # NOW we switch to the go folder, where commands _can_ be run in place.
-cd lib/go;
+cd lib/go
 
 go run scripts/deploy.go
 go test ./deploy -v
-
-NEW_VAULTED_ACCOUNT_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
-NEW_VAULTED_ACCOUNT_SK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -o inline --filter=Private)
-NEW_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NEW_VAULTED_ACCOUNT_SEED" -o inline --filter=Public)
-NEW_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NEW_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
-
-if [ "${NETWORK}" == "testnet" ]; then
-  flow transactions send ./transactions/transfer_flow_tokens_testnet.cdc \
-    -f "$FLOW_CONFIG_PATH" \
-    --arg=UFix64:0.001 \
-    --arg=Address:0x"$NEW_VAULTED_ACCOUNT_ADDRESS" \
-    --signer=token-account \
-    --network=testnet
-fi
-
-NON_VAULTED_ACCOUNT_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
-NON_VAULTED_ACCOUNT_SK=$(flow keys generate --seed="$NON_VAULTED_ACCOUNT_SEED" -o inline --filter=Private)
-NON_VAULTED_ACCOUNT_PK=$(flow keys generate --seed="$NON_VAULTED_ACCOUNT_SEED" -o inline --filter=Public)
-NON_VAULTED_ACCOUNT_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$NON_VAULTED_ACCOUNT_PK" --signer="$SIGNER" -o inline --filter=Address)
-export NEW_VAULTED_ACCOUNT_SK
-export NEW_VAULTED_ACCOUNT_ADDRESS
-export NON_VAULTED_ACCOUNT_SK
-export NON_VAULTED_ACCOUNT_ADDRESS
-
-go test ./vault  -v
-
-PAUSER_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
-PAUSER_SK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Private)
-PAUSER_PK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Public)
-PAUSER_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$PAUSER_PK" --signer="$SIGNER" -o inline --filter=Address)
-
-NON_PAUSER_SEED=$(hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/random)
-NON_PAUSER_SK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Private)
-NON_PAUSER_PK=$(flow keys generate --seed="$PAUSER_SEED" -o inline --filter=Public)
-NON_PAUSER_ADDRESS=$(flow accounts create --network="$NETWORK" --key="$PAUSER_PK" --signer="$SIGNER" -o inline --filter=Address)
-
-export PAUSER_ADDRESS
-export PAUSER_SK
-export NON_PAUSER_ADDRESS
-export NON_PAUSER_SK
+go test ./vault -v
 go test ./pause -v
+
