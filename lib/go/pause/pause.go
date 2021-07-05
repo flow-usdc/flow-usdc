@@ -1,65 +1,65 @@
 package pause
 
 import (
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
-	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func CreatePauser(
-    g *gwtf.GoWithTheFlow,
+	g *gwtf.GoWithTheFlow,
 	account string,
 ) (err error) {
-    txFilename := "../../../transactions/pause/create_new_pauser.cdc"
+	txFilename := "../../../transactions/pause/create_new_pauser.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	err = g.TransactionFromFile(txFilename, txScript).
-        SignProposeAndPayAs(account).
-        AccountArgument(account).
-        RunPrintEventsFull()
+		SignProposeAndPayAs(account).
+		AccountArgument(account).
+		RunPrintEventsFull()
 	return
 }
 
 func SetPauserCapability(
-    g *gwtf.GoWithTheFlow,
+	g *gwtf.GoWithTheFlow,
 	pauserAcct string,
 	ownerAcct string,
 ) (err error) {
-    txFilename := "../../../transactions/owner/set_pause_cap.cdc"
+	txFilename := "../../../transactions/owner/set_pause_cap.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-    pubPath := cadence.Path{Domain: "public", Identifier: "UsdcPauseCapReceiver"}
+	pubPath := cadence.Path{Domain: "public", Identifier: "UsdcPauseCapReceiver"}
 	err = g.TransactionFromFile(txFilename, txScript).
-        SignProposeAndPayAs(ownerAcct).
-        AccountArgument(pauserAcct).
-        Argument(pubPath).
-        RunPrintEventsFull()
+		SignProposeAndPayAs(ownerAcct).
+		AccountArgument(pauserAcct).
+		Argument(pubPath).
+		RunPrintEventsFull()
 	return
 }
 
 func PauseOrUnpauseContract(
-    g *gwtf.GoWithTheFlow,
+	g *gwtf.GoWithTheFlow,
 	pauserAcct string,
 	pause uint,
 ) (err error) {
-    var txFilename string 
+	var txFilename string
 
 	if pause == 1 {
-        txFilename = "../../../transactions/pause/pause_contract.cdc"
+		txFilename = "../../../transactions/pause/pause_contract.cdc"
 	} else {
-        txFilename = "../../../transactions/pause/unpause_contract.cdc"
+		txFilename = "../../../transactions/pause/unpause_contract.cdc"
 	}
 
-    txScript := util.ParseCadenceTemplate(txFilename)
+	txScript := util.ParseCadenceTemplate(txFilename)
 	err = g.TransactionFromFile(txFilename, txScript).
-        SignProposeAndPayAs(pauserAcct).
-        RunPrintEventsFull()
+		SignProposeAndPayAs(pauserAcct).
+		RunPrintEventsFull()
 	return
 }
 
 func GetPaused(g *gwtf.GoWithTheFlow) (cadence.Bool, error) {
-    filename := "../../../scripts/get_paused.cdc"
-    script := util.ParseCadenceTemplate(filename)
-    r, err := g.ScriptFromFile(filename, script).RunReturns()
-    paused := r.(cadence.Bool)
+	filename := "../../../scripts/get_paused.cdc"
+	script := util.ParseCadenceTemplate(filename)
+	r, err := g.ScriptFromFile(filename, script).RunReturns()
+	paused := r.(cadence.Bool)
 	return paused, err
 }

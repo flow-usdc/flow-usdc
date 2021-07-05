@@ -3,9 +3,9 @@ package pause
 import (
 	"testing"
 
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/flow-usdc/flow-usdc/vault"
 	"github.com/stretchr/testify/assert"
-	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func TestCreatePauser(t *testing.T) {
@@ -59,5 +59,5 @@ func TestUnPauserContractWithCap(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
-    assert.NoError(t, err)
+	assert.NoError(t, err)
 }
