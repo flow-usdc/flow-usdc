@@ -10,12 +10,12 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/client"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
-	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 type Addresses struct {
@@ -95,12 +95,12 @@ func SetupTestEnvironment(t *testing.T) (context.Context, *client.Client) {
 }
 
 func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, err error) {
-    filename := "../../../scripts/get_balance.cdc"
+	filename := "../../../scripts/get_balance.cdc"
 	script := ParseCadenceTemplate(filename)
-    value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
-    if err != nil {
-        return
-    }
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	if err != nil {
+		return
+	}
 	result = value.(cadence.UFix64)
 	return result, err
 }

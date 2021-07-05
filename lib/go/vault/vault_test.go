@@ -3,9 +3,9 @@ package vault
 import (
 	"testing"
 
+	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/stretchr/testify/assert"
-	"github.com/bjartek/go-with-the-flow/gwtf"
 )
 
 func TestAddVaultToAccount(t *testing.T) {
@@ -27,7 +27,7 @@ func TestNonVaultedAccount(t *testing.T) {
 }
 
 func TestTransferTokens(t *testing.T) {
-    g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	initialBalance, err := util.GetBalance(g, "owner")
 	assert.NoError(t, err)
@@ -49,8 +49,8 @@ func TestTransferTokens(t *testing.T) {
 }
 
 func TestTransferToNonVaulted(t *testing.T) {
-   	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	// Transfer 1 token from FT minter to Account B, which has no vault
-    err := TransferTokens(g, "1000.0", "owner", "non-vaulted-account")
+	err := TransferTokens(g, "1000.0", "owner", "non-vaulted-account")
 	assert.Error(t, err)
 }
