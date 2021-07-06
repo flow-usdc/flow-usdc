@@ -5,12 +5,12 @@ pub contract interface USDCInterface {
     // ===== Contract Paths =====
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
-    pub let BlockListExecutorStoragePath: StoragePath;
+    pub let BlocklistExecutorStoragePath: StoragePath;
     pub let MasterMinterStoragePath: StoragePath;
 
     pub let OwnerPrivPath: PrivatePath;
     pub let PauseExecutorPrivPath: PrivatePath;
-    pub let BlockListExecutorPrivPath: PrivatePath;
+    pub let BlocklistExecutorPrivPath: PrivatePath;
     pub let MasterMinterPrivPath: PrivatePath;
 
     
@@ -37,7 +37,8 @@ pub contract interface USDCInterface {
     /// Dict of all blocklisted
     /// This is managed by the blocklister
     /// Resources such as Vaults and Minters can be blocked
-    pub var blocklist: {UInt64: Bool}
+    /// {resourceId: Block Height}
+    pub var blocklist: {UInt64: UInt64};
     /// Blocklisted
     ///
     /// The event that is emitted when new resource has been blocklisted 
@@ -148,7 +149,7 @@ pub contract interface USDCInterface {
     }
 
     /// Interface required for blocklisting a resource 
-    pub resource interface BlockLister {
+    pub resource interface Blocklister {
         pub fun blocklist(resourceId: UInt64);
         pub fun unblocklist(resourceId: UInt64);
     }
@@ -160,4 +161,7 @@ pub contract interface USDCInterface {
         pub fun unpause();
     }
 
+    pub resource interface VaultUUID {
+        pub fun UUID(): UInt64;
+    }
 }

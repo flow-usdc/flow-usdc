@@ -1,17 +1,17 @@
 import FungibleToken from 0x{{.FungibleToken}} 
-import USDCInterface from 0x{{.USDCInterface}} 
+import USDCInterface from 0x{{.USDCInterface}}
 
 pub contract USDC: USDCInterface, FungibleToken {
 
     // ===== Contract Paths =====
     pub let OwnerStoragePath: StoragePath;
     pub let PauseExecutorStoragePath: StoragePath;
-    pub let BlockListExecutorStoragePath: StoragePath;
+    pub let BlocklistExecutorStoragePath: StoragePath;
     pub let MasterMinterStoragePath: StoragePath;
 
     pub let OwnerPrivPath: PrivatePath;
     pub let PauseExecutorPrivPath: PrivatePath;
-    pub let BlockListExecutorPrivPath: PrivatePath;
+    pub let BlocklistExecutorPrivPath: PrivatePath;
     pub let MasterMinterPrivPath: PrivatePath;
 
     // ===== Pause state and events =====
@@ -38,7 +38,8 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// Dict of all blocklisted
     /// This is managed by the blocklister
     /// Resources such as Vaults and Minters can be blocked
-    pub var blocklist: {UInt64: Bool}
+    /// {resourceId: Block Height}
+    pub var blocklist: {UInt64: UInt64};
     /// Blocklisted
     ///
     /// The event that is emitted when new resource has been blocklisted 
@@ -50,8 +51,27 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated()
-
+    pub event BlocklisterCreated();
+    
+    /// ===== USDC Vault events =====
+    /// NewVault 
+    ///
+    /// The event that is emitted when new vault resource has been created 
+    pub event NewVault(resourceId: UInt64);
+    /// Destroy Vault 
+    ///
+    /// The event that is emitted when a vault resource has been destroyed 
+    pub event DestroyVault(resourceId: UInt64);
+    /// USDCWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a USDC Vault
+    /// note we emit UUID as blocklisting requires this 
+    pub event USDCWithdrawn(amount: UFix64, from: UInt64);
+    /// USDCDeposited
+    ///
+    /// The event that is emitted when tokens are deposited into a USDC Vault
+    /// note we emit UUID as blocklisting requires this 
+    pub event USDCDeposited(amount: UFix64, to: UInt64);
 
     // ===== Minting states and events =====
 
@@ -126,7 +146,7 @@ pub contract USDC: USDCInterface, FungibleToken {
  
     // ===== USDC Resources: =====
     
-    pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+    pub resource Vault: USDCInterface.VaultUUID, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
         /// The total balance of this vault
         pub var balance: UFix64
@@ -135,6 +155,12 @@ pub contract USDC: USDCInterface, FungibleToken {
         init(balance: UFix64) {
             self.balance = balance
         }
+        
+        // uuid is implicitly created on resource init
+        // lets owner share uuid but there is not guarantee they would
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             pre {
@@ -142,8 +168,9 @@ pub contract USDC: USDCInterface, FungibleToken {
             }
             // todo check blocklist and pause state
             self.balance = self.balance - amount
-            emit TokensWithdrawn(amount: amount, from: self.owner?.address)
-            return <-create Vault(balance: amount)
+            emit USDCWithdrawn(amount: amount, from: self.uuid);
+            emit TokensWithdrawn(amount: amount, from: self.owner?.address);
+            return <-create Vault(balance: amount);
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
@@ -153,12 +180,14 @@ pub contract USDC: USDCInterface, FungibleToken {
             // todo check blocklist and pause state 
             let vault <- from as! @USDC.Vault
             self.balance = self.balance + vault.balance
+            emit USDCDeposited(amount: vault.balance, to: self.uuid);
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
             destroy vault 
         }
         destroy() {
             USDC.totalSupply = USDC.totalSupply - self.balance
+            emit DestroyVault(resourceId: self.uuid);
         }
     }
     
@@ -174,9 +203,9 @@ pub contract USDC: USDCInterface, FungibleToken {
             return <-create PauseExecutor()
         }
 
-        pub fun createNewBlockListExecutor(): @BlockListExecutor{
+        pub fun createNewBlocklistExecutor(): @BlocklistExecutor{
             // todo set cap
-            return <-create BlockListExecutor()
+            return <-create BlocklistExecutor()
         }
 
         pub fun createNewMasterMinter(): @MasterMinter{
@@ -263,28 +292,52 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     /// The blocklist execution resource, account with this resource must share / unlink its capability
-    /// with BlockLister to managed permission for block
-    pub resource BlockListExecutor: USDCInterface.BlockLister{
+    /// with Blocklister to managed permission for block
+    pub resource BlocklistExecutor: USDCInterface.Blocklister{
+
         pub fun blocklist(resourceId: UInt64){
-            // todo
+            let block = getCurrentBlock();
+            USDC.blocklist.insert(key: resourceId, block.height);
+            emit Blocklisted(resourceId: resourceId);
         };
+
         pub fun unblocklist(resourceId: UInt64){
-            // todo
+            USDC.blocklist.remove(key: resourceId);
+            emit Unblocklisted(resourceId: resourceId);
         };
     }
 
-    /// Delegate blocklister
-    pub resource BlockLister {
-        access(self) var blocklistcap: Capability<&BlockListExecutor>?;
+    pub resource interface BlocklistCapReceiver {
+        // This is used to set the blocklist capability of a Blocklister
+        pub fun setBlocklistCap(blocklistCap: Capability<&BlocklistExecutor>) 
+    }
+
+    /// Delegate blocklister for actually adding resources to blocklist
+    //  Blocklisting is not paused in the event the contract is paused\
+    // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#pausing
+    pub resource Blocklister: BlocklistCapReceiver {
+        // Optional value, initially nil until set by BlocklistExecutor
+        access(self) var blocklistcap: Capability<&BlocklistExecutor>?;
+        
         pub fun blocklist(resourceId: UInt64){
-            // todo
+            pre {
+                !USDC.blocklist.containsKey(resourceId): "Resource already on blocklist"
+            }
+            self.blocklistcap!.borrow()!.blocklist(resourceId: resourceId);
         };
+
         pub fun unblocklist(resourceId: UInt64){
-            // todo
+            pre {
+                USDC.blocklist.containsKey(resourceId): "Resource not on blocklist"
+            }
+            self.blocklistcap!.borrow()!.unblocklist(resourceId: resourceId);
         };
         
-        pub fun setCapability(blocklistcap: Capability<&BlockListExecutor>){
-            self.blocklistcap = blocklistcap;
+        pub fun setBlocklistCap(blocklistCap: Capability<&BlocklistExecutor>){
+            pre {
+                blocklistCap.borrow() != nil: "Invalid BlocklistCap capability"
+            }
+            self.blocklistcap = blocklistCap;
         }
         
         init(){
@@ -307,7 +360,8 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     pub resource interface PauseCapReceiver {
-        // Note: this only sets the state of the pause of the contract
+        // This is used by some account with the PauseExecutor resource
+        // to share it with a Pauser
         pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) 
     }
 
@@ -356,7 +410,9 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// account to be able to receive deposits of this token type.
     ///
     pub fun createEmptyVault(): @Vault {
-        return <-create Vault(balance: 0.0)
+        let r <-create Vault(balance: 0.0);
+        emit NewVault(resourceId: r.uuid);
+        return <-r;
     }
 
     pub fun createNewPauser(): @Pauser{
@@ -369,9 +425,9 @@ pub contract USDC: USDCInterface, FungibleToken {
         return <-create MinterController()
     }
 
-    pub fun createNewBlockLister(): @BlockLister{
-        // todo set cap
-        return <-create BlockLister()
+    pub fun createNewBlocklister(): @Blocklister{
+        emit BlocklisterCreated();
+        return <-create Blocklister()
     }
 
     init(adminAccount: AuthAccount){
@@ -409,12 +465,12 @@ pub contract USDC: USDCInterface, FungibleToken {
 
         self.OwnerStoragePath = /storage/UsdcOwner;
         self.PauseExecutorStoragePath = /storage/UsdcPauseExec;
-        self.BlockListExecutorStoragePath = /storage/UsdcBlockListExec;
+        self.BlocklistExecutorStoragePath = /storage/UsdcBlocklistExec;
         self.MasterMinterStoragePath = /storage/UsdcMasterMinter;
 
         self.OwnerPrivPath = /private/UsdcOwner;
         self.PauseExecutorPrivPath = /private/UsdcPauserExec;
-        self.BlockListExecutorPrivPath = /private/UsdcBlockListExec;
+        self.BlocklistExecutorPrivPath = /private/UsdcBlocklistExec;
         self.MasterMinterPrivPath = /private/UsdcMasterMinter;
 
         let owner <- create Owner()
@@ -425,11 +481,11 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Create all the owner resources where capabilities can be shared.
         let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerPrivPath);
         adminAccount.save(<-ownerCap.borrow()!.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
-        adminAccount.save(<-ownerCap.borrow()!.createNewBlockListExecutor(), to: self.BlockListExecutorStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewBlocklistExecutor(), to: self.BlocklistExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(), to: self.MasterMinterStoragePath);
         
         adminAccount.link<&PauseExecutor>(self.PauseExecutorPrivPath, target: self.PauseExecutorStoragePath);
-        adminAccount.link<&BlockListExecutor>(self.BlockListExecutorPrivPath, target: self.BlockListExecutorStoragePath);
+        adminAccount.link<&BlocklistExecutor>(self.BlocklistExecutorPrivPath, target: self.BlocklistExecutorStoragePath);
         adminAccount.link<&MasterMinter>(self.MasterMinterPrivPath, target: self.MasterMinterStoragePath);
 
         // Emit an event that shows that the contract was initialized

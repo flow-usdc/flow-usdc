@@ -33,6 +33,8 @@ func ParseCadenceTemplate(templatePath string) []byte {
 		panic(err)
 	}
 
+	// Addresss for emulator are
+	// addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450" }
 	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
@@ -91,5 +93,16 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 		return
 	}
 	result = value.(cadence.UFix64)
+	return result, err
+}
+
+func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (result cadence.UInt64, err error) {
+	filename := "../../../scripts/get_vault_uuid.cdc"
+	script := ParseCadenceTemplate(filename)
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	if err != nil {
+		return
+	}
+	result = value.(cadence.UInt64)
 	return result, err
 }

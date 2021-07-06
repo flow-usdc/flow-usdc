@@ -3,7 +3,6 @@ package deploy
 import (
 	"testing"
 
-	// "github.com/onflow/cadence"
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/stretchr/testify/assert"
