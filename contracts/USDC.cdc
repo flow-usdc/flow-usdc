@@ -165,6 +165,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             pre {
                 !USDC.paused: "USDC contract paused" 
+                USDC.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
             // todo check blocklist and pause state
             self.balance = self.balance - amount
@@ -176,6 +177,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
                 !USDC.paused: "USDC contract paused" 
+                USDC.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
             // todo check blocklist and pause state 
             let vault <- from as! @USDC.Vault

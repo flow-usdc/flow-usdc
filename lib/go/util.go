@@ -34,7 +34,7 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	// Addresss for emulator are
-	// addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450" }
+	// addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
 	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
@@ -96,13 +96,27 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 	return result, err
 }
 
-func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (result cadence.UInt64, err error) {
+func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {
 	filename := "../../../scripts/get_vault_uuid.cdc"
 	script := ParseCadenceTemplate(filename)
 	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
 	if err != nil {
 		return
 	}
-	result = value.(cadence.UInt64)
-	return result, err
+	r, ok := value.ToGoValue().(uint64)
+	if !ok {
+		err = errors.New("returned not uint64")
+	}
+	return
+}
+
+func GetCurrentBlockHeight(g *gwtf.GoWithTheFlow) (r uint64, err error) {
+	filename := "../../../scripts/get_block_height.cdc"
+	script := ParseCadenceTemplate(filename)
+	height, err := g.ScriptFromFile(filename, script).RunReturns()
+	r, ok := height.ToGoValue().(uint64)
+	if !ok {
+		err = errors.New("returned not uint64")
+	}
+	return
 }
