@@ -172,7 +172,7 @@ pub contract interface USDCInterface {
     }
 
     /// Interface for another vault to receive an allowance
-    /// SHould be linked to the public domain
+    /// Should be linked to the public domain
     pub resource interface Allowance {
         pub var allowed: {UInt64: UFix64};
         pub fun allowance(resourceId: UInt64): UFix64?;
