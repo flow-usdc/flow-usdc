@@ -61,4 +61,5 @@ go run scripts/deploy.go
 go test ./deploy -v
 go test ./vault -v
 go test ./pause -v
+go test ./blocklist -v
 

@@ -3,6 +3,7 @@
 // so that they can use USDC 
 import FungibleToken from 0x{{.FungibleToken}}
 import USDC from 0x{{.USDCToken}}
+import USDCInterface from 0x{{.USDCInterface}}
 
 transaction {
 
@@ -23,6 +24,13 @@ transaction {
         // the deposit function through the Receiver interface
         signer.link<&USDC.Vault{FungibleToken.Receiver}>(
             /public/UsdcReceiver,
+            target: /storage/UsdcVault
+        )
+
+        // Create a public capability to the Vault that only exposes
+        // the UUID() function through the VaultUUID interface
+        signer.link<&USDC.Vault{USDCInterface.VaultUUID}>(
+            /public/UsdcVaultUUID,
             target: /storage/UsdcVault
         )
 
