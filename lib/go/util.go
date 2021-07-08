@@ -93,7 +93,7 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 		return
 	}
 	result = value.(cadence.UFix64)
-	return result, err
+	return
 }
 
 func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {

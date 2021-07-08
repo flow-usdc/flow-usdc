@@ -28,6 +28,14 @@ transaction {
         )
 
         // Create a public capability to the Vault that only exposes
+        // the withdrawAllowace function through the WithdrawAllowance interface
+        // Anyone can all this method but only those with allowance set will succeed
+        signer.link<&USDC.Vault{USDCInterface.Allowance}>(
+            /public/UsdcVaultAllowance,
+            target: /storage/UsdcVault
+        )
+
+        // Create a public capability to the Vault that only exposes
         // the UUID() function through the VaultUUID interface
         signer.link<&USDC.Vault{USDCInterface.VaultUUID}>(
             /public/UsdcVaultUUID,
