@@ -72,6 +72,11 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// The event that is emitted when tokens are deposited into a USDC Vault
     /// note we emit UUID as blocklisting requires this 
     pub event USDCDeposited(amount: UFix64, to: UInt64);
+    /// Approval 
+    ///
+    /// The event that is emitted when a USDC vault approves another to  
+    /// withdraw some set allowance 
+    pub event Approval(fromResourceId: UInt64, toResourceId: UInt64, amount: UFix64);
 
     // ===== Minting states and events =====
 
@@ -146,7 +151,7 @@ pub contract USDC: USDCInterface, FungibleToken {
  
     // ===== USDC Resources: =====
     
-    pub resource Vault: USDCInterface.VaultUUID, USDCInterface.Approval, USDCInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+    pub resource Vault: USDCInterface.VaultUUID, USDCInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
         // initialize the balance at resource creation time
         init(balance: UFix64) {
@@ -224,8 +229,6 @@ pub contract USDC: USDCInterface, FungibleToken {
             
             assert(self.allowed.containsKey(resourceId), message: "no allowance provided for resource");
             let allowance = self.allowed[resourceId]!;
-            log("allowance ");
-            log(allowance);
             assert(allowance >= amount, message: "requested amount more than allowed");
             self.allowed.insert(key: resourceId, allowance - amount);
             
@@ -238,10 +241,33 @@ pub contract USDC: USDCInterface, FungibleToken {
             receiverRef.deposit(from: <-v)
         }
 
-        // Sets allowance for this vault
-        pub fun approval(uuid: UInt64, amount: UFix64) {
-            self.allowed.insert(key: uuid, amount);
+        // ===== Private capabilities to set / modify allowances
+
+        /// Sets allowance for this vault
+        pub fun approval(resourceId: UInt64, amount: UFix64) {
+            if (amount != 0.0){
+                self.allowed.insert(key: resourceId, amount);
+            } else {
+                assert(self.allowed.containsKey(resourceId), message: "cannot set zero allowance")
+                self.allowed.remove(key: resourceId)
+            }
+            emit Approval(fromResourceId: self.uuid, toResourceId: resourceId, amount: amount);
         }
+
+        /// Increase current allowance by increment value 
+        pub fun increaseAllowance(resourceId: UInt64, increment: UFix64){
+            let allowance = self.allowed[resourceId] ?? 0.0;
+            let newAllowance = allowance.saturatingAdd(increment);
+            self.approval(resourceId: resourceId, amount: newAllowance);
+        };
+
+        /// Decrease current allowance by decrement value 
+        pub fun decreaseAllowance(resourceId: UInt64, decrement: UFix64){
+            let allowance = self.allowed[resourceId]!;
+            let newAllowance = allowance.saturatingSubtract(decrement);
+            self.approval(resourceId: resourceId, amount: newAllowance);
+        };
+
 
         destroy() {
             USDC.totalSupply = USDC.totalSupply - self.balance

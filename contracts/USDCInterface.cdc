@@ -165,12 +165,6 @@ pub contract interface USDCInterface {
         pub fun UUID(): UInt64;
     }
     
-    /// Interface for setting allowance by the vault owner
-    /// Should be linked to the private domain
-    pub resource interface Approval {
-        pub fun approval(uuid: UInt64, amount: UFix64);
-    }
-
     /// Interface for another vault to receive an allowance
     /// Should be linked to the public domain
     pub resource interface Allowance {

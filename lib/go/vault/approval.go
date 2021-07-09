@@ -33,6 +33,9 @@ func GetAllowance(
 		AccountArgument(fromAcct).
 		UInt64Argument(toResourceId).
 		RunReturns()
+	if err != nil {
+		return
+	}
 	result = r.(cadence.UFix64)
 	return
 }
@@ -51,6 +54,30 @@ func WithdrawAllowance(
 		AccountArgument(fromAcct).
 		AccountArgument(toAcct).
 		UFix64Argument(amount).
+		RunPrintEventsFull()
+	return
+}
+
+func IncreaseOrDecreaseAlowance(
+	g *gwtf.GoWithTheFlow,
+	fromAcct string,
+	toResourceId uint64,
+	delta string,
+	inc uint,
+) (err error) {
+	var txFilename string
+
+	if inc == 1 {
+		txFilename = "../../../transactions/vault/increaseAllowance.cdc"
+	} else {
+		txFilename = "../../../transactions/vault/decreaseAllowance.cdc"
+	}
+
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(fromAcct).
+		UInt64Argument(toResourceId).
+		UFix64Argument(delta).
 		RunPrintEventsFull()
 	return
 }
