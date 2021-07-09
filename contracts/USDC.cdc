@@ -146,22 +146,20 @@ pub contract USDC: USDCInterface, FungibleToken {
  
     // ===== USDC Resources: =====
     
-    pub resource Vault: USDCInterface.VaultUUID, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+    pub resource Vault: USDCInterface.VaultUUID, USDCInterface.Approval, USDCInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+
+        // initialize the balance at resource creation time
+        init(balance: UFix64) {
+            self.balance = balance;
+            self.allowed = {};
+        }
+        
+        // ===== Fungible Token Interfaces =====
 
         /// The total balance of this vault
         pub var balance: UFix64
 
-        // initialize the balance at resource creation time
-        init(balance: UFix64) {
-            self.balance = balance
-        }
-        
-        // uuid is implicitly created on resource init
-        // lets owner share uuid but there is not guarantee they would
-        pub fun UUID(): UInt64 {
-            return self.uuid;
-        }
-
+        // Fungible token Provider interface 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             pre {
                 !USDC.paused: "USDC contract paused" 
@@ -174,6 +172,7 @@ pub contract USDC: USDCInterface, FungibleToken {
             return <-create Vault(balance: amount);
         }
 
+        // Fungible token Receiver interface 
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
                 !USDC.paused: "USDC contract paused" 
@@ -187,6 +186,63 @@ pub contract USDC: USDCInterface, FungibleToken {
             vault.balance = 0.0
             destroy vault 
         }
+
+        
+        // ===== USDC interfacas =====
+
+        /// USDC VaultUUID Interface: should be linked to the public domain 
+        /// uuid is implicitly created on resource init
+        /// lets owner share uuid but there is not guarantee they would
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }
+
+        /// The allowances state of this vault
+        ///
+        /// Receiving vault uuid : Amount
+        pub var allowed: {UInt64: UFix64};
+
+        /// Public interface to check allowance
+        ///
+        /// Returns allowance if any
+        pub fun allowance(resourceId: UInt64): UFix64? {
+           return self.allowed[resourceId];
+        }
+
+        /// Public interface to withdraw allowance
+        ///
+        /// Anyone can call this but the allowance would be transfered to 
+        /// the vault stored at the recv addr
+        pub fun withdrawAllowance(recvAddr: Address, amount: UFix64) {
+            let to = getAccount(recvAddr);
+            // TODO: perhaps allow path as an arg
+            let idRef = to.getCapability(/public/UsdcVaultUUID)
+                .borrow<&{USDCInterface.VaultUUID}>()
+                ?? panic("Could not borrow uuid reference to the recipient's Vault")
+
+            let resourceId = idRef.UUID(); 
+            
+            assert(self.allowed.containsKey(resourceId), message: "no allowance provided for resource");
+            let allowance = self.allowed[resourceId]!;
+            log("allowance ");
+            log(allowance);
+            assert(allowance >= amount, message: "requested amount more than allowed");
+            self.allowed.insert(key: resourceId, allowance - amount);
+            
+            let v <- self.withdraw(amount:amount);
+
+            let receiverRef = to.getCapability(/public/UsdcReceiver)
+                .borrow<&{FungibleToken.Receiver}>()
+                ?? panic("Could not borrow receiver reference to the recipient's Vault")
+    
+            receiverRef.deposit(from: <-v)
+        }
+
+        // Sets allowance for this vault
+        pub fun approval(uuid: UInt64, amount: UFix64) {
+            self.allowed.insert(key: uuid, amount);
+        }
+
         destroy() {
             USDC.totalSupply = USDC.totalSupply - self.balance
             emit DestroyVault(resourceId: self.uuid);
@@ -458,6 +514,22 @@ pub contract USDC: USDCInterface, FungibleToken {
         //
         adminAccount.link<&USDC.Vault{FungibleToken.Balance}>(
             /public/UsdcBalance,
+            target: /storage/UsdcVault
+        )
+
+        // Create a public capability to the stored Vault that only exposes
+        // the `uuid` field through the `VaultUUID` interface
+        //
+        adminAccount.link<&USDC.Vault{USDCInterface.VaultUUID}>(
+            /public/UsdcVaultUUID,
+            target: /storage/UsdcVault
+        )
+
+        // Create a public capability to the stored Vault that only exposes
+        // the `withdrawAllowance` method through the `WithdrawAllowance` interface
+        //
+        adminAccount.link<&USDC.Vault{USDCInterface.Allowance}>(
+            /public/UsdcVaultAllowance,
             target: /storage/UsdcVault
         )
 

@@ -17,7 +17,16 @@ func DeployUSDCContract(
 	txFilename := "../../transactions/deploy_contract_with_auth.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
-	g.CreateAccountPrintEvents("vaulted-account", "non-vaulted-account", "pauser", "non-pauser", "blocklister", "non-blocklister")
+	g.CreateAccountPrintEvents(
+		"vaulted-account",
+		"non-vaulted-account",
+		"pauser",
+		"non-pauser",
+		"blocklister",
+		"non-blocklister",
+		"allowance",
+		"non-allowance",
+	)
 	err = g.TransactionFromFile(txFilename, code).SignProposeAndPayAs(ownerAcct).StringArgument("USDC").StringArgument(encodedStr).RunPrintEventsFull()
 	return
 }

@@ -61,6 +61,14 @@
     "non-blocklister" : {
 	  "address": "f669cb8d41ce0c74",
       "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "allowance" : {
+	  "address": "192440c99cb17282",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "non-allowance" : {
+	  "address": "fd43f9148d4b725d",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     }
   }
 }
