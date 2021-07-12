@@ -3,24 +3,31 @@ import FungibleToken from "./FungibleToken.cdc"
 pub contract interface FiatTokenInterface {
 
     // ===== Token Info =====
-    pub var name: String;
+    pub let name: String;
 
     // ===== Contract Paths =====
-    pub var VaultBalancePubPath: PublicPath;
-    pub var VaultUUIDPubPath: PublicPath;
-    pub var VaultAllowancePubPath: PublicPath;
-    pub var VaultReceiverPubPath: PublicPath;
+    pub let VaultStoragePath: StoragePath;
+    pub let VaultBalancePubPath: PublicPath;
+    pub let VaultUUIDPubPath: PublicPath;
+    pub let VaultAllowancePubPath: PublicPath;
+    pub let VaultReceiverPubPath: PublicPath;
 
-    pub var VaultStoragePath: StoragePath;
-    pub var OwnerStoragePath: StoragePath;
-    pub var PauseExecutorStoragePath: StoragePath;
-    pub var BlocklistExecutorStoragePath: StoragePath;
-    pub var MasterMinterStoragePath: StoragePath;
+    pub let BlocklistExecutorStoragePath: StoragePath;
+    pub let BlocklistExecutorPrivPath: PrivatePath;
+    
+    pub let BlocklisterStoragePath: StoragePath;
+    pub let BlocklisterCapReceiverPubPath: PublicPath;
 
-    pub var OwnerPrivPath: PrivatePath;
-    pub var PauseExecutorPrivPath: PrivatePath;
-    pub var BlocklistExecutorPrivPath: PrivatePath;
-    pub var MasterMinterPrivPath: PrivatePath;
+    pub let PauseExecutorStoragePath: StoragePath;
+    pub let PauseExecutorPrivPath: PrivatePath;
+
+    pub let PauserStoragePath: StoragePath;
+    pub let PauserCapReceiverPubPath: PublicPath;
+
+    pub let OwnerStoragePath: StoragePath;
+    pub let OwnerPrivPath: PrivatePath;
+    pub let MasterMinterStoragePath: StoragePath;
+    pub let MasterMinterPrivPath: PrivatePath;
     
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`

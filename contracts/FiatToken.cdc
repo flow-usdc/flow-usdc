@@ -4,31 +4,31 @@ import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
     // ===== Token Info =====
-    pub var name: String;
+    pub let name: String;
 
     // ===== Contract Paths =====
-    pub var VaultStoragePath: StoragePath;
-    pub var VaultBalancePubPath: PublicPath;
-    pub var VaultUUIDPubPath: PublicPath;
-    pub var VaultAllowancePubPath: PublicPath;
-    pub var VaultReceiverPubPath: PublicPath;
+    pub let VaultStoragePath: StoragePath;
+    pub let VaultBalancePubPath: PublicPath;
+    pub let VaultUUIDPubPath: PublicPath;
+    pub let VaultAllowancePubPath: PublicPath;
+    pub let VaultReceiverPubPath: PublicPath;
 
-    pub var BlocklistExecutorStoragePath: StoragePath;
-    pub var BlocklistExecutorPrivPath: PrivatePath;
+    pub let BlocklistExecutorStoragePath: StoragePath;
+    pub let BlocklistExecutorPrivPath: PrivatePath;
     
-    pub var BlocklisterStoragePath: StoragePath;
-    pub var BlocklisterCapReceiverPubPath: PublicPath;
+    pub let BlocklisterStoragePath: StoragePath;
+    pub let BlocklisterCapReceiverPubPath: PublicPath;
 
-    pub var PauseExecutorStoragePath: StoragePath;
-    pub var PauseExecutorPrivPath: PrivatePath;
+    pub let PauseExecutorStoragePath: StoragePath;
+    pub let PauseExecutorPrivPath: PrivatePath;
 
-    pub var PauserStoragePath: StoragePath;
-    pub var PauserCapReceiverPubPath: PublicPath;
+    pub let PauserStoragePath: StoragePath;
+    pub let PauserCapReceiverPubPath: PublicPath;
 
-    pub var OwnerStoragePath: StoragePath;
-    pub var OwnerPrivPath: PrivatePath;
-    pub var MasterMinterStoragePath: StoragePath;
-    pub var MasterMinterPrivPath: PrivatePath;
+    pub let OwnerStoragePath: StoragePath;
+    pub let OwnerPrivPath: PrivatePath;
+    pub let MasterMinterStoragePath: StoragePath;
+    pub let MasterMinterPrivPath: PrivatePath;
 
     // ===== Pause state and events =====
     
