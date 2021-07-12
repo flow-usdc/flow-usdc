@@ -19,21 +19,6 @@ func CreateBlocklister(
 	return
 }
 
-func SetBlocklistCapability(
-	g *gwtf.GoWithTheFlow,
-	blocklisterAcct string,
-	ownerAcct string,
-) (err error) {
-	txFilename := "../../../transactions/owner/set_blocklist_cap.cdc"
-	txScript := util.ParseCadenceTemplate(txFilename)
-
-	err = g.TransactionFromFile(txFilename, txScript).
-		SignProposeAndPayAs(ownerAcct).
-		AccountArgument(blocklisterAcct).
-		RunPrintEventsFull()
-	return
-}
-
 func BlocklistOrUnblocklistRsc(
 	g *gwtf.GoWithTheFlow,
 	blocklisterAcct string,

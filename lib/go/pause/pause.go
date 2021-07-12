@@ -19,21 +19,6 @@ func CreatePauser(
 	return
 }
 
-func SetPauserCapability(
-	g *gwtf.GoWithTheFlow,
-	pauserAcct string,
-	ownerAcct string,
-) (err error) {
-	txFilename := "../../../transactions/owner/set_pause_cap.cdc"
-	txScript := util.ParseCadenceTemplate(txFilename)
-
-	err = g.TransactionFromFile(txFilename, txScript).
-		SignProposeAndPayAs(ownerAcct).
-		AccountArgument(pauserAcct).
-		RunPrintEventsFull()
-	return
-}
-
 func PauseOrUnpauseContract(
 	g *gwtf.GoWithTheFlow,
 	pauserAcct string,
