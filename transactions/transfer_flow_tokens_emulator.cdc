@@ -7,7 +7,7 @@
 
 // Here we use hard-coded testnet addresses for the emulator
 // This is required because the newly created account requires
-// balance for the deployment of the USDC contract.
+// balance for the deployment of the FiatToken contract.
 
 import FungibleToken from 0xee82856bf20e2aa6
 import FlowToken from 0x0ae53cb6e3f42a79

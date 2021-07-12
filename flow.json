@@ -7,10 +7,10 @@
   },
   "deployments": {
     "emulator": {
-      "owner": ["USDCInterface"]
+      "owner": ["FiatTokenInterface"]
     },
     "testnet": {
-      "owner": ["USDCInterface"]
+      "owner": ["FiatTokenInterface"]
     }
   },
   "contracts": {
@@ -22,7 +22,7 @@
         "mainnet": "0xf233dcee88fe0abe"
       }
     },
-    "USDCInterface": "./contracts/USDCInterface.cdc"
+    "FiatTokenInterface": "./contracts/FiatTokenInterface.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",

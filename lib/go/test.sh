@@ -32,7 +32,7 @@ if [ "${NETWORK}" == "emulator" ]; then
   SIGNER=emulator-account
   OWNER_PK="46acb0e0918e09a50fc2a6b12f14fc00822ad7dac6c6fd92427ec675b9745cbe5ae93d790e6fdd0683d7dd17b6156cc4201def8d6a992807796a5ce4a789005f"
   # we create the first account and transfer flow tokens to it
-  # the first account is the USDC owner
+  # the first account is the FiatToken owner
   flow accounts create --network="$NETWORK" --key="$OWNER_PK" --signer="$SIGNER"
   flow transactions send ./transactions/transfer_flow_tokens_emulator.cdc \
     --arg=UFix64:100.0 \

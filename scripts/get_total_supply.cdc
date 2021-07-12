@@ -1,11 +1,11 @@
 // This script reads the total supply field
-// of the USDC smart contract
+// of the FiatToken smart contract
 
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 pub fun main(): UFix64 {
 
-    let supply = USDC.totalSupply
+    let supply = FiatToken.totalSupply
 
     log(supply)
 

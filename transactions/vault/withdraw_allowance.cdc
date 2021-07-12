@@ -1,8 +1,8 @@
-// This transaction is a template for withdrawing allowance from a USDC vault
+// This transaction is a template for withdrawing allowance from a FiatToken vault
 
 import FungibleToken from 0x{{.FungibleToken}}
-import USDC from 0x{{.USDCToken}}
-import USDCInterface from 0x{{.USDCInterface}}
+import FiatToken from 0x{{.FiatToken}}
+import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction(fromAddr: Address, toAddr: Address, amount: UFix64) {
     
@@ -16,8 +16,8 @@ transaction(fromAddr: Address, toAddr: Address, amount: UFix64) {
         let fromAcct = getAccount(fromAddr)
 
         // Get a allowance reference to the fromAcct's vault 
-        let allowanceRef = fromAcct.getCapability(/public/UsdcVaultAllowance)
-            .borrow<&{USDCInterface.Allowance}>()
+        let allowanceRef = fromAcct.getCapability(FiatToken.VaultAllowancePubPath)
+            .borrow<&{FiatTokenInterface.Allowance}>()
             ?? panic("Could not borrow allowance reference")
 
         allowanceRef.withdrawAllowance(recvAddr: toAddr, amount: amount)

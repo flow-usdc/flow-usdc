@@ -1,52 +1,52 @@
 // This transaction is a template for a transaction
 // to add a Vault resource to their account
-// so that they can use USDC 
+// so that they can use FiatToken 
 import FungibleToken from 0x{{.FungibleToken}}
-import USDC from 0x{{.USDCToken}}
-import USDCInterface from 0x{{.USDCInterface}}
+import FiatToken from 0x{{.FiatToken}}
+import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction {
 
     prepare(signer: AuthAccount) {
 
-        // Return early if the account already stores a USDC Vault
-        if signer.borrow<&USDC.Vault>(from: /storage/UsdcVault) != nil {
+        // Return early if the account already stores a FiatToken Vault
+        if signer.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath) != nil {
             return
         }
 
         // Create a new ExampleToken Vault and put it in storage
         signer.save(
-            <-USDC.createEmptyVault(),
-            to: /storage/UsdcVault
+            <-FiatToken.createEmptyVault(),
+            to: FiatToken.VaultStoragePath
         )
 
         // Create a public capability to the Vault that only exposes
         // the deposit function through the Receiver interface
-        signer.link<&USDC.Vault{FungibleToken.Receiver}>(
-            /public/UsdcReceiver,
-            target: /storage/UsdcVault
+        signer.link<&FiatToken.Vault{FungibleToken.Receiver}>(
+            FiatToken.VaultReceiverPubPath,
+            target: FiatToken.VaultStoragePath
         )
 
         // Create a public capability to the Vault that only exposes
         // the withdrawAllowace function through the WithdrawAllowance interface
         // Anyone can all this method but only those with allowance set will succeed
-        signer.link<&USDC.Vault{USDCInterface.Allowance}>(
-            /public/UsdcVaultAllowance,
-            target: /storage/UsdcVault
+        signer.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(
+            FiatToken.VaultAllowancePubPath,
+            target: FiatToken.VaultStoragePath
         )
 
         // Create a public capability to the Vault that only exposes
         // the UUID() function through the VaultUUID interface
-        signer.link<&USDC.Vault{USDCInterface.VaultUUID}>(
-            /public/UsdcVaultUUID,
-            target: /storage/UsdcVault
+        signer.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(
+            FiatToken.VaultUUIDPubPath,
+            target: FiatToken.VaultStoragePath
         )
 
         // Create a public capability to the Vault that only exposes
         // the balance field through the Balance interface
-        signer.link<&USDC.Vault{FungibleToken.Balance}>(
-            /public/UsdcBalance,
-            target: /storage/UsdcVault
+        signer.link<&FiatToken.Vault{FungibleToken.Balance}>(
+            FiatToken.VaultBalancePubPath,
+            target: FiatToken.VaultStoragePath
         )
     }
 }

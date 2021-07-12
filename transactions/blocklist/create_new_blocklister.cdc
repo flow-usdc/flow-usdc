@@ -1,25 +1,21 @@
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 transaction(blocklisterAddr: Address) {
     prepare (blocklister: AuthAccount) {
         
         // Check and return if they already have a pauser resource
-        if blocklister.borrow<&USDC.Blocklister>(from: /storage/UsdcBlocklister) != nil {
+        if blocklister.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) != nil {
             return
         }
         
-        blocklister.save(<- USDC.createNewBlocklister(), to: /storage/UsdcBlocklister);
+        blocklister.save(<- FiatToken.createNewBlocklister(), to: FiatToken.BlocklisterStoragePath);
         
-        blocklister.link<&USDC.Blocklister{USDC.BlocklistCapReceiver}>(/public/UsdcBlocklistCapReceiver, target: /storage/UsdcBlocklister)
+        blocklister.link<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath, target: FiatToken.BlocklisterStoragePath)
         ??  panic("Could not link BlocklistCapReceiver");
-
-        blocklister.link<&USDC.Blocklister>(/private/UsdcBlocklister, target: /storage/UsdcBlocklister)
-        ??  panic("Could not link BlocklistCap");
-        
     } 
 
     post {
-        getAccount(blocklisterAddr).getCapability<&USDC.Blocklister{USDC.BlocklistCapReceiver}>(/public/UsdcBlocklistCapReceiver).check() :
+        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
         "BlocklistCapReceiver link not set"
     }
 }

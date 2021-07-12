@@ -1,13 +1,13 @@
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 transaction {
     prepare (pauser: AuthAccount) {
 
-        let cap = pauser.getCapability<&USDC.Pauser>(/private/UsdcPause).borrow() ?? panic("cannot borrow own private path")
-        cap.unpause();
+        let pauser = pauser.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) ?? panic("cannot borrow own private path")
+        pauser.unpause();
     } 
 
     post {
-        !USDC.paused: "unpause contract error"
+        !FiatToken.paused: "unpause contract error"
     }
 }

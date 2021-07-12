@@ -1,18 +1,26 @@
 import FungibleToken from "./FungibleToken.cdc"
 
-pub contract interface USDCInterface {
+pub contract interface FiatTokenInterface {
+
+    // ===== Token Info =====
+    pub var name: String;
 
     // ===== Contract Paths =====
-    pub let OwnerStoragePath: StoragePath;
-    pub let PauseExecutorStoragePath: StoragePath;
-    pub let BlocklistExecutorStoragePath: StoragePath;
-    pub let MasterMinterStoragePath: StoragePath;
+    pub var VaultBalancePubPath: PublicPath;
+    pub var VaultUUIDPubPath: PublicPath;
+    pub var VaultAllowancePubPath: PublicPath;
+    pub var VaultReceiverPubPath: PublicPath;
 
-    pub let OwnerPrivPath: PrivatePath;
-    pub let PauseExecutorPrivPath: PrivatePath;
-    pub let BlocklistExecutorPrivPath: PrivatePath;
-    pub let MasterMinterPrivPath: PrivatePath;
+    pub var VaultStoragePath: StoragePath;
+    pub var OwnerStoragePath: StoragePath;
+    pub var PauseExecutorStoragePath: StoragePath;
+    pub var BlocklistExecutorStoragePath: StoragePath;
+    pub var MasterMinterStoragePath: StoragePath;
 
+    pub var OwnerPrivPath: PrivatePath;
+    pub var PauseExecutorPrivPath: PrivatePath;
+    pub var BlocklistExecutorPrivPath: PrivatePath;
+    pub var MasterMinterPrivPath: PrivatePath;
     
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`
@@ -61,7 +69,7 @@ pub contract interface USDCInterface {
     /// Dict of all minters and their deadlines in terms of block height 
     pub var minterDeadlines: { UInt64: UInt64};
     /// Dict of all minters and their restricted vault reciever
-    pub var minterRecievers: { UInt64: UInt64};
+    pub var minterReceivers: { UInt64: UInt64};
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
@@ -137,7 +145,7 @@ pub contract interface USDCInterface {
         ///
         /// Function that updates managedMinter 
         /// only the MasterMinter will have this capability so it is configured by such resource 
-        pub fun configureManagedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
+        pub fun configureManagedMinter (cap: Capability<&AnyResource{FiatTokenInterface.MasterMinter}>, newManagedMinter: UInt64?) {
             post{self.managedMinter == newManagedMinter: "Must set managed minter to new resourceID"}
         }
     }
