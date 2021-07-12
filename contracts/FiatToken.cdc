@@ -1,5 +1,8 @@
-import FungibleToken from 0x{{.FungibleToken}} 
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
+// import FungibleToken from 0x{{.FungibleToken}} 
+// import FiatTokenInterface from 0x{{.FiatTokenInterface}}
+
+import FungibleToken from "./FungibleToken.cdc"
+import FiatTokenInterface from "./FiatTokenInterface.cdc" 
 
 pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
@@ -95,7 +98,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     pub event Approval(fromResourceId: UInt64, toResourceId: UInt64, amount: UFix64);
 
     // ===== Minting states and events =====
-
+    
+    /// Dict of minter controller to their minter
+    /// Only one minter per minter controller but each minter may be controller by multiple controllers
+    pub var managedMinters: {UInt64: UInt64}
     /// Minting restrictions include allowance, deadline, vault reciever
     /// Dict of all minters and their allowances
     pub var minterAllowances: { UInt64: UFix64};
@@ -123,11 +129,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// MinterConfigured 
     ///
     /// The event that is emitted when minter controller has configured a minter's restrictions 
-    pub event MinterConfigured(minter: UInt64);
+    /// Currently only support allowance
+    pub event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64);
     /// MinterRemoved
     ///
     /// The event that is emitted when minter controller has removed the minter 
-    pub event MinterRemoved(minter: UInt64);
+    pub event MinterRemoved(controller: UInt64, minter: UInt64);
     /// MinterAllowanceIncreased
     ///
     /// The event that is emitted when minter controller has increase the minter's allowance
@@ -245,7 +252,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             
             assert(self.allowed.containsKey(resourceId), message: "no allowance provided for resource");
             let allowance = self.allowed[resourceId]!;
-            assert(allowance >= amount, message: "requested amount more than allowed");
+            assert(allowance >= amount, message: "insufficient allowance");
             self.allowed.insert(key: resourceId, allowance - amount);
             
             let v <- self.withdraw(amount:amount);
@@ -299,17 +306,14 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     pub resource Owner {
 
         pub fun createNewPauseExecutor(): @PauseExecutor{
-            // todo set cap
             return <-create PauseExecutor()
         }
 
         pub fun createNewBlocklistExecutor(): @BlocklistExecutor{
-            // todo set cap
             return <-create BlocklistExecutor()
         }
 
         pub fun createNewMasterMinter(): @MasterMinter{
-            // todo set cap
             return <-create MasterMinter()
         }
     }
@@ -319,39 +323,48 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The master minter creates minter controller resources to delegate control for minters
     pub resource MasterMinter: FiatTokenInterface.MasterMinter {
 
-     
-        /// Function that creates and returns a new minter resource
-        /// The controller should be set here too
-        pub fun createNewMinter(allowance: UFix64): @Minter {
-            // can only create 1
-            // update minterAllowance 
-            return <- create Minter();
-        }
-
         /// Function to configure MinterController
-        /// This should configure the minter for the controller 
-        pub fun configureMinterController(minter: UInt64, mintController: UInt64) {
-            // todo
+        pub fun configureMinterController(minter: UInt64, minterController: UInt64) {
+            /// we overwrite the key here since minterController can only control 1 minter
+            FiatToken.managedMinters.insert(key: minterController, minter);
+            emit ControllerConfigured(controller: minterController, minter: minter)
         }
         
         /// Function to remove MinterController
-        /// This should remove the capability from the MasterMinter
         pub fun removeMinterController(minterController: UInt64){
-            // todo
+            assert(FiatToken.managedMinters.containsKey(minterController), message: "cannot remove unknown minter controller");
+            FiatToken.managedMinters.remove(key: minterController);
+            emit ControllerRemoved(controller: minterController)
         }
+    }
+    
+    pub resource interface ManageMinterController {
+        pub fun managedMinter(): UInt64?; 
+        pub fun UUID(): UInt64; 
     }
 
     /// This is a resource to manage minters, delegated from MasterMinter
-    pub resource MinterController: FiatTokenInterface.MinterController {
+    pub resource MinterController: FiatTokenInterface.MinterController, ManageMinterController {
 
         /// The resourceId this MinterController manages
-        pub var managedMinter: UInt64?;
+        pub fun managedMinter(): UInt64? {
+            return FiatToken.managedMinters[self.uuid];
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }
 
         /// configureMinter 
         ///
         /// Function that updates existing minter restrictions
-        pub fun configureMinter(allowance: UFix64) {
-            // todo, time, destination vault
+        pub fun configureMinterAllowance(allowance: UFix64) {
+            pre {
+                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
+            }
+            let managedMinter = self.managedMinter()!;
+            FiatToken.minterAllowances[managedMinter] = allowance;
+            emit MinterConfigured(controller: self.uuid, minter: managedMinter, allowance: allowance);
         }
         
         pub fun incrementMinterAllowance(amount: UFix64) {
@@ -366,27 +379,39 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         /// 
         /// Function to remove minter
         pub fun removeMinter(minter: UInt64){
-            // todo
-        }
-        
-        pub fun configureManagedMinter (cap: Capability<&AnyResource{FiatTokenInterface.MasterMinter}>, newManagedMinter: UInt64?) {
-        }
-        
-        init(){
-            self.managedMinter = nil;
+            pre {
+                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
+            }
+            let managedMinter = self.managedMinter()!;
+            assert(FiatToken.minterAllowances.containsKey(minter), message: "cannot remove unknown minter");
+            FiatToken.minterAllowances.remove(key: minter);
+            emit MinterRemoved(controller: self.uuid, minter: minter)
         }
     }
 
     /// The actual minter resource, the resourceId must be added to the minter restrictions lists
     /// for minter to successfully mint / burn within restrictions
     pub resource Minter: FiatTokenInterface.Minter {
-        // todo: check allowance
-        // todo: check block
         pub fun mint(amount: UFix64): @FungibleToken.Vault{
+            pre{
+                FiatToken.minterAllowances.containsKey(self.uuid): "minter does not have allowance set"
+            }
+            let mintAllowance = FiatToken.minterAllowances[self.uuid];
+            assert(mintAllowance >= amount, message: "insufficient mint allowance");
+            FiatToken.minterAllowances.insert(key: self.uuid, minterAllowance - amount);
+            let newTotalSupply = FiatToken.totalSupply + amount;
+            FiatToken.totalSupply = newTotalSupply;
             return <-create Vault(balance: amount);
         }
+        
+        /// Burn tokens called by minter reduces the totalSupply of the tokens
+        /// Burning tokens does not increase minting allowance
+        // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#burning
         pub fun burn(vault: @FungibleToken.Vault) {
-            //todo
+            let amount = vault.balance;
+            assert(FiatToken.totalSupply >= amount, message: "burning more than total supply");
+            let newTotalSupply = FiatToken.totalSupply - amount;
+            FiatToken.totalSupply = newTotalSupply;
             destroy vault;
         }
     }
@@ -520,10 +545,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <-create Pauser()
     }
 
-    pub fun createMinterController(): @MinterController{
-        // todo set cap
+    pub fun createNewMinterController(): @MinterController{
         return <-create MinterController()
     }
+
+    pub fun createNewMinter(): @Minter{
+        return <-create Minter()
 
     pub fun createNewBlocklister(): @Blocklister{
         emit BlocklisterCreated();
@@ -552,8 +579,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         tokenName: String,
         initTotalSupply: UFix64,
         initPaused: Bool
-    ){
-        self.name= tokenName;
+    ) {
+        self.name = tokenName;
         self.paused = initPaused;
         self.totalSupply = initTotalSupply;
         self.blocklist = {};

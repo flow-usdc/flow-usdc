@@ -70,6 +70,9 @@ pub contract interface FiatTokenInterface {
 
     // ===== Minting states and events =====
 
+    /// Dict of minter controller to their minter
+    /// Only one minter per minter controller but each minter may be controller by multiple controllers
+    pub var managedMinters: {UInt64: UInt64}
     /// Minting restrictions include allowance, deadline, vault reciever
     /// Dict of all minters and their allowances
     pub var minterAllowances: { UInt64: UFix64};
@@ -97,11 +100,11 @@ pub contract interface FiatTokenInterface {
     /// MinterConfigured 
     ///
     /// The event that is emitted when minter controller has configured a minter's restrictions 
-    pub event MinterConfigured(minter: UInt64);
+    pub event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64);
     /// MinterRemoved
     ///
     /// The event that is emitted when minter controller has removed the minter 
-    pub event MinterRemoved(minter: UInt64);
+    pub event MinterRemoved(controller: UInt64, minter: UInt64);
     /// MinterAllowanceIncreased
     ///
     /// The event that is emitted when minter controller has increase the minter's allowance
@@ -127,7 +130,7 @@ pub contract interface FiatTokenInterface {
 
         /// Function to configure MinterController
         /// This should configure the minter for the controller 
-        pub fun configureMinterController(minter: UInt64, mintController: UInt64);
+        pub fun configureMinterController(minter: UInt64, minterController: UInt64);
 
         /// Function to remove MinterController
         /// This should remove the capability from the MasterMinter
@@ -136,25 +139,13 @@ pub contract interface FiatTokenInterface {
 
     /// This is a resource interface to manage minters, delegated from MasterMinter
     pub resource interface MinterController {
-
-        /// The resourceId this MinterController manages
-        pub var managedMinter: UInt64?;
-
         /// configureMinter 
         ///
         /// Function that updates existing minter restrictions
-        pub fun configureMinter(allowance: UFix64);
+        pub fun configureMinterAllowance(allowance: UFix64);
         pub fun incrementMinterAllowance(amount: UFix64);
         pub fun decrementMinterAllowance(amount: UFix64);
         pub fun removeMinter(minter: UInt64);
-        
-        /// configureManagedMinter 
-        ///
-        /// Function that updates managedMinter 
-        /// only the MasterMinter will have this capability so it is configured by such resource 
-        pub fun configureManagedMinter (cap: Capability<&AnyResource{FiatTokenInterface.MasterMinter}>, newManagedMinter: UInt64?) {
-            post{self.managedMinter == newManagedMinter: "Must set managed minter to new resourceID"}
-        }
     }
 
     /// The minter is controlled by at least 1 minter controller
