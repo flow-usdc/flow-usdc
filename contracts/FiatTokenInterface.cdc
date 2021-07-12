@@ -120,7 +120,7 @@ pub contract interface FiatTokenInterface {
     /// ControllerRemoved
     ///
     /// The event that is emitted when master minter has removed the mint controller 
-    pub event ControllerRemoved(contorller: UInt64);
+    pub event ControllerRemoved(controller: UInt64);
 
 
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md

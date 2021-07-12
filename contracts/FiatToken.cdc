@@ -1,8 +1,9 @@
-// import FungibleToken from 0x{{.FungibleToken}} 
-// import FiatTokenInterface from 0x{{.FiatTokenInterface}}
+import FungibleToken from 0x{{.FungibleToken}} 
+import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
-import FungibleToken from "./FungibleToken.cdc"
-import FiatTokenInterface from "./FiatTokenInterface.cdc" 
+// Below helps debug when using language server
+// import FungibleToken from "./FungibleToken.cdc"
+// import FiatTokenInterface from "./FiatTokenInterface.cdc" 
 
 pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
@@ -30,8 +31,15 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
+
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
+
+    pub let MinterControllerStoragePath: StoragePath;
+    pub let MinterControllerUUIDPubPath: PublicPath;
+
+    pub let MinterStoragePath: StoragePath;
+    pub let MinterUUIDPubPath: PublicPath;
 
     // ===== Pause state and events =====
     
@@ -150,7 +158,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// ControllerRemoved
     ///
     /// The event that is emitted when master minter has removed the mint controller 
-    pub event ControllerRemoved(contorller: UInt64);
+    pub event ControllerRemoved(controller: UInt64);
     
     // ===== Fungible Token state and events =====
 
@@ -338,13 +346,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
     }
     
-    pub resource interface ManageMinterController {
-        pub fun managedMinter(): UInt64?; 
+    pub resource interface ResourceId{
         pub fun UUID(): UInt64; 
     }
 
     /// This is a resource to manage minters, delegated from MasterMinter
-    pub resource MinterController: FiatTokenInterface.MinterController, ManageMinterController {
+    pub resource MinterController: FiatTokenInterface.MinterController, ResourceId {
 
         /// The resourceId this MinterController manages
         pub fun managedMinter(): UInt64? {
@@ -391,14 +398,19 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     /// The actual minter resource, the resourceId must be added to the minter restrictions lists
     /// for minter to successfully mint / burn within restrictions
-    pub resource Minter: FiatTokenInterface.Minter {
+    pub resource Minter: FiatTokenInterface.Minter, ResourceId {
+
+        pub fun UUID(): UInt64 {
+            return self.uuid
+        }
+
         pub fun mint(amount: UFix64): @FungibleToken.Vault{
             pre{
                 FiatToken.minterAllowances.containsKey(self.uuid): "minter does not have allowance set"
             }
-            let mintAllowance = FiatToken.minterAllowances[self.uuid];
+            let mintAllowance = FiatToken.minterAllowances[self.uuid]!;
             assert(mintAllowance >= amount, message: "insufficient mint allowance");
-            FiatToken.minterAllowances.insert(key: self.uuid, minterAllowance - amount);
+            FiatToken.minterAllowances.insert(key: self.uuid, mintAllowance - amount);
             let newTotalSupply = FiatToken.totalSupply + amount;
             FiatToken.totalSupply = newTotalSupply;
             return <-create Vault(balance: amount);
@@ -551,6 +563,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     pub fun createNewMinter(): @Minter{
         return <-create Minter()
+    }
 
     pub fun createNewBlocklister(): @Blocklister{
         emit BlocklisterCreated();
@@ -576,6 +589,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         OwnerPrivPath: PrivatePath,
         MasterMinterStoragePath: StoragePath,
         MasterMinterPrivPath: PrivatePath,
+        MinterControllerStoragePath: StoragePath,
+        MinterControllerUUIDPubPath: PublicPath,
+        MinterStoragePath: StoragePath,
+        MinterUUIDPubPath: PublicPath,
         tokenName: String,
         initTotalSupply: UFix64,
         initPaused: Bool
@@ -587,6 +604,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.minterAllowances = {};
         self.minterDeadlines = {};
         self.minterReceivers = {};
+        self.managedMinters = {};
 
         // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
         // Saving the owner here means the admin and the owner is under management of the same account
@@ -605,15 +623,21 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
         self.PauseExecutorStoragePath = PauseExecutorStoragePath; 
         self.PauseExecutorPrivPath = PauseExecutorPrivPath;
-        
+
         self.PauserStoragePath = PauseExecutorStoragePath; 
         self.PauserCapReceiverPubPath = PauserCapReceiverPubPath;
-        
+
         self.OwnerStoragePath = OwnerStoragePath;
         self.OwnerPrivPath = OwnerPrivPath;
 
         self.MasterMinterStoragePath = MasterMinterStoragePath;
         self.MasterMinterPrivPath = MasterMinterPrivPath;
+
+        self.MinterControllerStoragePath = MinterControllerStoragePath;
+        self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath;
+
+        self.MinterStoragePath = MinterStoragePath;
+        self.MinterUUIDPubPath = MinterUUIDPubPath;
 
         // Create the Vault with the total supply of tokens and save it in storage
         //

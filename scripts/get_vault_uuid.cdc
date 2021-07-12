@@ -1,4 +1,3 @@
-// This script reads the balance field of an account's FiatToken Balance
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
