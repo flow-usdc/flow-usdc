@@ -1,17 +1,33 @@
 import FungibleToken from 0x{{.FungibleToken}} 
-import USDCInterface from 0x{{.USDCInterface}}
+import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
-pub contract USDC: USDCInterface, FungibleToken {
+pub contract FiatToken: FiatTokenInterface, FungibleToken {
+    
+    // ===== Token Info =====
+    pub let name: String;
 
     // ===== Contract Paths =====
-    pub let OwnerStoragePath: StoragePath;
-    pub let PauseExecutorStoragePath: StoragePath;
-    pub let BlocklistExecutorStoragePath: StoragePath;
-    pub let MasterMinterStoragePath: StoragePath;
+    pub let VaultStoragePath: StoragePath;
+    pub let VaultBalancePubPath: PublicPath;
+    pub let VaultUUIDPubPath: PublicPath;
+    pub let VaultAllowancePubPath: PublicPath;
+    pub let VaultReceiverPubPath: PublicPath;
 
-    pub let OwnerPrivPath: PrivatePath;
-    pub let PauseExecutorPrivPath: PrivatePath;
+    pub let BlocklistExecutorStoragePath: StoragePath;
     pub let BlocklistExecutorPrivPath: PrivatePath;
+    
+    pub let BlocklisterStoragePath: StoragePath;
+    pub let BlocklisterCapReceiverPubPath: PublicPath;
+
+    pub let PauseExecutorStoragePath: StoragePath;
+    pub let PauseExecutorPrivPath: PrivatePath;
+
+    pub let PauserStoragePath: StoragePath;
+    pub let PauserCapReceiverPubPath: PublicPath;
+
+    pub let OwnerStoragePath: StoragePath;
+    pub let OwnerPrivPath: PrivatePath;
+    pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
 
     // ===== Pause state and events =====
@@ -53,7 +69,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// The event that is emitted when a new blocklister resource is created
     pub event BlocklisterCreated();
     
-    /// ===== USDC Vault events =====
+    /// ===== FiatToken Vault events =====
     /// NewVault 
     ///
     /// The event that is emitted when new vault resource has been created 
@@ -62,19 +78,19 @@ pub contract USDC: USDCInterface, FungibleToken {
     ///
     /// The event that is emitted when a vault resource has been destroyed 
     pub event DestroyVault(resourceId: UInt64);
-    /// USDCWithdrawn
+    /// FiatTokenWithdrawn
     ///
-    /// The event that is emitted when tokens are withdrawn from a USDC Vault
+    /// The event that is emitted when tokens are withdrawn from a FiatToken Vault
     /// note we emit UUID as blocklisting requires this 
-    pub event USDCWithdrawn(amount: UFix64, from: UInt64);
-    /// USDCDeposited
+    pub event FiatTokenWithdrawn(amount: UFix64, from: UInt64);
+    /// FiatTokenDeposited
     ///
-    /// The event that is emitted when tokens are deposited into a USDC Vault
+    /// The event that is emitted when tokens are deposited into a FiatToken Vault
     /// note we emit UUID as blocklisting requires this 
-    pub event USDCDeposited(amount: UFix64, to: UInt64);
+    pub event FiatTokenDeposited(amount: UFix64, to: UInt64);
     /// Approval 
     ///
-    /// The event that is emitted when a USDC vault approves another to  
+    /// The event that is emitted when a FiatToken vault approves another to  
     /// withdraw some set allowance 
     pub event Approval(fromResourceId: UInt64, toResourceId: UInt64, amount: UFix64);
 
@@ -86,7 +102,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// Dict of all minters and their deadlines in terms of block height 
     pub var minterDeadlines: { UInt64: UInt64};
     /// Dict of all minters and their restricted vault reciever
-    pub var minterRecievers: { UInt64: UInt64};
+    pub var minterReceivers: { UInt64: UInt64};
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
@@ -131,7 +147,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     
     // ===== Fungible Token state and events =====
 
-    /// Total supply of usdc in existence
+    /// Total supply of FiatToken in existence
     pub var totalSupply: UFix64;
 
     /// TokensInitialized
@@ -149,9 +165,9 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// The event that is emitted when tokens are deposited into a Vault
     pub event TokensDeposited(amount: UFix64, to: Address?)
  
-    // ===== USDC Resources: =====
+    // ===== FiatToken Resources: =====
     
-    pub resource Vault: USDCInterface.VaultUUID, USDCInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+    pub resource Vault: FiatTokenInterface.VaultUUID, FiatTokenInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
         // initialize the balance at resource creation time
         init(balance: UFix64) {
@@ -167,12 +183,12 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Fungible token Provider interface 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             pre {
-                !USDC.paused: "USDC contract paused" 
-                USDC.blocklist[self.uuid] == nil: "Vault Blocklisted"
+                !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
             // todo check blocklist and pause state
             self.balance = self.balance - amount
-            emit USDCWithdrawn(amount: amount, from: self.uuid);
+            emit FiatTokenWithdrawn(amount: amount, from: self.uuid);
             emit TokensWithdrawn(amount: amount, from: self.owner?.address);
             return <-create Vault(balance: amount);
         }
@@ -180,22 +196,22 @@ pub contract USDC: USDCInterface, FungibleToken {
         // Fungible token Receiver interface 
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
-                !USDC.paused: "USDC contract paused" 
-                USDC.blocklist[self.uuid] == nil: "Vault Blocklisted"
+                !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
             // todo check blocklist and pause state 
-            let vault <- from as! @USDC.Vault
+            let vault <- from as! @FiatToken.Vault
             self.balance = self.balance + vault.balance
-            emit USDCDeposited(amount: vault.balance, to: self.uuid);
+            emit FiatTokenDeposited(amount: vault.balance, to: self.uuid);
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
             destroy vault 
         }
 
         
-        // ===== USDC interfacas =====
+        // ===== FiatToken interfacas =====
 
-        /// USDC VaultUUID Interface: should be linked to the public domain 
+        /// FiatToken VaultUUID Interface: should be linked to the public domain 
         /// uuid is implicitly created on resource init
         /// lets owner share uuid but there is not guarantee they would
         pub fun UUID(): UInt64 {
@@ -221,8 +237,8 @@ pub contract USDC: USDCInterface, FungibleToken {
         pub fun withdrawAllowance(recvAddr: Address, amount: UFix64) {
             let to = getAccount(recvAddr);
             // TODO: perhaps allow path as an arg
-            let idRef = to.getCapability(/public/UsdcVaultUUID)
-                .borrow<&{USDCInterface.VaultUUID}>()
+            let idRef = to.getCapability(FiatToken.VaultUUIDPubPath)
+                .borrow<&{FiatTokenInterface.VaultUUID}>()
                 ?? panic("Could not borrow uuid reference to the recipient's Vault")
 
             let resourceId = idRef.UUID(); 
@@ -234,7 +250,7 @@ pub contract USDC: USDCInterface, FungibleToken {
             
             let v <- self.withdraw(amount:amount);
 
-            let receiverRef = to.getCapability(/public/UsdcReceiver)
+            let receiverRef = to.getCapability(FiatToken.VaultReceiverPubPath)
                 .borrow<&{FungibleToken.Receiver}>()
                 ?? panic("Could not borrow receiver reference to the recipient's Vault")
     
@@ -270,7 +286,7 @@ pub contract USDC: USDCInterface, FungibleToken {
 
 
         destroy() {
-            USDC.totalSupply = USDC.totalSupply - self.balance
+            FiatToken.totalSupply = FiatToken.totalSupply - self.balance
             emit DestroyVault(resourceId: self.uuid);
         }
     }
@@ -301,7 +317,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
     /// The master minter creates minter controller resources to delegate control for minters
-    pub resource MasterMinter: USDCInterface.MasterMinter {
+    pub resource MasterMinter: FiatTokenInterface.MasterMinter {
 
      
         /// Function that creates and returns a new minter resource
@@ -326,7 +342,7 @@ pub contract USDC: USDCInterface, FungibleToken {
     }
 
     /// This is a resource to manage minters, delegated from MasterMinter
-    pub resource MinterController: USDCInterface.MinterController {
+    pub resource MinterController: FiatTokenInterface.MinterController {
 
         /// The resourceId this MinterController manages
         pub var managedMinter: UInt64?;
@@ -353,7 +369,7 @@ pub contract USDC: USDCInterface, FungibleToken {
             // todo
         }
         
-        pub fun configureManagedMinter (cap: Capability<&AnyResource{USDCInterface.MasterMinter}>, newManagedMinter: UInt64?) {
+        pub fun configureManagedMinter (cap: Capability<&AnyResource{FiatTokenInterface.MasterMinter}>, newManagedMinter: UInt64?) {
         }
         
         init(){
@@ -363,7 +379,7 @@ pub contract USDC: USDCInterface, FungibleToken {
 
     /// The actual minter resource, the resourceId must be added to the minter restrictions lists
     /// for minter to successfully mint / burn within restrictions
-    pub resource Minter: USDCInterface.Minter {
+    pub resource Minter: FiatTokenInterface.Minter {
         // todo: check allowance
         // todo: check block
         pub fun mint(amount: UFix64): @FungibleToken.Vault{
@@ -377,16 +393,16 @@ pub contract USDC: USDCInterface, FungibleToken {
 
     /// The blocklist execution resource, account with this resource must share / unlink its capability
     /// with Blocklister to managed permission for block
-    pub resource BlocklistExecutor: USDCInterface.Blocklister{
+    pub resource BlocklistExecutor: FiatTokenInterface.Blocklister{
 
         pub fun blocklist(resourceId: UInt64){
             let block = getCurrentBlock();
-            USDC.blocklist.insert(key: resourceId, block.height);
+            FiatToken.blocklist.insert(key: resourceId, block.height);
             emit Blocklisted(resourceId: resourceId);
         };
 
         pub fun unblocklist(resourceId: UInt64){
-            USDC.blocklist.remove(key: resourceId);
+            FiatToken.blocklist.remove(key: resourceId);
             emit Unblocklisted(resourceId: resourceId);
         };
     }
@@ -405,14 +421,14 @@ pub contract USDC: USDCInterface, FungibleToken {
         
         pub fun blocklist(resourceId: UInt64){
             pre {
-                !USDC.blocklist.containsKey(resourceId): "Resource already on blocklist"
+                !FiatToken.blocklist.containsKey(resourceId): "Resource already on blocklist"
             }
             self.blocklistcap!.borrow()!.blocklist(resourceId: resourceId);
         };
 
         pub fun unblocklist(resourceId: UInt64){
             pre {
-                USDC.blocklist.containsKey(resourceId): "Resource not on blocklist"
+                FiatToken.blocklist.containsKey(resourceId): "Resource not on blocklist"
             }
             self.blocklistcap!.borrow()!.unblocklist(resourceId: resourceId);
         };
@@ -431,14 +447,14 @@ pub contract USDC: USDCInterface, FungibleToken {
 
     /// The pause execution resource, account with this resource must share / unlink its capability
     /// with Pauser to managed permission for block
-    pub resource PauseExecutor: USDCInterface.Pauser {
+    pub resource PauseExecutor: FiatTokenInterface.Pauser {
         // Note: this only sets the state of the pause of the contract
         pub fun pause() {
-            USDC.paused = true;
+            FiatToken.paused = true;
             emit Paused();
          }
         pub fun unpause() { 
-            USDC.paused = false;
+            FiatToken.paused = false;
             emit Unpaused();
          }
     }
@@ -484,7 +500,7 @@ pub contract USDC: USDCInterface, FungibleToken {
         }
     }
 
-    // ============ USDC METHODS: ==============
+    // ============ FiatToken METHODS: ==============
 
     /// createEmptyVault
     ///
@@ -514,67 +530,105 @@ pub contract USDC: USDCInterface, FungibleToken {
         return <-create Blocklister()
     }
 
-    init(adminAccount: AuthAccount){
-        self.paused = false;
+    init(
+        adminAccount: AuthAccount, 
+        VaultStoragePath: StoragePath,
+        VaultBalancePubPath: PublicPath,
+        VaultUUIDPubPath: PublicPath,
+        VaultAllowancePubPath: PublicPath,
+        VaultReceiverPubPath: PublicPath,
+        BlocklistExecutorStoragePath: StoragePath,
+        BlocklistExecutorPrivPath: PrivatePath,
+        BlocklisterStoragePath: StoragePath,
+        BlocklisterCapReceiverPubPath: PublicPath,
+        PauseExecutorStoragePath: StoragePath,
+        PauseExecutorPrivPath: PrivatePath,
+        PauserStoragePath: StoragePath,
+        PauserCapReceiverPubPath: PublicPath,
+        OwnerStoragePath: StoragePath,
+        OwnerPrivPath: PrivatePath,
+        MasterMinterStoragePath: StoragePath,
+        MasterMinterPrivPath: PrivatePath,
+        tokenName: String,
+        initTotalSupply: UFix64,
+        initPaused: Bool
+    ){
+        self.name= tokenName;
+        self.paused = initPaused;
+        self.totalSupply = initTotalSupply;
         self.blocklist = {};
-        self.totalSupply = 10000.0;
         self.minterAllowances = {};
         self.minterDeadlines = {};
-        self.minterRecievers = {};
+        self.minterReceivers = {};
+
+        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
+        // Saving the owner here means the admin and the owner is under management of the same account
+
+        self.VaultStoragePath = VaultStoragePath;
+        self.VaultBalancePubPath = VaultBalancePubPath;
+        self.VaultUUIDPubPath = VaultUUIDPubPath;
+        self.VaultAllowancePubPath = VaultAllowancePubPath;
+        self.VaultReceiverPubPath = VaultReceiverPubPath;
+
+        self.BlocklistExecutorStoragePath =  BlocklistExecutorStoragePath;
+        self.BlocklistExecutorPrivPath = BlocklistExecutorPrivPath;
+
+        self.BlocklisterStoragePath =  BlocklisterStoragePath;
+        self.BlocklisterCapReceiverPubPath = BlocklisterCapReceiverPubPath;
+
+        self.PauseExecutorStoragePath = PauseExecutorStoragePath; 
+        self.PauseExecutorPrivPath = PauseExecutorPrivPath;
+        
+        self.PauserStoragePath = PauseExecutorStoragePath; 
+        self.PauserCapReceiverPubPath = PauserCapReceiverPubPath;
+        
+        self.OwnerStoragePath = OwnerStoragePath;
+        self.OwnerPrivPath = OwnerPrivPath;
+
+        self.MasterMinterStoragePath = MasterMinterStoragePath;
+        self.MasterMinterPrivPath = MasterMinterPrivPath;
 
         // Create the Vault with the total supply of tokens and save it in storage
         //
         let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/UsdcVault)
+        self.account.save(<-vault, to: self.VaultStoragePath)
 
         // Create a public capability to the stored Vault that only exposes
         // the `deposit` method through the `Receiver` interface
         //
-        adminAccount.link<&USDC.Vault{FungibleToken.Receiver}>(
-            /public/UsdcReceiver,
-            target: /storage/UsdcVault
+        adminAccount.link<&FiatToken.Vault{FungibleToken.Receiver}>(
+            self.VaultReceiverPubPath,
+            target: self.VaultStoragePath 
         )
 
         // Create a public capability to the stored Vault that only exposes
         // the `balance` field through the `Balance` interface
         //
-        adminAccount.link<&USDC.Vault{FungibleToken.Balance}>(
-            /public/UsdcBalance,
-            target: /storage/UsdcVault
+        adminAccount.link<&FiatToken.Vault{FungibleToken.Balance}>(
+            self.VaultBalancePubPath,
+            target: self.VaultStoragePath 
         )
 
         // Create a public capability to the stored Vault that only exposes
         // the `uuid` field through the `VaultUUID` interface
         //
-        adminAccount.link<&USDC.Vault{USDCInterface.VaultUUID}>(
-            /public/UsdcVaultUUID,
-            target: /storage/UsdcVault
+        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(
+            self.VaultUUIDPubPath,
+            target: self.VaultStoragePath 
         )
 
         // Create a public capability to the stored Vault that only exposes
         // the `withdrawAllowance` method through the `WithdrawAllowance` interface
         //
-        adminAccount.link<&USDC.Vault{USDCInterface.Allowance}>(
-            /public/UsdcVaultAllowance,
-            target: /storage/UsdcVault
+        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(
+            self.VaultAllowancePubPath,
+            target: self.VaultStoragePath 
         )
 
-        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
-        // Saving the owner here means the admin and the owner is under management of the same account
-        //
-
-        self.OwnerStoragePath = /storage/UsdcOwner;
-        self.PauseExecutorStoragePath = /storage/UsdcPauseExec;
-        self.BlocklistExecutorStoragePath = /storage/UsdcBlocklistExec;
-        self.MasterMinterStoragePath = /storage/UsdcMasterMinter;
-
-        self.OwnerPrivPath = /private/UsdcOwner;
-        self.PauseExecutorPrivPath = /private/UsdcPauserExec;
-        self.BlocklistExecutorPrivPath = /private/UsdcBlocklistExec;
-        self.MasterMinterPrivPath = /private/UsdcMasterMinter;
 
         let owner <- create Owner()
         adminAccount.save(<-owner, to: self.OwnerStoragePath);
+        // TODO: do we need to link this? 
         adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);
         
 

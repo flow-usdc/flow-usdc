@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUSDCTotalSupplyInOwnerVault(t *testing.T) {
+func TestFiatTokenTotalSupplyInOwnerVault(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	supply, err := GetTotalSupply(g)
 	assert.NoError(t, err)

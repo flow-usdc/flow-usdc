@@ -1,15 +1,15 @@
 // The account with the PauseExecutor Resource can use this script to 
 // provide capability for a pauser to pause the contract
 
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
-transaction (pauser: Address, pauseCapPath: PublicPath) {
+transaction (pauser: Address) {
     prepare(pauseExe: AuthAccount) {
-        let cap = pauseExe.getCapability<&USDC.PauseExecutor>(USDC.PauseExecutorPrivPath);
+        let cap = pauseExe.getCapability<&FiatToken.PauseExecutor>(FiatToken.PauseExecutorPrivPath);
         if !cap.check() {
             panic ("cannot borrow such capability") 
         } else {
-            let setCapRef = getAccount(pauser).getCapability<&USDC.Pauser{USDC.PauseCapReceiver}>(pauseCapPath).borrow() ?? panic("Cannot get pauseCapReceiver");
+            let setCapRef = getAccount(pauser).getCapability<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath).borrow() ?? panic("Cannot get pauseCapReceiver");
             setCapRef.setPauseCap(pauseCap: cap);
         }
     }

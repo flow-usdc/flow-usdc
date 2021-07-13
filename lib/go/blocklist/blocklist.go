@@ -27,11 +27,9 @@ func SetBlocklistCapability(
 	txFilename := "../../../transactions/owner/set_blocklist_cap.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	pubPath := cadence.Path{Domain: "public", Identifier: "UsdcBlocklistCapReceiver"}
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		AccountArgument(blocklisterAcct).
-		Argument(pubPath).
 		RunPrintEventsFull()
 	return
 }

@@ -1,12 +1,12 @@
-// This script reads the balance field of an account's USDC Balance
+// This script reads the balance field of an account's FiatToken Balance
 
 import FungibleToken from 0x{{.FungibleToken}}
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 pub fun main(account: Address): UFix64 {
     let acct = getAccount(account)
-    let vaultRef = acct.getCapability(/public/UsdcBalance)
-        .borrow<&USDC.Vault{FungibleToken.Balance}>()
+    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
+        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
         ?? panic("Could not borrow Balance reference to the Vault")
 
     return vaultRef.balance

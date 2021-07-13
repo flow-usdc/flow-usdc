@@ -1,5 +1,5 @@
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 pub fun main(uuid: UInt64): UInt64? {
-    return USDC.blocklist[uuid]
+    return FiatToken.blocklist[uuid]
 }

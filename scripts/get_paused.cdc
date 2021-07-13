@@ -1,5 +1,5 @@
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 pub fun main(): Bool {
-    return USDC.paused
+    return FiatToken.paused
 }

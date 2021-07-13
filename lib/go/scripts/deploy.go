@@ -11,7 +11,7 @@ func main() {
 	// This relative path to flow.json is  different in tests as it is the main package
 	g := gwtf.NewGoWithTheFlow("../../flow.json")
 
-	err := deploy.DeployUSDCContract(g, "owner")
+	err := deploy.DeployFiatTokenContract(g, "owner")
 	if err != nil {
 		log.Fatal("Cannot deploy contract")
 	}

@@ -16,10 +16,10 @@ import (
 )
 
 type Addresses struct {
-	FungibleToken string
-	ExampleToken  string
-	USDCInterface string
-	USDCToken     string
+	FungibleToken      string
+	ExampleToken       string
+	FiatTokenInterface string
+	FiatToken          string
 }
 
 func ParseCadenceTemplate(templatePath string) []byte {

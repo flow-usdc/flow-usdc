@@ -23,7 +23,7 @@ func TransferTokens(
 	fromAcct string,
 	toAcct string,
 ) (err error) {
-	txFilename := "../../../transactions/transfer_USDC.cdc"
+	txFilename := "../../../transactions/transfer_FiatToken.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
 	err = g.TransactionFromFile(txFilename, txScript).

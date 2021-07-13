@@ -3,17 +3,17 @@
 // - if the blocklister does not have delegated capability given by the BlocklistExecutor
 // - if the resource has already been blocklisted
 
-import USDC from 0x{{.USDCToken}}
+import FiatToken from 0x{{.FiatToken}}
 
 transaction(resourceId: UInt64) {
     prepare (blocklister: AuthAccount) {
-        let cap = blocklister.getCapability<&USDC.Blocklister>(/private/UsdcBlocklister).borrow() ?? panic("cannot borrow own private path")
-        cap.blocklist(resourceId: resourceId);
+        let blocklister = blocklister.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) ?? panic("cannot borrow own private path")
+        blocklister.blocklist(resourceId: resourceId);
     } 
 
     post {
-        USDC.blocklist[resourceId]! != nil: "Resource not blocklisted";
-        USDC.blocklist[resourceId] == getCurrentBlock().height : "Blocklisted on incorrect height";
+        FiatToken.blocklist[resourceId]! != nil: "Resource not blocklisted";
+        FiatToken.blocklist[resourceId] == getCurrentBlock().height : "Blocklisted on incorrect height";
 
     }
 }

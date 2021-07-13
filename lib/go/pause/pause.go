@@ -27,11 +27,9 @@ func SetPauserCapability(
 	txFilename := "../../../transactions/owner/set_pause_cap.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	pubPath := cadence.Path{Domain: "public", Identifier: "UsdcPauseCapReceiver"}
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		AccountArgument(pauserAcct).
-		Argument(pubPath).
 		RunPrintEventsFull()
 	return
 }
