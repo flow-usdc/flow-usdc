@@ -48,7 +48,7 @@ func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct stri
 	txScript := util.ParseCadenceTemplate(txFilename)
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterAcct).
-        UFix64Argument(amount).
+		UFix64Argument(amount).
 		AccountArgument(recvAcct).
 		RunPrintEventsFull()
 	return

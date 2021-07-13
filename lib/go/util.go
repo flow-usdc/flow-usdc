@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"os"
 	"text/template"
-    "os"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
