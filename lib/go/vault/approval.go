@@ -62,7 +62,7 @@ func IncreaseOrDecreaseAlowance(
 	g *gwtf.GoWithTheFlow,
 	fromAcct string,
 	toResourceId uint64,
-	delta string,
+	absDelta string,
 	inc uint,
 ) (err error) {
 	var txFilename string
@@ -77,7 +77,7 @@ func IncreaseOrDecreaseAlowance(
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(fromAcct).
 		UInt64Argument(toResourceId).
-		UFix64Argument(delta).
+		UFix64Argument(absDelta).
 		RunPrintEventsFull()
 	return
 }
