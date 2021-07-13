@@ -5,6 +5,8 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/flow-usdc/flow-usdc/owner"
+	"github.com/flow-usdc/flow-usdc/vault"
+	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,7 +47,6 @@ func TestConfigureMinterController(t *testing.T) {
 }
 
 func TestConfigureMinterAllowance(t *testing.T) {
-
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	minter, err := GetMinterUUID(g, "minter")
@@ -60,7 +61,38 @@ func TestConfigureMinterAllowance(t *testing.T) {
 	expected, err := cadence.NewUFix64(allowanceInput)
 	assert.NoError(t, err)
 	assert.Equal(t, expected, allowance)
+}
 
+func TestMintWithAllowace(t *testing.T) {
+    g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+    // Params
+	err := vault.AddVaultToAccount(g, "minter")
+	assert.NoError(t, err)
+    minter, err := GetMinterUUID(g, "minter")
+    assert.NoError(t, err)
+    mintAmountStr := "200.0"
+    mintAmount, err := cadence.NewUFix64(mintAmountStr)
+    assert.NoError(t, err)
+
+    // Initial values
+    initTotalSupply, err := util.GetTotalSupply(g)
+    initBalance, err := util.GetBalance(g, "minter")
+    initMintAllowance, err := GetMinterAllowance(g, minter)
+
+    // Execute mint
+    err = Mint(g, "minter", mintAmountStr, "minter")
+	assert.NoError(t, err)
+
+    // Post mint values
+    postTotalSupply, err := util.GetTotalSupply(g)
+    postBalance, err := util.GetBalance(g, "minter")
+    postMintAllowance, err := GetMinterAllowance(g, minter)
+
+    // Assertions
+    assert.Equal(t, mintAmount, postTotalSupply - initTotalSupply)
+    assert.Equal(t, mintAmount, postBalance - initBalance)
+    assert.Equal(t, mintAmount, initMintAllowance - postMintAllowance)
 }
 
 func TestRemoveMinterController(t *testing.T) {

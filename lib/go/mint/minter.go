@@ -42,3 +42,14 @@ func GetMinterAllowance(g *gwtf.GoWithTheFlow, minter uint64) (amount cadence.UF
 	amount = r.(cadence.UFix64)
 	return
 }
+
+func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct string) (err error) {
+	txFilename := "../../../transactions/mint/mint.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(minterAcct).
+        UFix64Argument(amount).
+		AccountArgument(recvAcct).
+		RunPrintEventsFull()
+	return
+}

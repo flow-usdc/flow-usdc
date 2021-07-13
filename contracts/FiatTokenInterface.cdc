@@ -92,11 +92,11 @@ pub contract interface FiatTokenInterface {
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted
-    pub event Mint(minter: UInt64, Amount: UFix64);
+    pub event Mint(minter: UInt64, amount: UFix64);
     /// Burn
     ///
     /// The event that is emitted when tokens are burnt by minter
-    pub event Burn(minter: UInt64, Amount: UFix64);
+    pub event Burn(minter: UInt64, amount: UFix64);
     /// MinterConfigured 
     ///
     /// The event that is emitted when minter controller has configured a minter's restrictions 

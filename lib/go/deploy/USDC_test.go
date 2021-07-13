@@ -10,7 +10,7 @@ import (
 
 func TestFiatTokenTotalSupplyInOwnerVault(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	supply, err := GetTotalSupply(g)
+	supply, err := util.GetTotalSupply(g)
 	assert.NoError(t, err)
 	assert.Equal(t, "10000.00000000", supply.String())
 

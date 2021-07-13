@@ -72,11 +72,3 @@ func DeployFiatTokenContract(
 		RunPrintEventsFull()
 	return
 }
-
-func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/get_total_supply.cdc"
-	script := util.ParseCadenceTemplate(filename)
-	r, err := g.ScriptFromFile(filename, script).RunReturns()
-	result = r.(cadence.UFix64)
-	return
-}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"text/template"
+    "os"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
@@ -29,8 +30,8 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	// Addresss for emulator are
-	addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
-	// addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
+	// addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
+	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
 	if err != nil {
@@ -46,6 +47,14 @@ func ReadCadenceCode(ContractPath string) []byte {
 		panic(err)
 	}
 	return b
+}
+
+func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
+	filename := "../../../scripts/get_total_supply.cdc"
+	script := ParseCadenceTemplate(filename)
+	r, err := g.ScriptFromFile(filename, script).RunReturns()
+	result = r.(cadence.UFix64)
+	return
 }
 
 func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, err error) {

@@ -129,11 +129,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted
-    pub event Mint(minter: UInt64, Amount: UFix64);
+    pub event Mint(minter: UInt64, amount: UFix64);
     /// Burn
     ///
     /// The event that is emitted when tokens are burnt by minter
-    pub event Burn(minter: UInt64, Amount: UFix64);
+    pub event Burn(minter: UInt64, amount: UFix64);
     /// MinterConfigured 
     ///
     /// The event that is emitted when minter controller has configured a minter's restrictions 
@@ -405,7 +405,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
 
         pub fun mint(amount: UFix64): @FungibleToken.Vault{
-            pre{
+            pre {
+                !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
                 FiatToken.minterAllowances.containsKey(self.uuid): "minter does not have allowance set"
             }
             let mintAllowance = FiatToken.minterAllowances[self.uuid]!;
@@ -413,6 +415,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             FiatToken.minterAllowances.insert(key: self.uuid, mintAllowance - amount);
             let newTotalSupply = FiatToken.totalSupply + amount;
             FiatToken.totalSupply = newTotalSupply;
+
+            emit Mint(minter: self.uuid, amount: amount);
             return <-create Vault(balance: amount);
         }
         
@@ -420,11 +424,17 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         /// Burning tokens does not increase minting allowance
         // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#burning
         pub fun burn(vault: @FungibleToken.Vault) {
+            pre {
+                !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
+            }
             let amount = vault.balance;
             assert(FiatToken.totalSupply >= amount, message: "burning more than total supply");
             let newTotalSupply = FiatToken.totalSupply - amount;
             FiatToken.totalSupply = newTotalSupply;
             destroy vault;
+
+            emit Burn(minter: self.uuid, amount: amount);
         }
     }
 
