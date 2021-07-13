@@ -7,11 +7,11 @@ import (
 	util "github.com/flow-usdc/flow-usdc"
 )
 
-func CreateMinter(
+func CreateMinterController(
 	g *gwtf.GoWithTheFlow,
 	account string,
 ) (err error) {
-	txFilename := "../../../transactions/mint/create_new_minter.cdc"
+	txFilename := "../../../transactions/mint/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
@@ -20,10 +20,10 @@ func CreateMinter(
 	return
 }
 
-func GetMinterUUID(g *gwtf.GoWithTheFlow, minterAcct string) (uuid uint64, err error) {
-	filename := "../../../scripts/get_minter_uuid.cdc"
+func GetMinterControllerUUID(g *gwtf.GoWithTheFlow, minterControllerAcct string) (uuid uint64, err error) {
+	filename := "../../../scripts/get_minter_controller_uuid.cdc"
 	script := util.ParseCadenceTemplate(filename)
-	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterAcct).RunReturns()
+	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterControllerAcct).RunReturns()
 	uuid, ok := r.ToGoValue().(uint64)
 	if !ok {
 		err = errors.New("returned not uint64")
@@ -31,24 +31,27 @@ func GetMinterUUID(g *gwtf.GoWithTheFlow, minterAcct string) (uuid uint64, err e
 	return
 }
 
-// func ConfigureMinter(
-// 	g *gwtf.GoWithTheFlow,
-// 	minterControllerAcct string,
-// 	minter uint64,
-// ) (err error) {
-// 	txFilename := "../../../transactions/mint/configure_minter.cdc"
-// 	txScript := util.ParseCadenceTemplate(txFilename)
-// 	err = g.TransactionFromFile(txFilename, txScript).
-// 		SignProposeAndPayAs(minterControllerAcct).
-// 		UInt64Argument(minter).
-// 		RunPrintEventsFull()
-// 	return
-// }
-//
-// func GetManagedMinter(g *gwtf.GoWithTheFlow, minterController uint64) (cadence.Bool, error) {
-// 	filename := "../../../scripts/get_managed_minter.cdc"
-// 	script := util.ParseCadenceTemplate(filename)
-//     r, err := g.ScriptFromFile(filename, script).UInt64Argument(minterController).RunReturns()
-// 	paused := r.(cadence.Bool)
-// 	return paused, err
-// }
+func GetManagedMinter(g *gwtf.GoWithTheFlow, minterController uint64) (uuid uint64, err error) {
+	filename := "../../../scripts/get_managed_minter.cdc"
+	script := util.ParseCadenceTemplate(filename)
+	r, err := g.ScriptFromFile(filename, script).UInt64Argument(minterController).RunReturns()
+	uuid, ok := r.ToGoValue().(uint64)
+	if !ok {
+		err = errors.New("returned nil")
+	}
+	return
+}
+
+func ConfigureMinterAllowance(
+	g *gwtf.GoWithTheFlow,
+	minterControllerAcct string,
+	amount string,
+) (err error) {
+	txFilename := "../../../transactions/mint/configure_minter_allowance.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(minterControllerAcct).
+		UFix64Argument(amount).
+		RunPrintEventsFull()
+	return
+}

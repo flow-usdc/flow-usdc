@@ -40,8 +40,8 @@ func SetBlocklistCapability(
 // Uses the MasterMinter Resource Capabilities
 func ConfigureMinterController(
 	g *gwtf.GoWithTheFlow,
-	minterControllerAcct string,
-	minterAcct string,
+	minterController uint64,
+	minter uint64,
 	ownerAcct string,
 ) (err error) {
 	txFilename := "../../../transactions/owner/configure_minter_controller.cdc"
@@ -49,8 +49,8 @@ func ConfigureMinterController(
 
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
-		AccountArgument(minterControllerAcct).
-		AccountArgument(minterAcct).
+		UInt64Argument(minter).
+		UInt64Argument(minterController).
 		RunPrintEventsFull()
 	return
 }
@@ -58,7 +58,7 @@ func ConfigureMinterController(
 // Uses the MasterMinter Resource Capabilities
 func RemoveMinterController(
 	g *gwtf.GoWithTheFlow,
-	minterControllerAcct string,
+	minterController uint64,
 	ownerAcct string,
 ) (err error) {
 	txFilename := "../../../transactions/owner/remove_minter_controller.cdc"
@@ -66,7 +66,7 @@ func RemoveMinterController(
 
 	err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
-		AccountArgument(minterControllerAcct).
+		UInt64Argument(minterController).
 		RunPrintEventsFull()
 	return
 }
