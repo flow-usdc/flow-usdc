@@ -145,7 +145,7 @@ pub contract interface FiatTokenInterface {
         pub fun configureMinterAllowance(allowance: UFix64);
         pub fun incrementMinterAllowance(amount: UFix64);
         pub fun decrementMinterAllowance(amount: UFix64);
-        pub fun removeMinter(minter: UInt64);
+        pub fun removeMinter();
     }
 
     /// The minter is controlled by at least 1 minter controller

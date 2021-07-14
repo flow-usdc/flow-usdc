@@ -55,3 +55,15 @@ func ConfigureMinterAllowance(
 		RunPrintEventsFull()
 	return
 }
+
+func RemoveMinter(
+	g *gwtf.GoWithTheFlow,
+	minterControllerAcct string,
+) (err error) {
+	txFilename := "../../../transactions/mint/remove_minter.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(minterControllerAcct).
+		RunPrintEventsFull()
+	return
+}
