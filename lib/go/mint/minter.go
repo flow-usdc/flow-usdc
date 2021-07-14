@@ -53,3 +53,13 @@ func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct stri
 		RunPrintEventsFull()
 	return
 }
+
+func Burn(g *gwtf.GoWithTheFlow, minterAcct string, amount string) (err error) {
+	txFilename := "../../../transactions/mint/burn.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(minterAcct).
+		UFix64Argument(amount).
+		RunPrintEventsFull()
+	return
+}

@@ -56,11 +56,13 @@ flow project deploy --network="$NETWORK" --update
 
 # NOW we switch to the go folder, where commands _can_ be run in place.
 cd lib/go
+go clean -testcache
 
 go run scripts/deploy.go
 go test ./deploy -v
 go test ./vault -v
 go test ./pause -v
 go test ./blocklist -v
-go test ./mint -v
+go test ./mint -run Controller -v
+go test ./mint -run MintBurn -v
 
