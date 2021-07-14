@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/flow-usdc/flow-usdc/vault"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +17,7 @@ func TestCreatePauser(t *testing.T) {
 
 func TestSetPauserCapability(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	err := SetPauserCapability(g, "pauser", "owner")
+	err := owner.SetPauserCapability(g, "pauser", "owner")
 	assert.NoError(t, err)
 }
 

@@ -26,6 +26,10 @@ func DeployFiatTokenContract(
 		"non-blocklister",
 		"allowance",
 		"non-allowance",
+		"minter",
+		"non-minter",
+		"minterController1",
+		"minterController2",
 	)
 
 	err = g.TransactionFromFile(txFilename, code).
@@ -56,17 +60,15 @@ func DeployFiatTokenContract(
 		// Masterminter
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMasterMinter"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCMasterMinterCap"}).
+		// Minter Controller
+		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinterController"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterControllerUUID"}).
+		// Minter
+		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinter"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterUUID"}).
 		StringArgument("USDC").
 		UFix64Argument("10000.0").
 		BooleanArgument(false).
 		RunPrintEventsFull()
-	return
-}
-
-func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/get_total_supply.cdc"
-	script := util.ParseCadenceTemplate(filename)
-	r, err := g.ScriptFromFile(filename, script).RunReturns()
-	result = r.(cadence.UFix64)
 	return
 }

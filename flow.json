@@ -69,6 +69,22 @@
     "non-allowance" : {
 	  "address": "fd43f9148d4b725d",
       "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "minter" : {
+	  "address": "eb179c27144f783c",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "non-minter" : {
+	  "address": "f7025fa05b578e3",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "minterController1" : {
+	  "address": "e2f72218abeec2b9",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+    },
+    "minterController2" : {
+	  "address": "6909bc5ba14c266",
+      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     }
   }
 }

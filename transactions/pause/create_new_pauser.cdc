@@ -10,9 +10,6 @@ transaction(pauserAddr: Address) {
         
         pauser.save(<- FiatToken.createNewPauser(), to: FiatToken.PauserStoragePath);
         
-        log(FiatToken.PauserStoragePath);
-        log(FiatToken.PauserCapReceiverPubPath);
-        
         pauser.link<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath, target: FiatToken.PauserStoragePath)
         ??  panic("Could not link PauserCapReceiver");
     } 

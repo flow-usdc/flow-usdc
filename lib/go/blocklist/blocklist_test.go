@@ -6,6 +6,7 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/flow-usdc/flow-usdc/vault"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +32,7 @@ func TestCreateBlocklister(t *testing.T) {
 
 func TestSetBlocklistCapability(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	err := SetBlocklistCapability(g, "blocklister", "owner")
+	err := owner.SetBlocklistCapability(g, "blocklister", "owner")
 	assert.NoError(t, err)
 }
 
