@@ -55,6 +55,44 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 	assert.Equal(t, expected, allowance)
 }
 
+func TestController_IncreaseMinterAllowance(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	minter, err := GetMinterUUID(g, "minter")
+	assert.NoError(t, err)
+	initAllowance, err := GetMinterAllowance(g, minter)
+	assert.NoError(t, err)
+
+	var allowanceIncr = "500.0"
+	err = IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceIncr, 1)
+	assert.NoError(t, err)
+
+	postAllowance, err := GetMinterAllowance(g, minter)
+	assert.NoError(t, err)
+	expectedDelta, err := cadence.NewUFix64(allowanceIncr)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedDelta, postAllowance-initAllowance)
+}
+
+func TestController_DecreaseMinterAllowance(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	minter, err := GetMinterUUID(g, "minter")
+	assert.NoError(t, err)
+	initAllowance, err := GetMinterAllowance(g, minter)
+	assert.NoError(t, err)
+
+	var allowanceDecr = "500.0"
+	err = IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceDecr, 0)
+	assert.NoError(t, err)
+
+	postAllowance, err := GetMinterAllowance(g, minter)
+	assert.NoError(t, err)
+	expectedDelta, err := cadence.NewUFix64(allowanceDecr)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedDelta, initAllowance-postAllowance)
+}
+
 func TestController_RemoveMinter(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
@@ -118,7 +156,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 	assert.Equal(t, expectedController2, allowance)
 }
 
-func TestController_RemoveController(t *testing.T) {
+func TestController_MasterMinterRemoveController(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	minterController2, err := GetMinterControllerUUID(g, "minterController2")
 	assert.NoError(t, err)

@@ -67,3 +67,24 @@ func RemoveMinter(
 		RunPrintEventsFull()
 	return
 }
+
+func IncreaseOrDecreaseMinterAllowance(
+	g *gwtf.GoWithTheFlow,
+	minterControllerAcct string,
+	absDelta string,
+	inc uint,
+) (err error) {
+	var txFilename string
+	if inc == 1 {
+		txFilename = "../../../transactions/mint/increase_minter_allowance.cdc"
+	} else {
+		txFilename = "../../../transactions/mint/decrease_minter_allowance.cdc"
+	}
+
+	txScript := util.ParseCadenceTemplate(txFilename)
+	err = g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(minterControllerAcct).
+		UFix64Argument(absDelta).
+		RunPrintEventsFull()
+	return
+}
