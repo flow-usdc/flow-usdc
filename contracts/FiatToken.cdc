@@ -143,14 +143,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     ///
     /// The event that is emitted when minter controller has removed the minter 
     pub event MinterRemoved(controller: UInt64, minter: UInt64);
-    /// MinterAllowanceIncreased
-    ///
-    /// The event that is emitted when minter controller has increase the minter's allowance
-    pub event MinterAllowanceIncreased(minter: UInt64, newAllowance: UFix64);
-    /// MinterAllowanceDecreased
-    ///
-    /// The event that is emitted when minter controller has decrease the minter's allowance
-    pub event MinterAllowanceDecreased(minter: UInt64, newAllowance: UFix64);
     /// ControllerConfigured
     ///
     /// The event that is emitted when master minter has set the mint controller's minter 
@@ -294,8 +286,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
         /// Decrease current allowance by decrement value 
         pub fun decreaseAllowance(resourceId: UInt64, decrement: UFix64){
-            let allowance = self.allowed[resourceId]!;
-            let newAllowance = allowance.saturatingSubtract(decrement);
+            pre {
+                self.allowed[resourceId] != nil: "Cannot decrease nil allowance"
+            }
+            let newAllowance = self.allowed[resourceId]!.saturatingSubtract(decrement);
             self.approval(resourceId: resourceId, amount: newAllowance);
         };
 
@@ -340,7 +334,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         
         /// Function to remove MinterController
         pub fun removeMinterController(minterController: UInt64){
-            assert(FiatToken.managedMinters.containsKey(minterController), message: "cannot remove unknown minter controller");
+            pre {
+                FiatToken.managedMinters.containsKey(minterController): "cannot remove unknown minter controller"
+            }
             FiatToken.managedMinters.remove(key: minterController);
             emit ControllerRemoved(controller: minterController)
         }
@@ -374,12 +370,26 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             emit MinterConfigured(controller: self.uuid, minter: managedMinter, allowance: allowance);
         }
         
-        pub fun incrementMinterAllowance(amount: UFix64) {
-            // todo
+        pub fun increaseMinterAllowance(increment: UFix64) {
+            pre {
+                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
+            }
+            let managedMinter = self.managedMinter()!;
+            let allowance = FiatToken.minterAllowances[managedMinter] ?? 0.0;
+            let newAllowance = allowance.saturatingAdd(increment);
+            self.configureMinterAllowance(allowance: newAllowance);
         }
 
-        pub fun decrementMinterAllowance(amount: UFix64) {
-            // todo
+        pub fun decreaseMinterAllowance(decrement: UFix64) {
+            pre {
+                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
+            }
+            let managedMinter = self.managedMinter()!;
+            // If there is no allowance already, we cannot decrease it
+            let allowance = FiatToken.minterAllowances[managedMinter];
+            assert(allowance != nil, message: "Cannot decrease nil mint allowance")
+            let newAllowance = allowance!.saturatingSubtract(decrement);
+            self.configureMinterAllowance(allowance: newAllowance);
         }
         
         /// removeMinter

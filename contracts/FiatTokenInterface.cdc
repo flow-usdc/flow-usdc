@@ -26,8 +26,15 @@ pub contract interface FiatTokenInterface {
 
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
+
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
+
+    pub let MinterControllerStoragePath: StoragePath;
+    pub let MinterControllerUUIDPubPath: PublicPath;
+
+    pub let MinterStoragePath: StoragePath;
+    pub let MinterUUIDPubPath: PublicPath;
     
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`
@@ -105,14 +112,6 @@ pub contract interface FiatTokenInterface {
     ///
     /// The event that is emitted when minter controller has removed the minter 
     pub event MinterRemoved(controller: UInt64, minter: UInt64);
-    /// MinterAllowanceIncreased
-    ///
-    /// The event that is emitted when minter controller has increase the minter's allowance
-    pub event MinterAllowanceIncreased(minter: UInt64, newAllowance: UFix64);
-    /// MinterAllowanceDecreased
-    ///
-    /// The event that is emitted when minter controller has decrease the minter's allowance
-    pub event MinterAllowanceDecreased(minter: UInt64, newAllowance: UFix64);
     /// ControllerConfigured
     ///
     /// The event that is emitted when master minter has set the mint controller's minter 
@@ -143,8 +142,8 @@ pub contract interface FiatTokenInterface {
         ///
         /// Function that updates existing minter restrictions
         pub fun configureMinterAllowance(allowance: UFix64);
-        pub fun incrementMinterAllowance(amount: UFix64);
-        pub fun decrementMinterAllowance(amount: UFix64);
+        pub fun increaseMinterAllowance(increment: UFix64);
+        pub fun decreaseMinterAllowance(decrement: UFix64);
         pub fun removeMinter();
     }
 
