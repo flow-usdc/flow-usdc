@@ -54,9 +54,7 @@ func TestBlocklistWithCap(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("Blocklisted")
-	assert.Equal(t, event.Name, expectedEvent.Name)
-	assert.Equal(t, strconv.Itoa(int(uuid)), event.Fields["resourceId"])
+	util.NewExpectedEvent("Blocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, event)
 
 	blockheight, err := GetBlocklistStatus(g, uuid)
 	assert.NoError(t, err)
@@ -89,9 +87,7 @@ func TestUnblocklistWithCap(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("Unblocklisted")
-	assert.Equal(t, event.Name, expectedEvent.Name)
-	assert.Equal(t, strconv.Itoa(int(uuid)), event.Fields["resourceId"])
+	util.NewExpectedEvent("Unblocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, event)
 
 	// After blocklisted, "vaulted-account" should be able to transfer
 	// - the balance of post tx, recv should receive 10.0 more

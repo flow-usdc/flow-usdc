@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"testing"
 	"time"
 
 	"text/template"
@@ -12,6 +13,7 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/stretchr/testify/assert"
 )
 
 type Addresses struct {
@@ -23,7 +25,7 @@ type Addresses struct {
 
 type TestEvent struct {
 	Name   string
-	Fields map[string]interface{}
+	Fields map[string]string
 }
 
 var addresses Addresses
@@ -58,13 +60,20 @@ func ParseTestEvent(event flow.Event) *gwtf.FormatedEvent {
 func NewExpectedEvent(name string) TestEvent {
 	return TestEvent{
 		Name:   "A." + addresses.FiatToken + ".FiatToken." + name,
-		Fields: map[string]interface{}{},
+		Fields: map[string]string{},
 	}
 }
 
-func (te TestEvent) AddField(fieldName string, fieldValue cadence.Value) TestEvent {
-	te.Fields[fieldName] = gwtf.CadenceValueToInterface(fieldValue)
+func (te TestEvent) AddField(fieldName string, fieldValue string) TestEvent {
+	te.Fields[fieldName] = fieldValue
 	return te
+}
+
+func (te TestEvent) AssertEqual(t *testing.T, event *gwtf.FormatedEvent) {
+	assert.Equal(t, event.Name, te.Name)
+	for k := range te.Fields {
+		assert.Equal(t, te.Fields[k], event.Fields[k])
+	}
 }
 
 func ReadCadenceCode(ContractPath string) []byte {
