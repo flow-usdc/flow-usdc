@@ -69,11 +69,22 @@ func (te TestEvent) AddField(fieldName string, fieldValue string) TestEvent {
 	return te
 }
 
+func (te TestEvent) AssertHasKey(t *testing.T, event *gwtf.FormatedEvent, key string) {
+	assert.Equal(t, event.Name, te.Name)
+	_, exist := event.Fields[key]
+	assert.Equal(t, true, exist)
+}
+
 func (te TestEvent) AssertEqual(t *testing.T, event *gwtf.FormatedEvent) {
 	assert.Equal(t, event.Name, te.Name)
 	for k := range te.Fields {
 		assert.Equal(t, te.Fields[k], event.Fields[k])
 	}
+}
+
+func GetAccountAddr (g *gwtf.GoWithTheFlow, name string) string {
+	address := cadence.BytesToAddress(g.Accounts[name].Address.Bytes())
+	return address.String()
 }
 
 func ReadCadenceCode(ContractPath string) []byte {

@@ -21,10 +21,7 @@ func TestCreatePauser(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("PauserCreated")
-	assert.Equal(t, event.Name, expectedEvent.Name)
-	_, exist := event.Fields["resourceId"]
-	assert.Equal(t, true, exist)
+	util.NewExpectedEvent("PauserCreated").AssertHasKey(t, event, "resourceId")
 }
 
 func TestSetPauserCapability(t *testing.T) {
@@ -46,8 +43,7 @@ func TestPauserContractWithCap(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("Paused")
-	assert.Equal(t, event.Name, expectedEvent.Name)
+	util.NewExpectedEvent("Paused").AssertEqual(t, event)
 
 	err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
@@ -77,8 +73,7 @@ func TestUnPauserContractWithCap(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("Unpaused")
-	assert.Equal(t, event.Name, expectedEvent.Name)
+	util.NewExpectedEvent("Unpaused").AssertEqual(t, event)
 
 	err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)

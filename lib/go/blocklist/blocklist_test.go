@@ -28,10 +28,7 @@ func TestCreateBlocklister(t *testing.T) {
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])
-	expectedEvent := util.NewExpectedEvent("BlocklisterCreated")
-	assert.Equal(t, event.Name, expectedEvent.Name)
-	_, exist := event.Fields["resourceId"]
-	assert.Equal(t, true, exist)
+	util.NewExpectedEvent("BlocklisterCreated").AssertHasKey(t, event, "resourceId")
 
 	_, err = CreateBlocklister(g, "non-blocklister")
 	assert.NoError(t, err)
@@ -67,7 +64,7 @@ func TestBlocklistWithCap(t *testing.T) {
 	init_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
 	assert.Error(t, err)
 
 	post_rec_balance, err := util.GetBalance(g, "vaulted-account")
@@ -96,7 +93,7 @@ func TestUnblocklistWithCap(t *testing.T) {
 	init_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
 	assert.NoError(t, err)
 
 	post_rec_balance, err := util.GetBalance(g, "vaulted-account")
