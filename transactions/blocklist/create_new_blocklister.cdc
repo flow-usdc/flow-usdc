@@ -3,9 +3,11 @@ import FiatToken from 0x{{.FiatToken}}
 transaction(blocklisterAddr: Address) {
     prepare (blocklister: AuthAccount) {
         
-        // Check and return if they already have a pauser resource
+        // Check if they already have a blocklister resource, if so, destroy it
         if blocklister.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) != nil {
-            return
+            blocklister.unlink(FiatToken.BlocklisterCapReceiverPubPath)
+            let b <- blocklister.load<@FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) 
+            destroy b
         }
         
         blocklister.save(<- FiatToken.createNewBlocklister(), to: FiatToken.BlocklisterStoragePath);

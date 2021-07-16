@@ -58,7 +58,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated()
+    pub event PauserCreated(resourceId: UInt64)
 
     // ===== Blocklist state and events =====
 
@@ -78,7 +78,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated();
+    pub event BlocklisterCreated(resourceId: UInt64);
     
     /// ===== FiatToken Vault events =====
     /// NewVault 
@@ -574,8 +574,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     pub fun createNewPauser(): @Pauser{
-        emit PauserCreated();
-        return <-create Pauser()
+        let pauser <-create Pauser()
+        emit PauserCreated(resourceId: pauser.uuid);
+        return <- pauser
     }
 
     pub fun createNewMinterController(): @MinterController{
@@ -587,8 +588,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     pub fun createNewBlocklister(): @Blocklister{
-        emit BlocklisterCreated();
-        return <-create Blocklister()
+        let blocklister <-create Blocklister()
+        emit BlocklisterCreated(resourceId: blocklister.uuid);
+        return <-blocklister
     }
 
     init(

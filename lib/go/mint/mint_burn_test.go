@@ -131,7 +131,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// Pause contract
-	err := pause.PauseOrUnpauseContract(g, "pauser", 1)
+	_, err := pause.PauseOrUnpauseContract(g, "pauser", 1)
 	assert.NoError(t, err)
 	paused, err := pause.GetPaused(g)
 	assert.NoError(t, err)
@@ -153,7 +153,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 	err = Burn(g, "minter", burnAmount.String())
 	assert.Error(t, err)
 
-	err = pause.PauseOrUnpauseContract(g, "pauser", 0)
+	_, err = pause.PauseOrUnpauseContract(g, "pauser", 0)
 	assert.NoError(t, err)
 }
 
@@ -164,7 +164,7 @@ func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 	assert.NoError(t, err)
 
 	// blocklist minter
-	err = blocklist.BlocklistOrUnblocklistRsc(g, "blocklister", minter, 1)
+	_, err = blocklist.BlocklistOrUnblocklistRsc(g, "blocklister", minter, 1)
 	assert.NoError(t, err)
 	blockheight, err := blocklist.GetBlocklistStatus(g, minter)
 	assert.NoError(t, err)
@@ -184,7 +184,7 @@ func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 	err = Burn(g, "minter", burnAmount.String())
 	assert.Error(t, err)
 
-	err = blocklist.BlocklistOrUnblocklistRsc(g, "blocklister", minter, 0)
+	_, err = blocklist.BlocklistOrUnblocklistRsc(g, "blocklister", minter, 0)
 	assert.NoError(t, err)
 }
 

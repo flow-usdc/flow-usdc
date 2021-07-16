@@ -52,7 +52,7 @@ pub contract interface FiatTokenInterface {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated()
+    pub event PauserCreated(resourceId: UInt64)
 
     // ===== Blocklist state and events =====
 
@@ -72,7 +72,7 @@ pub contract interface FiatTokenInterface {
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated()
+    pub event BlocklisterCreated(resourceId: UInt64)
 
 
     // ===== Minting states and events =====

@@ -5,10 +5,13 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"time"
+
 	"text/template"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 )
 
 type Addresses struct {
@@ -17,6 +20,13 @@ type Addresses struct {
 	FiatTokenInterface string
 	FiatToken          string
 }
+
+type TestEvent struct {
+	Name   string
+	Fields map[string]interface{}
+}
+
+var addresses Addresses
 
 func ParseCadenceTemplate(templatePath string) []byte {
 	fb, err := ioutil.ReadFile(templatePath)
@@ -30,8 +40,8 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	// Addresss for emulator are
-	// addresses := Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
-	addresses := Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
+	// addresses = Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
+	addresses = Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
 	if err != nil {
@@ -39,6 +49,22 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+func ParseTestEvent(event flow.Event) *gwtf.FormatedEvent {
+	return gwtf.ParseEvent(event, uint64(0), time.Now(), nil)
+}
+
+func NewExpectedEvent(name string) TestEvent {
+	return TestEvent{
+		Name:   "A." + addresses.FiatToken + ".FiatToken." + name,
+		Fields: map[string]interface{}{},
+	}
+}
+
+func (te TestEvent) AddField(fieldName string, fieldValue cadence.Value) TestEvent {
+	te.Fields[fieldName] = gwtf.CadenceValueToInterface(fieldValue)
+	return te
 }
 
 func ReadCadenceCode(ContractPath string) []byte {

@@ -1,7 +1,7 @@
 package blocklist
 
 import (
-	"log"
+	"strconv"
 	"testing"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
@@ -23,10 +23,17 @@ func TestGetUUID(t *testing.T) {
 
 func TestCreateBlocklister(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	err := CreateBlocklister(g, "blocklister")
+	rawEvents, err := CreateBlocklister(g, "blocklister")
 	assert.NoError(t, err)
 
-	err = CreateBlocklister(g, "non-blocklister")
+	// Test event
+	event := util.ParseTestEvent(rawEvents[0])
+	expectedEvent := util.NewExpectedEvent("BlocklisterCreated")
+	assert.Equal(t, event.Name, expectedEvent.Name)
+	_, exist := event.Fields["resourceId"]
+	assert.Equal(t, true, exist)
+
+	_, err = CreateBlocklister(g, "non-blocklister")
 	assert.NoError(t, err)
 }
 
@@ -42,8 +49,14 @@ func TestBlocklistWithCap(t *testing.T) {
 	uuid, err := util.GetVaultUUID(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 1)
+	rawEvents, err := BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 1)
 	assert.NoError(t, err)
+
+	// Test event
+	event := util.ParseTestEvent(rawEvents[0])
+	expectedEvent := util.NewExpectedEvent("Blocklisted")
+	assert.Equal(t, event.Name, expectedEvent.Name)
+	assert.Equal(t, strconv.Itoa(int(uuid)), event.Fields["resourceId"])
 
 	blockheight, err := GetBlocklistStatus(g, uuid)
 	assert.NoError(t, err)
@@ -71,8 +84,14 @@ func TestUnblocklistWithCap(t *testing.T) {
 	uuid, err := util.GetVaultUUID(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 0)
+	rawEvents, err := BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 0)
 	assert.NoError(t, err)
+
+	// Test event
+	event := util.ParseTestEvent(rawEvents[0])
+	expectedEvent := util.NewExpectedEvent("Unblocklisted")
+	assert.Equal(t, event.Name, expectedEvent.Name)
+	assert.Equal(t, strconv.Itoa(int(uuid)), event.Fields["resourceId"])
 
 	// After blocklisted, "vaulted-account" should be able to transfer
 	// - the balance of post tx, recv should receive 10.0 more
@@ -87,9 +106,6 @@ func TestUnblocklistWithCap(t *testing.T) {
 	post_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	log.Println("init_rec_balance: ", init_rec_balance)
-	log.Println("post_rec_balance: ", post_rec_balance)
-
 	assert.Equal(t, "10.00000000", (post_rec_balance - init_rec_balance).String())
 }
 
@@ -99,6 +115,6 @@ func TestBlocklistWithoutCap(t *testing.T) {
 	uuid, err := util.GetVaultUUID(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = BlocklistOrUnblocklistRsc(g, "non-blocklister", uuid, 1)
+	_, err = BlocklistOrUnblocklistRsc(g, "non-blocklister", uuid, 1)
 	assert.Error(t, err)
 }

@@ -3,12 +3,15 @@ import FiatToken from 0x{{.FiatToken}}
 transaction(pauserAddr: Address) {
     prepare (pauser: AuthAccount) {
         
-        // Check and return if they already have a pauser resource
+        // Check if account already have a pauser resource, if so destroy it
         if pauser.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) != nil {
-            return
+            pauser.unlink(FiatToken.PauserCapReceiverPubPath)
+            let p <- pauser.load<@FiatToken.Pauser>(from: FiatToken.PauserStoragePath) 
+            destroy p
         }
         
         pauser.save(<- FiatToken.createNewPauser(), to: FiatToken.PauserStoragePath);
+        log("created new pauser")
         
         pauser.link<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath, target: FiatToken.PauserStoragePath)
         ??  panic("Could not link PauserCapReceiver");
