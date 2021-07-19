@@ -1,8 +1,8 @@
 package vault
 
 import (
-	"testing"
 	"strconv"
+	"testing"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
@@ -37,44 +37,47 @@ func TestTransferTokens(t *testing.T) {
 	initialBalance, err := util.GetBalance(g, "owner")
 	assert.NoError(t, err)
 
-    transferAmount := "100.00000000"
-    rawEvents, err := TransferTokens(g, transferAmount, "owner", "vaulted-account")
+	transferAmount := "100.00000000"
+	rawEvents, err := TransferTokens(g, transferAmount, "owner", "vaulted-account")
 	assert.NoError(t, err)
 
 	balanceA, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 	assert.Equal(t, transferAmount, balanceA.String())
 
+	// Print a formatted version of the event for more info
+	gwtf.PrintEvents(rawEvents, map[string][]string{})
+
 	// Test events
 	event0 := util.ParseTestEvent(rawEvents[0])
-    uuid, err := util.GetVaultUUID(g, "owner")
-    assert.NoError(t, err)
+	uuid, err := util.GetVaultUUID(g, "owner")
+	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenWithdrawn").
-        AddField("amount", transferAmount).
-        AddField("from", strconv.Itoa(int(uuid))).
-        AssertEqual(t, event0)
+		AddField("amount", transferAmount).
+		AddField("from", strconv.Itoa(int(uuid))).
+		AssertEqual(t, event0)
 
 	event1 := util.ParseTestEvent(rawEvents[1])
-    fromAddr := util.GetAccountAddr(g, "owner")
+	fromAddr := util.GetAccountAddr(g, "owner")
 	util.NewExpectedEvent("TokensWithdrawn").
-        AddField("amount", transferAmount).
-        AddField("from", fromAddr).
-        AssertEqual(t, event1)
+		AddField("amount", transferAmount).
+		AddField("from", fromAddr).
+		AssertEqual(t, event1)
 
 	event2 := util.ParseTestEvent(rawEvents[2])
-    uuid, err = util.GetVaultUUID(g, "vaulted-account")
-    assert.NoError(t, err)
+	uuid, err = util.GetVaultUUID(g, "vaulted-account")
+	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenDeposited").
-        AddField("amount", transferAmount).
-        AddField("to", strconv.Itoa(int(uuid))).
-        AssertEqual(t, event2)
+		AddField("amount", transferAmount).
+		AddField("to", strconv.Itoa(int(uuid))).
+		AssertEqual(t, event2)
 
 	event3 := util.ParseTestEvent(rawEvents[3])
-    toAddr := util.GetAccountAddr(g, "vaulted-account")
-	util.NewExpectedEvent("TokensWithdrawn").
-        AddField("amount", transferAmount).
-        AddField("from", toAddr).
-        AssertEqual(t, event3)
+	toAddr := util.GetAccountAddr(g, "vaulted-account")
+	util.NewExpectedEvent("TokensDeposited").
+		AddField("amount", transferAmount).
+		AddField("to", toAddr).
+		AssertEqual(t, event3)
 
 	event4 := util.ParseTestEvent(rawEvents[4])
 	util.NewExpectedEvent("DestroyVault").AssertHasKey(t, event4, "resourceId")
@@ -95,5 +98,5 @@ func TestTransferToNonVaulted(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test event
-    assert.Empty(t, rawEvents)
+	assert.Empty(t, rawEvents)
 }

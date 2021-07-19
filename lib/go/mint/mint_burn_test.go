@@ -26,7 +26,7 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// Params
-	err := vault.AddVaultToAccount(g, "minter")
+	_, err := vault.AddVaultToAccount(g, "minter")
 	assert.NoError(t, err)
 	minter, err := GetMinterUUID(g, "minter")
 	assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// Params
-	err := vault.AddVaultToAccount(g, "minter")
+	_, err := vault.AddVaultToAccount(g, "minter")
 	assert.NoError(t, err)
 	minter, err := GetMinterUUID(g, "minter")
 	assert.NoError(t, err)

@@ -45,10 +45,10 @@ func TestPauserContractWithCap(t *testing.T) {
 	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Paused").AssertEqual(t, event)
 
-	err = vault.AddVaultToAccount(g, "vaulted-account")
+	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
 	assert.Error(t, err)
 }
 
@@ -75,9 +75,9 @@ func TestUnPauserContractWithCap(t *testing.T) {
 	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Unpaused").AssertEqual(t, event)
 
-	err = vault.AddVaultToAccount(g, "vaulted-account")
+	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
 	assert.NoError(t, err)
 }

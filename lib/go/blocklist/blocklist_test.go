@@ -14,7 +14,7 @@ import (
 func TestGetUUID(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	err := vault.AddVaultToAccount(g, "vaulted-account")
+	_, err := vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
 	_, err = util.GetVaultUUID(g, "vaulted-account")

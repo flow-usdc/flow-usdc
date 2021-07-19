@@ -82,7 +82,7 @@ func (te TestEvent) AssertEqual(t *testing.T, event *gwtf.FormatedEvent) {
 	}
 }
 
-func GetAccountAddr (g *gwtf.GoWithTheFlow, name string) string {
+func GetAccountAddr(g *gwtf.GoWithTheFlow, name string) string {
 	address := cadence.BytesToAddress(g.Accounts[name].Address.Bytes())
 	return address.String()
 }
