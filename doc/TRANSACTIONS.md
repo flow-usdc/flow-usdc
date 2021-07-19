@@ -1,3 +1,4 @@
+<!-- markdownlint-disable -->
 # transactions
 # blocklist
 ## blocklist_rsc.cdc

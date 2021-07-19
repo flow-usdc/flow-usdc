@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 )
 
@@ -13,8 +12,6 @@ func walkingDir(path string, info fs.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
-
-	log.Println(path, info.Name())
 
 	if info.IsDir() {
 		fmt.Printf("# %s\n", info.Name())
@@ -71,6 +68,7 @@ func walkingDir(path string, info fs.FileInfo, err error) error {
 }
 
 func main() {
+	fmt.Printf("<!-- markdownlint-disable -->\n")
 	err := filepath.Walk("./transactions/", walkingDir)
 	if err != nil {
 		panic(err)
