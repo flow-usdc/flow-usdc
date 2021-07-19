@@ -103,7 +103,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     ///
     /// The event that is emitted when a FiatToken vault approves another to  
     /// withdraw some set allowance 
-    pub event Approval(fromResourceId: UInt64, toResourceId: UInt64, amount: UFix64);
+    pub event Approval(from: UInt64, to: UInt64, amount: UFix64);
 
     // ===== Minting states and events =====
     
@@ -274,7 +274,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 assert(self.allowed.containsKey(resourceId), message: "cannot set zero allowance")
                 self.allowed.remove(key: resourceId)
             }
-            emit Approval(fromResourceId: self.uuid, toResourceId: resourceId, amount: amount);
+            emit Approval(from: self.uuid, to: resourceId, amount: amount);
         }
 
         /// Increase current allowance by increment value 
