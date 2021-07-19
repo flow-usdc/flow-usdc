@@ -58,7 +58,7 @@ flow project deploy --network="$NETWORK" --update
 cd lib/go
 go clean -testcache
 
-go run scripts/deploy.go
+go run scripts/deploy/deploy.go
 go test ./deploy -v
 go test ./vault -v
 go test ./pause -v
