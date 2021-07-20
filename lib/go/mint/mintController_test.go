@@ -13,15 +13,14 @@ import (
 
 func TestController_Create(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	rawEvents, err := CreateMinterController(g, "minterController1")
+	events, err := CreateMinterController(g, "minterController1")
 	assert.NoError(t, err)
 
 	_, err = GetMinterControllerUUID(g, "minterController1")
 	assert.NoError(t, err)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
-	util.NewExpectedEvent("MinterControllerCreated").AssertHasKey(t, event, "resourceId")
+	util.NewExpectedEvent("MinterControllerCreated").AssertHasKey(t, events[0], "resourceId")
 }
 
 func TestController_MasterMinterConfigureMinterController(t *testing.T) {
@@ -36,7 +35,7 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 	minter, err := GetMinterUUID(g, "minter")
 	assert.NoError(t, err)
 
-	rawEvents, err := owner.ConfigureMinterController(g, minterController, minter, "owner")
+	events, err := owner.ConfigureMinterController(g, minterController, minter, "owner")
 	assert.NoError(t, err)
 
 	managedMinter, err := GetManagedMinter(g, minterController)
@@ -44,11 +43,10 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 	assert.Equal(t, minter, managedMinter)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("ControllerConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_ConfigureMinterAllowance(t *testing.T) {
@@ -60,7 +58,7 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 	assert.NoError(t, err)
 
 	allowanceInput := "500.00000000"
-	rawEvents, err := ConfigureMinterAllowance(g, "minterController1", allowanceInput)
+	events, err := ConfigureMinterAllowance(g, "minterController1", allowanceInput)
 	assert.NoError(t, err)
 
 	allowance, err := GetMinterAllowance(g, minter)
@@ -70,12 +68,11 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 	assert.Equal(t, expected, allowance)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", allowanceInput).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_IncreaseMinterAllowance(t *testing.T) {
@@ -89,7 +86,7 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 	assert.NoError(t, err)
 
 	allowanceIncr := "500.00000000"
-	rawEvents, err := IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceIncr, 1)
+	events, err := IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceIncr, 1)
 	assert.NoError(t, err)
 
 	postAllowance, err := GetMinterAllowance(g, minter)
@@ -101,12 +98,11 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 	// Test event
 	// allowance (500.0) + inc (500.0)
 	expectedAllowance := "1000.00000000"
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", expectedAllowance).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_DecreaseMinterAllowance(t *testing.T) {
@@ -120,7 +116,7 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 	assert.NoError(t, err)
 
 	var allowanceDecr = "500.00000000"
-	rawEvents, err := IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceDecr, 0)
+	events, err := IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceDecr, 0)
 	assert.NoError(t, err)
 
 	postAllowance, err := GetMinterAllowance(g, minter)
@@ -132,12 +128,11 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 	// Test event
 	// allowance (1000.0) + decr (500.0)
 	expectedAllowance := "500.00000000"
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", expectedAllowance).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_RemoveMinter(t *testing.T) {
@@ -148,7 +143,7 @@ func TestController_RemoveMinter(t *testing.T) {
 	minter, err := GetMinterUUID(g, "minter")
 	assert.NoError(t, err)
 
-	rawEvents, err := RemoveMinter(g, "minterController1")
+	events, err := RemoveMinter(g, "minterController1")
 	assert.NoError(t, err)
 
 	// Minter does not have allowance
@@ -156,11 +151,10 @@ func TestController_RemoveMinter(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("MinterRemoved").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_WithoutConfigFailToSetMinterAllowance(t *testing.T) {
@@ -218,17 +212,16 @@ func TestController_MasterMinterRemoveController(t *testing.T) {
 	minterController2, err := GetMinterControllerUUID(g, "minterController2")
 	assert.NoError(t, err)
 
-	rawEvents, err := owner.RemoveMinterController(g, minterController2, "owner")
+	events, err := owner.RemoveMinterController(g, minterController2, "owner")
 	assert.NoError(t, err)
 
 	_, err = GetManagedMinter(g, minterController2)
 	assert.Error(t, err)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("ControllerRemoved").
 		AddField("controller", strconv.Itoa(int(minterController2))).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T) {

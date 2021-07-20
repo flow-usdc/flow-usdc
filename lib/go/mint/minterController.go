@@ -5,19 +5,19 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
-	"github.com/onflow/flow-go-sdk"
 )
 
 func CreateMinterController(
 	g *gwtf.GoWithTheFlow,
 	account string,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/mint/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
 
@@ -47,25 +47,27 @@ func ConfigureMinterAllowance(
 	g *gwtf.GoWithTheFlow,
 	minterControllerAcct string,
 	amount string,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/mint/configure_minter_allowance.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(amount).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
 
 func RemoveMinter(
 	g *gwtf.GoWithTheFlow,
 	minterControllerAcct string,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/mint/remove_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
 
@@ -74,7 +76,7 @@ func IncreaseOrDecreaseMinterAllowance(
 	minterControllerAcct string,
 	absDelta string,
 	inc uint,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	var txFilename string
 	if inc == 1 {
 		txFilename = "../../../transactions/mint/increase_minter_allowance.cdc"
@@ -83,9 +85,10 @@ func IncreaseOrDecreaseMinterAllowance(
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(absDelta).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }

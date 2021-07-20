@@ -22,7 +22,7 @@ func TestApproval(t *testing.T) {
 	assert.NoError(t, err)
 
 	allowanceAmount := "16.00000000"
-	rawEvents, err := Approve(g, "owner", toUuid, allowanceAmount)
+	events, err := Approve(g, "owner", toUuid, allowanceAmount)
 	assert.NoError(t, err)
 
 	a, err := GetAllowance(g, "owner", toUuid)
@@ -30,12 +30,11 @@ func TestApproval(t *testing.T) {
 	assert.Equal(t, allowanceAmount, a.String())
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(toUuid))).
 		AddField("amount", allowanceAmount).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 
 }
 
@@ -53,7 +52,7 @@ func TestWithdrawAllowanceValidReq(t *testing.T) {
 	assert.NoError(t, err)
 
 	withdrawAmount := "10.00000000"
-	rawEvents, err := WithdrawAllowance(g, "owner", "owner", "allowance", withdrawAmount)
+	events, err := WithdrawAllowance(g, "owner", "owner", "allowance", withdrawAmount)
 	assert.NoError(t, err)
 
 	postFromBalance, err := util.GetBalance(g, "owner")
@@ -68,36 +67,32 @@ func TestWithdrawAllowanceValidReq(t *testing.T) {
 	assert.Equal(t, "10.00000000", (initAllowance - postAllowance).String())
 
 	// Test events
-	event0 := util.ParseTestEvent(rawEvents[0])
 	fromUuid, err := util.GetVaultUUID(g, "owner")
 	assert.NoError(t, err)
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenWithdrawn").
 		AddField("amount", withdrawAmount).
 		AddField("from", strconv.Itoa(int(fromUuid))).
-		AssertEqual(t, event0)
+		AssertEqual(t, events[0])
 
-	event1 := util.ParseTestEvent(rawEvents[1])
 	fromAddr := util.GetAccountAddr(g, "owner")
 	util.NewExpectedEvent("TokensWithdrawn").
 		AddField("amount", withdrawAmount).
 		AddField("from", fromAddr).
-		AssertEqual(t, event1)
+		AssertEqual(t, events[1])
 
-	event2 := util.ParseTestEvent(rawEvents[2])
 	uuid, err = util.GetVaultUUID(g, "allowance")
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenDeposited").
 		AddField("amount", withdrawAmount).
 		AddField("to", strconv.Itoa(int(uuid))).
-		AssertEqual(t, event2)
+		AssertEqual(t, events[2])
 
-	event3 := util.ParseTestEvent(rawEvents[3])
 	toAddr := util.GetAccountAddr(g, "allowance")
 	util.NewExpectedEvent("TokensDeposited").
 		AddField("amount", withdrawAmount).
 		AddField("to", toAddr).
-		AssertEqual(t, event3)
+		AssertEqual(t, events[3])
 
 }
 
@@ -181,7 +176,7 @@ func TestIncreaseAllowance(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, allowanceAmount, initAllowance.String())
 
-	rawEvents, err := IncreaseOrDecreaseAlowance(g, "owner", uuid, allowanceAmount, 1)
+	events, err := IncreaseOrDecreaseAlowance(g, "owner", uuid, allowanceAmount, 1)
 	assert.NoError(t, err)
 
 	postAllowance, err := GetAllowance(g, "owner", uuid)
@@ -193,12 +188,11 @@ func TestIncreaseAllowance(t *testing.T) {
 	postAllowanceAmount := "20.00000000"
 	fromUuid, err := util.GetVaultUUID(g, "owner")
 	assert.NoError(t, err)
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AddField("amount", postAllowanceAmount).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }
 
 func TestDecreaseAllowance(t *testing.T) {
@@ -215,7 +209,7 @@ func TestDecreaseAllowance(t *testing.T) {
 	initAllowance, err := GetAllowance(g, "owner", uuid)
 	assert.NoError(t, err)
 
-	rawEvents, err := IncreaseOrDecreaseAlowance(g, "owner", uuid, decrAmount, 0)
+	events, err := IncreaseOrDecreaseAlowance(g, "owner", uuid, decrAmount, 0)
 	assert.NoError(t, err)
 
 	postAllowance, err := GetAllowance(g, "owner", uuid)
@@ -227,10 +221,9 @@ func TestDecreaseAllowance(t *testing.T) {
 	postAllowanceAmount := "7.00000000"
 	fromUuid, err := util.GetVaultUUID(g, "owner")
 	assert.NoError(t, err)
-	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AddField("amount", postAllowanceAmount).
-		AssertEqual(t, event)
+		AssertEqual(t, events[0])
 }

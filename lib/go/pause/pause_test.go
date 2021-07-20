@@ -14,12 +14,11 @@ import (
 func TestCreatePauser(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	rawEvents, err := CreatePauser(g, "pauser")
+	events, err := CreatePauser(g, "pauser")
 	assert.NoError(t, err)
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
-	util.NewExpectedEvent("PauserCreated").AssertHasKey(t, event, "resourceId")
+	util.NewExpectedEvent("PauserCreated").AssertHasKey(t, events[0], "resourceId")
 }
 
 func TestSetPauserCapability(t *testing.T) {
@@ -31,7 +30,7 @@ func TestSetPauserCapability(t *testing.T) {
 func TestPauserContractWithCap(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	rawEvents, err := PauseOrUnpauseContract(g, "pauser", 1)
+	events, err := PauseOrUnpauseContract(g, "pauser", 1)
 	assert.NoError(t, err)
 
 	// Test contract pause state
@@ -40,15 +39,14 @@ func TestPauserContractWithCap(t *testing.T) {
 	assert.Equal(t, paused.String(), "true")
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
-	util.NewExpectedEvent("Paused").AssertEqual(t, event)
+	util.NewExpectedEvent("Paused").AssertEqual(t, events[0])
 
 	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	rawEvents, err = vault.TransferTokens(g, "100.00000000", "owner", "vaulted-account")
+	events, err = vault.TransferTokens(g, "100.00000000", "owner", "vaulted-account")
 	assert.Error(t, err)
-	assert.Empty(t, rawEvents)
+	assert.Empty(t, events)
 }
 
 func TestPauserContractWithoutCap(t *testing.T) {
@@ -63,7 +61,7 @@ func TestPauserContractWithoutCap(t *testing.T) {
 
 func TestUnPauserContractWithCap(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	rawEvents, err := PauseOrUnpauseContract(g, "pauser", 0)
+	events, err := PauseOrUnpauseContract(g, "pauser", 0)
 	assert.NoError(t, err)
 
 	// Test contract pause state
@@ -72,8 +70,7 @@ func TestUnPauserContractWithCap(t *testing.T) {
 	assert.Equal(t, paused.String(), "false")
 
 	// Test event
-	event := util.ParseTestEvent(rawEvents[0])
-	util.NewExpectedEvent("Unpaused").AssertEqual(t, event)
+	util.NewExpectedEvent("Unpaused").AssertEqual(t, events[0])
 
 	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)

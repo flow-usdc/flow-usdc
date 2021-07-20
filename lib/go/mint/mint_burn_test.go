@@ -15,7 +15,7 @@ import (
 func TestMintBurn_MintWithoutConfig(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	createRawEvents, err := CreateMinter(g, "non-minter")
+	createEvents, err := CreateMinter(g, "non-minter")
 	assert.NoError(t, err)
 
 	// Execute mint without minterController config
@@ -24,8 +24,7 @@ func TestMintBurn_MintWithoutConfig(t *testing.T) {
 	assert.Empty(t, mintRawEvents)
 
 	// Test event
-	createEvent := util.ParseTestEvent(createRawEvents[0])
-	util.NewExpectedEvent("MinterCreated").AssertHasKey(t, createEvent, "resourceId")
+	util.NewExpectedEvent("MinterCreated").AssertHasKey(t, createEvents[0], "resourceId")
 }
 
 func TestMintBurn_MintBelowAllowace(t *testing.T) {
@@ -47,7 +46,7 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 	mintAmount := initMintAllowance / 2.0
 
 	// Execute mint
-	rawEvents, err := Mint(g, "minter", mintAmount.String(), "minter")
+	events, err := Mint(g, "minter", mintAmount.String(), "minter")
 	assert.NoError(t, err)
 
 	// Post mint values
@@ -63,30 +62,26 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 	assert.Equal(t, mintAmount, postBalance-initBalance)
 	assert.Equal(t, mintAmount, initMintAllowance-postMintAllowance)
 
-	event0 := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("Mint").
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("amount", mintAmount.String()).
-		AssertEqual(t, event0)
+		AssertEqual(t, events[0])
 
-	event1 := util.ParseTestEvent(rawEvents[1])
 	uuid, err := util.GetVaultUUID(g, "minter")
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", strconv.Itoa(int(uuid))).
-		AssertEqual(t, event1)
+		AssertEqual(t, events[1])
 
-	event2 := util.ParseTestEvent(rawEvents[2])
 	toAddr := util.GetAccountAddr(g, "minter")
 	util.NewExpectedEvent("TokensDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", toAddr).
-		AssertEqual(t, event2)
+		AssertEqual(t, events[2])
 
-	event3 := util.ParseTestEvent(rawEvents[3])
 	util.NewExpectedEvent("DestroyVault").
-		AssertHasKey(t, event3, "resourceId")
+		AssertHasKey(t, events[3], "resourceId")
 }
 
 func TestMintBurn_Burn(t *testing.T) {
@@ -105,7 +100,7 @@ func TestMintBurn_Burn(t *testing.T) {
 	burnAmount := initBalance / 2.0
 
 	// Execute mint
-	rawEvents, err := Burn(g, "minter", burnAmount.String())
+	events, err := Burn(g, "minter", burnAmount.String())
 	assert.NoError(t, err)
 
 	// Post mint values
@@ -121,30 +116,26 @@ func TestMintBurn_Burn(t *testing.T) {
 	assert.Equal(t, burnAmount, initBalance-postBalance)
 	assert.Equal(t, postMintAllowance, initMintAllowance)
 
-	event0 := util.ParseTestEvent(rawEvents[0])
 	uuid, err := util.GetVaultUUID(g, "minter")
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenWithdrawn").
 		AddField("amount", burnAmount.String()).
 		AddField("from", strconv.Itoa(int(uuid))).
-		AssertEqual(t, event0)
+		AssertEqual(t, events[0])
 
-	event1 := util.ParseTestEvent(rawEvents[1])
 	toAddr := util.GetAccountAddr(g, "minter")
 	util.NewExpectedEvent("TokensWithdrawn").
 		AddField("amount", burnAmount.String()).
 		AddField("from", toAddr).
-		AssertEqual(t, event1)
+		AssertEqual(t, events[1])
 
-	event2 := util.ParseTestEvent(rawEvents[2])
 	util.NewExpectedEvent("DestroyVault").
-		AssertHasKey(t, event2, "resourceId")
+		AssertHasKey(t, events[2], "resourceId")
 
-	event3 := util.ParseTestEvent(rawEvents[3])
 	util.NewExpectedEvent("Burn").
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("amount", burnAmount.String()).
-		AssertEqual(t, event3)
+		AssertEqual(t, events[3])
 }
 
 func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
