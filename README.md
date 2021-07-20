@@ -139,6 +139,15 @@ Issues and PRs accepted. Over time more details will be added here.
 * `test` - Test code in Golang.
 * `transactions` - contains examples of transactions one can perform with the contract
 
+#### Documentation
+
+Some documentation is auto-generated from comments and code.
+Run the command(s) below to update the docs:
+
+```bash
+$ make -B doc/TRANSACTIONS.md
+```
+
 ## License
 
 [MIT License](./LICENSE), Copyright (c) 2018-2021 CENTRE SECZ

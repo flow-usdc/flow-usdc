@@ -8,3 +8,6 @@ endif
 
 test:
 	./lib/go/test.sh
+
+doc/TRANSACTIONS.md:
+	go run lib/go/scripts/generate-docs/generate-transactions-md.go > doc/TRANSACTIONS.md
