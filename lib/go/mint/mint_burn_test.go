@@ -12,20 +12,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMintBurn_MintWithoutControllerConfig(t *testing.T) {
+func TestMintBurn_MintWithoutConfig(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	createRawEvents, err := CreateMinter(g, "non-minter")
 	assert.NoError(t, err)
 
 	// Execute mint without minterController config
-	mintRawEvents, err := Mint(g, "non-minter", "10.0", "non-minter")
+	mintRawEvents, err := Mint(g, "non-minter", "10.00000000", "non-minter")
 	assert.Error(t, err)
+	assert.Empty(t, mintRawEvents)
 
 	// Test event
 	createEvent := util.ParseTestEvent(createRawEvents[0])
 	util.NewExpectedEvent("MinterCreated").AssertHasKey(t, createEvent, "resourceId")
-	assert.Empty(t, mintRawEvents)
 }
 
 func TestMintBurn_MintBelowAllowace(t *testing.T) {
@@ -69,20 +69,24 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 		AddField("amount", mintAmount.String()).
 		AssertEqual(t, event0)
 
-	event2 := util.ParseTestEvent(rawEvents[2])
+	event1 := util.ParseTestEvent(rawEvents[1])
 	uuid, err := util.GetVaultUUID(g, "minter")
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", strconv.Itoa(int(uuid))).
-		AssertEqual(t, event2)
+		AssertEqual(t, event1)
 
-	event3 := util.ParseTestEvent(rawEvents[3])
+	event2 := util.ParseTestEvent(rawEvents[2])
 	toAddr := util.GetAccountAddr(g, "minter")
 	util.NewExpectedEvent("TokensDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", toAddr).
-		AssertEqual(t, event3)
+		AssertEqual(t, event2)
+
+	event3 := util.ParseTestEvent(rawEvents[3])
+	util.NewExpectedEvent("DestroyVault").
+		AssertHasKey(t, event3, "resourceId")
 }
 
 func TestMintBurn_Burn(t *testing.T) {
@@ -122,21 +126,25 @@ func TestMintBurn_Burn(t *testing.T) {
 	assert.NoError(t, err)
 	util.NewExpectedEvent("FiatTokenWithdrawn").
 		AddField("amount", burnAmount.String()).
-		AddField("to", strconv.Itoa(int(uuid))).
+		AddField("from", strconv.Itoa(int(uuid))).
 		AssertEqual(t, event0)
 
 	event1 := util.ParseTestEvent(rawEvents[1])
 	toAddr := util.GetAccountAddr(g, "minter")
-	util.NewExpectedEvent("TokensDeposited").
+	util.NewExpectedEvent("TokensWithdrawn").
 		AddField("amount", burnAmount.String()).
-		AddField("to", toAddr).
+		AddField("from", toAddr).
 		AssertEqual(t, event1)
 
 	event2 := util.ParseTestEvent(rawEvents[2])
+	util.NewExpectedEvent("DestroyVault").
+		AssertHasKey(t, event2, "resourceId")
+
+	event3 := util.ParseTestEvent(rawEvents[3])
 	util.NewExpectedEvent("Burn").
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("amount", burnAmount.String()).
-		AssertEqual(t, event2)
+		AssertEqual(t, event3)
 }
 
 func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
@@ -160,6 +168,7 @@ func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
 	// Execute mint
 	rawEvents, err := Mint(g, "minter", mintAmount.String(), "minter")
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 
 	// Post mint values
 	postTotalSupply, err := util.GetTotalSupply(g)
@@ -173,7 +182,6 @@ func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
 	assert.Equal(t, postTotalSupply, initTotalSupply)
 	assert.Equal(t, postBalance, initBalance)
 	assert.Equal(t, initMintAllowance, postMintAllowance)
-	assert.Empty(t, rawEvents)
 }
 
 func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
@@ -199,10 +207,10 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 	// Execute mint/burn should error as contract is paused
 	mEvents, err := Mint(g, "minter", mintAmount.String(), "minter")
 	assert.Error(t, err)
+	assert.Empty(t, mEvents)
+
 	bEvents, err := Burn(g, "minter", burnAmount.String())
 	assert.Error(t, err)
-
-	assert.Empty(t, mEvents)
 	assert.Empty(t, bEvents)
 
 	_, err = pause.PauseOrUnpauseContract(g, "pauser", 0)
@@ -233,10 +241,10 @@ func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 	// Execute mint/burn should error as minter is blocklisted
 	mEvents, err := Mint(g, "minter", mintAmount.String(), "minter")
 	assert.Error(t, err)
+	assert.Empty(t, mEvents)
+
 	bEvents, err := Burn(g, "minter", burnAmount.String())
 	assert.Error(t, err)
-
-	assert.Empty(t, mEvents)
 	assert.Empty(t, bEvents)
 
 	_, err = blocklist.BlocklistOrUnblocklistRsc(g, "blocklister", minter, 0)
@@ -257,17 +265,15 @@ func TestMintBurn_FailedToMintOrBurnAfterRemoved(t *testing.T) {
 	mintAmount := initMintAllowance / 2.0
 
 	// "minterController1" controls "minter" and removes it
-	rEvents, err := RemoveMinter(g, "minterController1")
+	_, err = RemoveMinter(g, "minterController1")
 	assert.NoError(t, err)
 
 	// Execute mint/burn should error
 	mEvents, err := Mint(g, "minter", mintAmount.String(), "minter")
 	assert.Error(t, err)
+	assert.Empty(t, mEvents)
 
 	bEvents, err := Burn(g, "minter", burnAmount.String())
 	assert.Error(t, err)
-
-	assert.Empty(t, rEvents)
-	assert.Empty(t, mEvents)
 	assert.Empty(t, bEvents)
 }

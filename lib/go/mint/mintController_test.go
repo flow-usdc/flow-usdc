@@ -88,7 +88,7 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 	initAllowance, err := GetMinterAllowance(g, minter)
 	assert.NoError(t, err)
 
-	allowanceIncr := "500.0"
+	allowanceIncr := "500.00000000"
 	rawEvents, err := IncreaseOrDecreaseMinterAllowance(g, "minterController1", allowanceIncr, 1)
 	assert.NoError(t, err)
 
@@ -156,7 +156,6 @@ func TestController_RemoveMinter(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test event
-	// allowance (1000.0) + decr (500.0)
 	event := util.ParseTestEvent(rawEvents[0])
 	util.NewExpectedEvent("MinterRemoved").
 		AddField("controller", strconv.Itoa(int(minterController))).
@@ -172,11 +171,9 @@ func TestController_WithoutConfigFailToSetMinterAllowance(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Try Mint should error
-	allowanceInput := "500.0"
+	allowanceInput := "500.00000000"
 	rawEvents, err := ConfigureMinterAllowance(g, "minterController2", allowanceInput)
 	assert.Error(t, err)
-
-	// Test event
 	assert.Empty(t, rawEvents)
 }
 
@@ -196,7 +193,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 	assert.NoError(t, err)
 
 	// mintController1 configures minter allowance
-	var controller1Allowance = "50.0"
+	var controller1Allowance = "50.00000000"
 	expectedController1, _ := cadence.NewUFix64(controller1Allowance)
 	_, err = ConfigureMinterAllowance(g, "minterController1", controller1Allowance)
 	assert.NoError(t, err)
@@ -206,7 +203,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 	assert.Equal(t, expectedController1, allowance)
 
 	// mintController2 configures minter allowance
-	var controller2Allowance = "12.0"
+	var controller2Allowance = "12.00000000"
 	expectedController2, _ := cadence.NewUFix64(controller2Allowance)
 	_, err = ConfigureMinterAllowance(g, "minterController2", controller2Allowance)
 	assert.NoError(t, err)
@@ -244,15 +241,14 @@ func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T
 	assert.NoError(t, err)
 
 	// Try Mint should error
-	var allowanceInput = "500.0"
+	var allowanceInput = "500.00000000"
 	rawEvents, err := ConfigureMinterAllowance(g, "minterController2", allowanceInput)
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 
 	postAllowance, err := GetMinterAllowance(g, minter)
 	assert.NoError(t, err)
 
 	// Assertions: minter allowance should not change
 	assert.Equal(t, postAllowance, initAllowance)
-	// Test event
-	assert.Empty(t, rawEvents)
 }

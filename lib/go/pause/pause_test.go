@@ -46,8 +46,9 @@ func TestPauserContractWithCap(t *testing.T) {
 	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	_, err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+	rawEvents, err = vault.TransferTokens(g, "100.00000000", "owner", "vaulted-account")
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 }
 
 func TestPauserContractWithoutCap(t *testing.T) {
@@ -55,8 +56,9 @@ func TestPauserContractWithoutCap(t *testing.T) {
 	_, err := CreatePauser(g, "non-pauser")
 	assert.NoError(t, err)
 
-	_, pauseErr := PauseOrUnpauseContract(g, "non-pauser", 1)
+	rawEvents, pauseErr := PauseOrUnpauseContract(g, "non-pauser", 1)
 	assert.Error(t, pauseErr)
+	assert.Empty(t, rawEvents)
 }
 
 func TestUnPauserContractWithCap(t *testing.T) {
@@ -76,6 +78,6 @@ func TestUnPauserContractWithCap(t *testing.T) {
 	_, err = vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	_, err = vault.TransferTokens(g, "100.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "100.00000000", "owner", "vaulted-account")
 	assert.NoError(t, err)
 }

@@ -64,8 +64,9 @@ func TestBlocklistWithCap(t *testing.T) {
 	init_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	_, err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
+	rawEvents, err = vault.TransferTokens(g, "10.00000000", "owner", "vaulted-account")
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 
 	post_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
@@ -93,7 +94,7 @@ func TestUnblocklistWithCap(t *testing.T) {
 	init_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	_, err = vault.TransferTokens(g, "10.0", "owner", "vaulted-account")
+	_, err = vault.TransferTokens(g, "10.00000000", "owner", "vaulted-account")
 	assert.NoError(t, err)
 
 	post_rec_balance, err := util.GetBalance(g, "vaulted-account")
@@ -108,6 +109,7 @@ func TestBlocklistWithoutCap(t *testing.T) {
 	uuid, err := util.GetVaultUUID(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	_, err = BlocklistOrUnblocklistRsc(g, "non-blocklister", uuid, 1)
+	rawEvents, err := BlocklistOrUnblocklistRsc(g, "non-blocklister", uuid, 1)
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 }

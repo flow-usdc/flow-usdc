@@ -117,8 +117,9 @@ func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
 
 	_, err = GetAllowance(g, "owner", uuid)
 	assert.Error(t, err)
-	rawEvents, err := WithdrawAllowance(g, "owner", "owner", "non-allowance", "10.0")
+	rawEvents, err := WithdrawAllowance(g, "owner", "owner", "non-allowance", "10.00000000")
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 
 	postFromBalance, err := util.GetBalance(g, "owner")
 	assert.NoError(t, err)
@@ -127,7 +128,6 @@ func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
 
 	assert.Equal(t, "0.00000000", (initFromBalance - postFromBalance).String())
 	assert.Equal(t, "0.00000000", (postToBalance - initToBalance).String())
-	assert.Empty(t, rawEvents)
 }
 
 func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
@@ -139,19 +139,19 @@ func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
 	initAllowance, err := GetAllowance(g, "owner", uuid)
 	assert.NoError(t, err)
 
-	reqAllowance, err := cadence.NewUFix64("1.0")
+	reqAllowance, err := cadence.NewUFix64("1.00000000")
 	assert.NoError(t, err)
 
 	reqAllowance += initAllowance
 
 	rawEvents, err := WithdrawAllowance(g, "owner", "owner", "allowance", reqAllowance.String())
 	assert.Error(t, err)
+	assert.Empty(t, rawEvents)
 
 	postAllowance, err := GetAllowance(g, "owner", uuid)
 	assert.NoError(t, err)
 
 	assert.Equal(t, initAllowance, postAllowance)
-	assert.Empty(t, rawEvents)
 }
 
 func TestSetZeroApprovalRemoves(t *testing.T) {
@@ -160,7 +160,7 @@ func TestSetZeroApprovalRemoves(t *testing.T) {
 	uuid, err := util.GetVaultUUID(g, "allowance")
 	assert.NoError(t, err)
 
-	_, err = Approve(g, "owner", uuid, "0.0")
+	_, err = Approve(g, "owner", uuid, "0.00000000")
 	assert.NoError(t, err)
 
 	_, err = GetAllowance(g, "owner", uuid)

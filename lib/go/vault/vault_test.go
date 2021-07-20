@@ -83,7 +83,7 @@ func TestTransferTokens(t *testing.T) {
 	util.NewExpectedEvent("DestroyVault").AssertHasKey(t, event4, "resourceId")
 
 	// Transfer the 100 token back from account A to FT minter
-	_, err = TransferTokens(g, "100.0", "vaulted-account", "owner")
+	_, err = TransferTokens(g, "100.00000000", "vaulted-account", "owner")
 	assert.NoError(t, err)
 
 	finalBalance, err := util.GetBalance(g, "owner")
@@ -94,9 +94,7 @@ func TestTransferTokens(t *testing.T) {
 func TestTransferToNonVaulted(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	// Transfer 1 token from FT minter to Account B, which has no vault
-	rawEvents, err := TransferTokens(g, "1000.0", "owner", "non-vaulted-account")
+	rawEvents, err := TransferTokens(g, "1000.00000000", "owner", "non-vaulted-account")
 	assert.Error(t, err)
-
-	// Test event
 	assert.Empty(t, rawEvents)
 }
