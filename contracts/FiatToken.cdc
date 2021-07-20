@@ -58,7 +58,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated()
+    pub event PauserCreated(resourceId: UInt64)
 
     // ===== Blocklist state and events =====
 
@@ -78,7 +78,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated();
+    pub event BlocklisterCreated(resourceId: UInt64);
     
     /// ===== FiatToken Vault events =====
     /// NewVault 
@@ -103,7 +103,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     ///
     /// The event that is emitted when a FiatToken vault approves another to  
     /// withdraw some set allowance 
-    pub event Approval(fromResourceId: UInt64, toResourceId: UInt64, amount: UFix64);
+    pub event Approval(from: UInt64, to: UInt64, amount: UFix64);
 
     // ===== Minting states and events =====
     
@@ -120,12 +120,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64);
+    pub event MinterCreated(resourceId: UInt64);
     /// MinterControllerCreated
     ///
     /// The event that is emitted when a new minter controller resource is created
     /// A minter controller manages the restrictions of exactly 1 minter.
-    pub event MinterControllerCreated();
+    pub event MinterControllerCreated(resourceId: UInt64);
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted
@@ -274,7 +274,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 assert(self.allowed.containsKey(resourceId), message: "cannot set zero allowance")
                 self.allowed.remove(key: resourceId)
             }
-            emit Approval(fromResourceId: self.uuid, toResourceId: resourceId, amount: amount);
+            emit Approval(from: self.uuid, to: resourceId, amount: amount);
         }
 
         /// Increase current allowance by increment value 
@@ -574,21 +574,27 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     pub fun createNewPauser(): @Pauser{
-        emit PauserCreated();
-        return <-create Pauser()
+        let pauser <-create Pauser()
+        emit PauserCreated(resourceId: pauser.uuid);
+        return <- pauser
     }
 
     pub fun createNewMinterController(): @MinterController{
-        return <-create MinterController()
+        let minterController <- create MinterController()
+        emit MinterControllerCreated(resourceId: minterController.uuid);
+        return <- minterController
     }
 
     pub fun createNewMinter(): @Minter{
-        return <-create Minter()
+        let minter <- create Minter();
+        emit MinterCreated(resourceId: minter.uuid);
+        return <- minter
     }
 
     pub fun createNewBlocklister(): @Blocklister{
-        emit BlocklisterCreated();
-        return <-create Blocklister()
+        let blocklister <-create Blocklister()
+        emit BlocklisterCreated(resourceId: blocklister.uuid);
+        return <-blocklister
     }
 
     init(

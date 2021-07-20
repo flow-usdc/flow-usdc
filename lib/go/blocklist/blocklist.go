@@ -4,18 +4,19 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 )
 
 func CreateBlocklister(
 	g *gwtf.GoWithTheFlow,
 	account string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/blocklist/create_new_blocklister.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -24,7 +25,7 @@ func BlocklistOrUnblocklistRsc(
 	blocklisterAcct string,
 	rscToBlockOrUnBlock uint64,
 	toBlock uint,
-) (err error) {
+) (events []flow.Event, err error) {
 	var txFilename string
 	if toBlock == 1 {
 		txFilename = "../../../transactions/blocklist/blocklist_rsc.cdc"
@@ -33,10 +34,10 @@ func BlocklistOrUnblocklistRsc(
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		UInt64Argument(rscToBlockOrUnBlock).
 		SignProposeAndPayAs(blocklisterAcct).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 

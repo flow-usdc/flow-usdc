@@ -4,18 +4,19 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 )
 
 func CreatePauser(
 	g *gwtf.GoWithTheFlow,
 	account string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/pause/create_new_pauser.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -23,7 +24,7 @@ func PauseOrUnpauseContract(
 	g *gwtf.GoWithTheFlow,
 	pauserAcct string,
 	pause uint,
-) (err error) {
+) (events []flow.Event, err error) {
 	var txFilename string
 
 	if pause == 1 {
@@ -33,9 +34,9 @@ func PauseOrUnpauseContract(
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(pauserAcct).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 

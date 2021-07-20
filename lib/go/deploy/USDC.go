@@ -67,7 +67,7 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinter"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterUUID"}).
 		StringArgument("USDC").
-		UFix64Argument("10000.0").
+		UFix64Argument("10000.00000000").
 		BooleanArgument(false).
 		RunPrintEventsFull()
 	return

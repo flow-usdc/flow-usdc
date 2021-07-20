@@ -52,7 +52,7 @@ pub contract interface FiatTokenInterface {
     /// PauserCreated 
     ///
     /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated()
+    pub event PauserCreated(resourceId: UInt64)
 
     // ===== Blocklist state and events =====
 
@@ -72,7 +72,7 @@ pub contract interface FiatTokenInterface {
     /// BlocklisterCreated
     ///
     /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated()
+    pub event BlocklisterCreated(resourceId: UInt64)
 
 
     // ===== Minting states and events =====
@@ -90,12 +90,12 @@ pub contract interface FiatTokenInterface {
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64);
+    pub event MinterCreated(resourceId: UInt64);
     /// MinterControllerCreated
     ///
     /// The event that is emitted when a new minter controller resource is created
     /// A minter controller manages the restrictions of exactly 1 minter.
-    pub event MinterControllerCreated();
+    pub event MinterControllerCreated(resourceId: UInt64);
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted

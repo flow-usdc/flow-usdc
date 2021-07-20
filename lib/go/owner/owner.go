@@ -3,6 +3,7 @@ package owner
 import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/onflow/flow-go-sdk"
 )
 
 // Uses the Pause Executor Resource Capabilities
@@ -43,15 +44,15 @@ func ConfigureMinterController(
 	minterController uint64,
 	minter uint64,
 	ownerAcct string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/owner/configure_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		UInt64Argument(minter).
 		UInt64Argument(minterController).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -60,13 +61,13 @@ func RemoveMinterController(
 	g *gwtf.GoWithTheFlow,
 	minterController uint64,
 	ownerAcct string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/owner/remove_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		UInt64Argument(minterController).
-		RunPrintEventsFull()
+		Run()
 	return
 }
