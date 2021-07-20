@@ -5,18 +5,19 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/onflow/flow-go-sdk"
 )
 
 func CreateMinterController(
 	g *gwtf.GoWithTheFlow,
 	account string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -46,25 +47,25 @@ func ConfigureMinterAllowance(
 	g *gwtf.GoWithTheFlow,
 	minterControllerAcct string,
 	amount string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/configure_minter_allowance.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(amount).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
 func RemoveMinter(
 	g *gwtf.GoWithTheFlow,
 	minterControllerAcct string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/remove_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -73,7 +74,7 @@ func IncreaseOrDecreaseMinterAllowance(
 	minterControllerAcct string,
 	absDelta string,
 	inc uint,
-) (err error) {
+) (events []flow.Event, err error) {
 	var txFilename string
 	if inc == 1 {
 		txFilename = "../../../transactions/mint/increase_minter_allowance.cdc"
@@ -82,9 +83,9 @@ func IncreaseOrDecreaseMinterAllowance(
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(absDelta).
-		RunPrintEventsFull()
+		Run()
 	return
 }

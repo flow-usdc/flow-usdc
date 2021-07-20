@@ -16,8 +16,6 @@ func TestCreatePauser(t *testing.T) {
 
 	rawEvents, err := CreatePauser(g, "pauser")
 	assert.NoError(t, err)
-	// Print a formatted version of the event for more info
-	gwtf.PrintEvents(rawEvents, map[string][]string{})
 
 	// Test event
 	event := util.ParseTestEvent(rawEvents[0])

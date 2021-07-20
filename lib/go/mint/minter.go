@@ -6,18 +6,19 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
+	"github.com/onflow/flow-go-sdk"
 )
 
 func CreateMinter(
 	g *gwtf.GoWithTheFlow,
 	account string,
-) (err error) {
+) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/create_new_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
@@ -43,23 +44,23 @@ func GetMinterAllowance(g *gwtf.GoWithTheFlow, minter uint64) (amount cadence.UF
 	return
 }
 
-func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct string) (err error) {
+func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct string) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/mint.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterAcct).
 		UFix64Argument(amount).
 		AccountArgument(recvAcct).
-		RunPrintEventsFull()
+		Run()
 	return
 }
 
-func Burn(g *gwtf.GoWithTheFlow, minterAcct string, amount string) (err error) {
+func Burn(g *gwtf.GoWithTheFlow, minterAcct string, amount string) (events []flow.Event, err error) {
 	txFilename := "../../../transactions/mint/burn.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	err = g.TransactionFromFile(txFilename, txScript).
+	events, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterAcct).
 		UFix64Argument(amount).
-		RunPrintEventsFull()
+		Run()
 	return
 }
