@@ -5,7 +5,9 @@ transaction(minterAddr: Address) {
         
         // Check and return if they already have a minter resource
         if minter.borrow<&FiatToken.Minter>(from: FiatToken.MinterStoragePath) != nil {
-            return
+            minter.unlink(FiatToken.MinterUUIDPubPath)
+            let m <- minter.load<@FiatToken.Minter>(from: FiatToken.MinterStoragePath) 
+            destroy m
         }
         
         minter.save(<- FiatToken.createNewMinter(), to: FiatToken.MinterStoragePath);

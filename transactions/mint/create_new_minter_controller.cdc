@@ -5,7 +5,9 @@ transaction(minterControllerAddr: Address) {
         
         // Check and return if they already have a minter controller resource
         if minterController.borrow<&FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) != nil {
-            return
+            minterController.unlink(FiatToken.MinterControllerUUIDPubPath)
+            let m <- minterController.load<@FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) 
+            destroy m
         }
         
         minterController.save(<- FiatToken.createNewMinterController(), to: FiatToken.MinterControllerStoragePath);
