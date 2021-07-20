@@ -120,12 +120,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64);
+    pub event MinterCreated(resourceId: UInt64);
     /// MinterControllerCreated
     ///
     /// The event that is emitted when a new minter controller resource is created
     /// A minter controller manages the restrictions of exactly 1 minter.
-    pub event MinterControllerCreated();
+    pub event MinterControllerCreated(resourceId: UInt64);
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted
@@ -580,11 +580,15 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     pub fun createNewMinterController(): @MinterController{
-        return <-create MinterController()
+        let minterController <- create MinterController()
+        emit MinterControllerCreated(resourceId: minterController.uuid);
+        return <- minterController
     }
 
     pub fun createNewMinter(): @Minter{
-        return <-create Minter()
+        let minter <- create Minter();
+        emit MinterCreated(resourceId: minter.uuid);
+        return <- minter
     }
 
     pub fun createNewBlocklister(): @Blocklister{

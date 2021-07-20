@@ -90,12 +90,12 @@ pub contract interface FiatTokenInterface {
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(allowedAmount: UFix64);
+    pub event MinterCreated(resourceId: UInt64);
     /// MinterControllerCreated
     ///
     /// The event that is emitted when a new minter controller resource is created
     /// A minter controller manages the restrictions of exactly 1 minter.
-    pub event MinterControllerCreated();
+    pub event MinterControllerCreated(resourceId: UInt64);
     /// Mint
     ///
     /// The event that is emitted when new tokens are minted
