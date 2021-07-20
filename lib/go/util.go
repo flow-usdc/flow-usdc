@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
+	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,6 +21,7 @@ type Addresses struct {
 	ExampleToken       string
 	FiatTokenInterface string
 	FiatToken          string
+	OnChainMultiSig    string
 }
 
 type TestEvent struct {
@@ -42,8 +43,8 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	}
 
 	// Addresss for emulator are
-	// addresses = Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
-	addresses = Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
+	addresses = Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
+	// addresses = Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS"), os.Getenv("TOKEN_ACCOUNT_ADDRESS")}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)
 	if err != nil {
@@ -128,6 +129,67 @@ func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {
 	r, ok := value.ToGoValue().(uint64)
 	if !ok {
 		err = errors.New("returned not uint64")
+	}
+	return
+}
+
+func ConvertCadenceByteArray(a cadence.Value) (b []uint8) {
+	// type assertion of interface
+	i := a.ToGoValue().([]interface{})
+
+	for _, e := range i {
+		// type assertion of uint8
+		b = append(b, e.(uint8))
+	}
+	return
+
+}
+
+// Multisig utility functions
+
+// Signing payload offline
+func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig []byte, err error) {
+	s := g.Accounts[signingAcct]
+	signer := crypto.NewInMemorySigner(s.PrivateKey, s.HashAlgo)
+	sig, err = signer.Sign(message)
+	return
+}
+
+func GetSignableDataFromScript(
+	g *gwtf.GoWithTheFlow,
+	method string,
+	args ...interface{},
+) (signable []byte, err error) {
+	filename := "../../../scripts/multisig/calc_signable_data.cdc"
+	script := ParseCadenceTemplate(filename)
+
+	cMethod, err := g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(cadence.String(method))).RunReturns()
+	signable = append(signable, ConvertCadenceByteArray(cMethod)...)
+
+	// amount, err := cadence.NewUFix64(value)
+	for _, arg := range args {
+		var b cadence.Value
+		switch arg.(type) {
+		case string:
+			// TODO: do not assume all args with string is for UFix64
+			ufix64, err := cadence.NewUFix64(arg.(string))
+			if err != nil {
+				return nil, err
+			}
+			b, err = g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(ufix64)).RunReturns()
+			if err != nil {
+				return nil, err
+			}
+		case uint64:
+			b, err = g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(cadence.UInt64(arg.(uint64)))).RunReturns()
+			if err != nil {
+				return nil, err
+			}
+		default:
+			panic("arg type not supported")
+		}
+		signable = append(signable, ConvertCadenceByteArray(b)...)
+
 	}
 	return
 }

@@ -29,6 +29,7 @@ pub contract interface FiatTokenInterface {
 
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
+    pub let MasterMinterPubSigner: PublicPath;
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;

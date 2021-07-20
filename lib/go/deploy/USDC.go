@@ -13,7 +13,7 @@ func DeployFiatTokenContract(
 	g *gwtf.GoWithTheFlow,
 	ownerAcct string) (events []*gwtf.FormatedEvent, err error) {
 	contractCode := util.ParseCadenceTemplate("../../contracts/FiatToken.cdc")
-	txFilename := "../../transactions/deploy_contract_with_auth.cdc"
+	txFilename := "../../transactions/deploy/deploy_contract_with_auth.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
 	g.CreateAccountPrintEvents(
@@ -30,6 +30,12 @@ func DeployFiatTokenContract(
 		"minterController1",
 		"minterController2",
 	)
+
+	pk := g.Accounts[ownerAcct].PrivateKey.PublicKey().String()
+
+	ownerAccountPubKeys := []cadence.Value{cadence.String(pk)}
+	w, _ := cadence.NewUFix64("1.0")
+	ownerAccountKeyWeight := []cadence.Value{w}
 
 	e, err := g.TransactionFromFile(txFilename, code).
 		SignProposeAndPayAs(ownerAcct).
@@ -59,6 +65,7 @@ func DeployFiatTokenContract(
 		// Masterminter
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMasterMinter"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCMasterMinterCap"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCMasterMinterPublicSigner"}).
 		// Minter Controller
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinterController"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterControllerUUID"}).
@@ -68,6 +75,8 @@ func DeployFiatTokenContract(
 		StringArgument("USDC").
 		UFix64Argument("10000.00000000").
 		BooleanArgument(false).
+		Argument(cadence.NewArray(ownerAccountPubKeys)).
+		Argument(cadence.NewArray(ownerAccountKeyWeight)).
 		Run()
 	gwtf.PrintEvents(e, map[string][]string{})
 	events = util.ParseTestEvents(e)

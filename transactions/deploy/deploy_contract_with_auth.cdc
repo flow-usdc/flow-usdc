@@ -23,13 +23,16 @@ transaction(
     OwnerPrivPath: PrivatePath,
     MasterMinterStoragePath: StoragePath,
     MasterMinterPrivPath: PrivatePath,
+    MasterMinterPubSigner: PublicPath,
     MinterControllerStoragePath: StoragePath,
     MinterControllerUUIDPubPath: PublicPath,
     MinterStoragePath: StoragePath,
     MinterUUIDPubPath: PublicPath,
     tokenName: String,
     initTotalSupply: UFix64,
-    initPaused: Bool
+    initPaused: Bool,
+    ownerAccountPubKeys: [String],
+    ownerAccountKeyWeights: [UFix64],
 ) {
     prepare(owner: AuthAccount) {
         let existingContract = owner.contracts.get(name: contractName)
@@ -56,6 +59,7 @@ transaction(
                 OwnerPrivPath: OwnerPrivPath,
                 MasterMinterStoragePath: MasterMinterStoragePath,
                 MasterMinterPrivPath: MasterMinterPrivPath,
+                MasterMinterPubSigner: MasterMinterPubSigner,
                 MinterControllerStoragePath:  MinterControllerStoragePath,
                 MinterControllerUUIDPubPath: MinterControllerUUIDPubPath,
                 MinterStoragePath: MinterStoragePath,
@@ -63,6 +67,8 @@ transaction(
                 tokenName: tokenName,
                 initTotalSupply: initTotalSupply,
                 initPaused: initPaused, 
+                ownerAccountPubKeys: ownerAccountPubKeys,
+                ownerAccountKeyWeights: ownerAccountKeyWeights,
             )
         } else {
             owner.contracts.update__experimental(name: contractName, code: code.decodeHex())
