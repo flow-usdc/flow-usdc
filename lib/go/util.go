@@ -77,6 +77,7 @@ func (te TestEvent) AssertHasKey(t *testing.T, event *gwtf.FormatedEvent, key st
 
 func (te TestEvent) AssertEqual(t *testing.T, event *gwtf.FormatedEvent) {
 	assert.Equal(t, event.Name, te.Name)
+	assert.Equal(t, len(te.Fields), len(event.Fields))
 	for k := range te.Fields {
 		assert.Equal(t, te.Fields[k], event.Fields[k])
 	}
