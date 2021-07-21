@@ -11,8 +11,7 @@ import (
 
 func DeployFiatTokenContract(
 	g *gwtf.GoWithTheFlow,
-	ownerAcct string) (err error) {
-
+	ownerAcct string) (events []*gwtf.FormatedEvent, err error) {
 	contractCode := util.ParseCadenceTemplate("../../contracts/FiatToken.cdc")
 	txFilename := "../../transactions/deploy_contract_with_auth.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
@@ -32,7 +31,7 @@ func DeployFiatTokenContract(
 		"minterController2",
 	)
 
-	err = g.TransactionFromFile(txFilename, code).
+	e, err := g.TransactionFromFile(txFilename, code).
 		SignProposeAndPayAs(ownerAcct).
 		StringArgument("FiatToken").
 		StringArgument(encodedStr).
@@ -69,6 +68,9 @@ func DeployFiatTokenContract(
 		StringArgument("USDC").
 		UFix64Argument("10000.00000000").
 		BooleanArgument(false).
-		RunPrintEventsFull()
+		Run()
+	gwtf.PrintEvents(e, map[string][]string{})
+	events = util.ParseTestEvents(e)
+
 	return
 }

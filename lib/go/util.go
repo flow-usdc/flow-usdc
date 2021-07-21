@@ -53,8 +53,11 @@ func ParseCadenceTemplate(templatePath string) []byte {
 	return buf.Bytes()
 }
 
-func ParseTestEvent(event flow.Event) *gwtf.FormatedEvent {
-	return gwtf.ParseEvent(event, uint64(0), time.Now(), nil)
+func ParseTestEvents(events []flow.Event) (formatedEvents []*gwtf.FormatedEvent) {
+	for _, e := range events {
+		formatedEvents = append(formatedEvents, gwtf.ParseEvent(e, uint64(0), time.Now(), nil))
+	}
+	return
 }
 
 func NewExpectedEvent(name string) TestEvent {

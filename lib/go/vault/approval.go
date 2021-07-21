@@ -4,7 +4,6 @@ import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
-	"github.com/onflow/flow-go-sdk"
 )
 
 func Approve(
@@ -12,14 +11,15 @@ func Approve(
 	fromAcct string,
 	toResourceId uint64,
 	amount string,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/vault/approval.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(fromAcct).
 		UInt64Argument(toResourceId).
 		UFix64Argument(amount).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
 
@@ -47,15 +47,16 @@ func WithdrawAllowance(
 	fromAcct string,
 	toAcct string,
 	amount string,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/vault/withdraw_allowance.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(signAcct).
 		AccountArgument(fromAcct).
 		AccountArgument(toAcct).
 		UFix64Argument(amount).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
 
@@ -65,7 +66,7 @@ func IncreaseOrDecreaseAlowance(
 	toResourceId uint64,
 	absDelta string,
 	inc uint,
-) (events []flow.Event, err error) {
+) (events []*gwtf.FormatedEvent, err error) {
 	var txFilename string
 
 	if inc == 1 {
@@ -75,10 +76,11 @@ func IncreaseOrDecreaseAlowance(
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
-	events, err = g.TransactionFromFile(txFilename, txScript).
+	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(fromAcct).
 		UInt64Argument(toResourceId).
 		UFix64Argument(absDelta).
 		Run()
+	events = util.ParseTestEvents(e)
 	return
 }
