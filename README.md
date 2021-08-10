@@ -1,6 +1,6 @@
-# USD Coin (USDC), on Flow _(flow-usdc)_
+# The CENTRE Fiat Token, on Flow _(flow-usdc)_
 
-> A `FungibleToken`-compatible fiat coin on Flow, with additional support for pausing and blocklisting.
+> An implementation of the CENTRE Fiat Token in Cadence, on the Flow Blockchain.
 
 <!-- markdownlint-configure-file { "MD013": { "line_length": 100 } } -->
 
