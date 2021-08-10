@@ -43,7 +43,7 @@ func BlocklistOrUnblocklistRsc(
 }
 
 func GetBlocklistStatus(g *gwtf.GoWithTheFlow, resourceId uint64) (r uint64, err error) {
-	filename := "../../../scripts/get_blocklist_status.cdc"
+	filename := "../../../scripts/contract/get_blocklist_status.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	result, err := g.ScriptFromFile(filename, script).UInt64Argument(resourceId).RunReturns()
 	blockHeight := result.(cadence.Optional)

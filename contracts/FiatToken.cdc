@@ -297,7 +297,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             self.approval(resourceId: resourceId, amount: newAllowance);
         };
 
-
         destroy() {
             FiatToken.totalSupply = FiatToken.totalSupply - self.balance
             emit DestroyVault(resourceId: self.uuid);
@@ -319,8 +318,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             return <-create BlocklistExecutor()
         }
 
-        pub fun createNewMasterMinter(initialSigners: [OnChainMultiSig.KeyListElement]): @MasterMinter{
-            return <-create MasterMinter(initialSigners: initialSigners)
+        pub fun createNewMasterMinter(): @MasterMinter{
+            return <-create MasterMinter()
         }
     }
 
@@ -345,48 +344,66 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             emit ControllerRemoved(controller: minterController)
         }
         
-        // PublicSigner interface requirements 
-        // 1. signatureStore: Stores the payloads, transactions pending to be signed and signature
-        // 2. addNewPayload: add new transaction payload to the signature store waiting for others to sign
-        // 3. addPayloadSignature: add signature to store for existing paylaods by payload index
-        // 4. executeTx: attempt to execute the transaction at a given index after required signatures have been added
-        // 
-        // Interfaces 1-3 uses `OnChainMultiSig.Manager` struct for code implementation
-        // Interface 4 needs to be implemented specifically for each resource
-
-        /// struct to keep track of partial sigatures
-        access(self) var signatureStore: OnChainMultiSig.SignatureStore;
+                /// struct to keep track of partial sigatures
+        pub var signatureStore: OnChainMultiSig.SignatureStore;
         
         /// To submit a new paylaod, i.e. starting a new tx requiring more signatures
-        pub fun addNewPayload(payload: OnChainMultiSig.PayloadDetails, keyListIndex: Int, sig: [UInt8]) {
+        pub fun addNewPayload(payload: OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             let manager = OnChainMultiSig.Manager(sigStore: self.signatureStore);
-            let newSignatureStore = manager.addNewPayload(resourceId: self.uuid, payload: payload, keyListIndex: keyListIndex, sig: sig);
+            let newSignatureStore = manager.addNewPayload(resourceId: self.uuid, payload: payload, publicKey: publicKey, sig: sig);
             self.signatureStore = newSignatureStore
         }
 
         /// To submit a new signature for a pre-exising payload, i.e. adding another signature
-        pub fun addPayloadSignature (txIndex: UInt64, keyListIndex: Int, sig: [UInt8]) {
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
             let manager = OnChainMultiSig.Manager(sigStore: self.signatureStore);
-            let newSignatureStore = manager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, keyListIndex: keyListIndex, sig: sig);
+            let newSignatureStore = manager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
             self.signatureStore = newSignatureStore
        }
-        /// To execute the multisig transaction iff conditions are met
-        pub fun executeTx(txIndex: UInt64) {
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
             let manager = OnChainMultiSig.Manager(sigStore: self.signatureStore);
-            let p = manager.readyForExecution(txIndex: txIndex) ?? panic ("TX not ready for execution")
+            let exeDetails = manager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            let p = exeDetails.payload            
+            self.signatureStore = exeDetails.signatureStore
             switch p.method {
+                case "configureKey":
+                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
+                    let weight = p.args[1] as? UFix64 ?? panic ("cannot downcast weight");
+                    let newSignatureStore = manager.configureKeys(pks: [pubKey], kws: [weight])
+                    self.signatureStore = newSignatureStore; 
+                case "removeKey":
+                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
+                    let newSignatureStore = manager.removeKeys(pks: [pubKey])
+                    self.signatureStore = newSignatureStore; 
                 case "configureMinterController":
-                    let m = p.args[0].value as? UInt64 ?? panic ("cannot downcast minter id");
-                    let mc = p.args[1].value as? UInt64 ?? panic ("cannot downcast minterController id") 
+                    let m = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.args[1] as? UInt64 ?? panic ("cannot downcast minterController id") 
                     self.configureMinterController(minter: m, minterController: mc);
                 case "removeMinterController":
-                    let mc = p.args[0].value as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
                     self.removeMinterController(minterController: mc);
             }
+            return nil;
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }; 
+
+        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
+            let manager = OnChainMultiSig.Manager(sigStore: self.signatureStore);
+            let newSignatureStore = manager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights)
+            self.signatureStore = newSignatureStore; 
+        }
+
+        pub fun removeKeys( multiSigPubKeys: [String]) {
+            let manager = OnChainMultiSig.Manager(sigStore: self.signatureStore);
+            let newSignatureStore = manager.removeKeys(pks: multiSigPubKeys)
+            self.signatureStore = newSignatureStore; 
         }
         
-        init(initialSigners: [OnChainMultiSig.KeyListElement]) {
-            self.signatureStore = OnChainMultiSig.SignatureStore(initialSigners: initialSigners)
+        init() {
+            self.signatureStore = OnChainMultiSig.SignatureStore(publicKeys: [], pubKeyAttrs: []);
         }
         
         
@@ -744,20 +761,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         // Create all the owner resources where capabilities can be shared.
         let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerPrivPath);
         
-        // Create keylistElements in the case this is for multisig for the owner account
-        // Default signing algo ECDSA_P256 = 1
-        let signers: [OnChainMultiSig.KeyListElement] = [];
-        let len = ownerAccountPubKeys.length;
-        var i = 0;
-        while i < len {
-            let ke = OnChainMultiSig.KeyListElement(pk: ownerAccountPubKeys[i], sa: 1, w: ownerAccountKeyWeights[i])
-            signers.append(ke);
-            i = i + 1;
-        }
-
         adminAccount.save(<-ownerCap.borrow()!.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()!.createNewBlocklistExecutor(), to: self.BlocklistExecutorStoragePath);
-        adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(initialSigners: signers), to: self.MasterMinterStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(), to: self.MasterMinterStoragePath);
         
         adminAccount.link<&PauseExecutor>(self.PauseExecutorPrivPath, target: self.PauseExecutorStoragePath);
         adminAccount.link<&BlocklistExecutor>(self.BlocklistExecutorPrivPath, target: self.BlocklistExecutorStoragePath);

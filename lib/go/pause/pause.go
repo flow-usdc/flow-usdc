@@ -42,7 +42,7 @@ func PauseOrUnpauseContract(
 }
 
 func GetPaused(g *gwtf.GoWithTheFlow) (cadence.Bool, error) {
-	filename := "../../../scripts/get_paused.cdc"
+	filename := "../../../scripts/contract/get_paused.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).RunReturns()
 	paused := r.(cadence.Bool)

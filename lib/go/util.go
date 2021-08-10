@@ -101,7 +101,7 @@ func ReadCadenceCode(ContractPath string) []byte {
 }
 
 func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/get_total_supply.cdc"
+	filename := "../../../scripts/contract/get_total_supply.cdc"
 	script := ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).RunReturns()
 	result = r.(cadence.UFix64)
@@ -109,7 +109,7 @@ func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
 }
 
 func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/get_balance.cdc"
+	filename := "../../../scripts/vault/get_balance.cdc"
 	script := ParseCadenceTemplate(filename)
 	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
 	if err != nil {
@@ -120,7 +120,7 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 }
 
 func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {
-	filename := "../../../scripts/get_vault_uuid.cdc"
+	filename := "../../../scripts/vault/get_vault_uuid.cdc"
 	script := ParseCadenceTemplate(filename)
 	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
 	if err != nil {

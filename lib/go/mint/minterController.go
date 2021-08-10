@@ -11,7 +11,7 @@ func CreateMinterController(
 	g *gwtf.GoWithTheFlow,
 	account string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/mint/create_new_minter_controller.cdc"
+	txFilename := "../../../transactions/minterControl/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
@@ -22,7 +22,7 @@ func CreateMinterController(
 }
 
 func GetMinterControllerUUID(g *gwtf.GoWithTheFlow, minterControllerAcct string) (uuid uint64, err error) {
-	filename := "../../../scripts/get_minter_controller_uuid.cdc"
+	filename := "../../../scripts/minterControl/get_minter_controller_uuid.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterControllerAcct).RunReturns()
 	uuid, ok := r.ToGoValue().(uint64)
@@ -33,7 +33,7 @@ func GetMinterControllerUUID(g *gwtf.GoWithTheFlow, minterControllerAcct string)
 }
 
 func GetManagedMinter(g *gwtf.GoWithTheFlow, minterController uint64) (uuid uint64, err error) {
-	filename := "../../../scripts/get_managed_minter.cdc"
+	filename := "../../../scripts/contract/get_managed_minter.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).UInt64Argument(minterController).RunReturns()
 	uuid, ok := r.ToGoValue().(uint64)
@@ -48,7 +48,7 @@ func ConfigureMinterAllowance(
 	minterControllerAcct string,
 	amount string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/mint/configure_minter_allowance.cdc"
+	txFilename := "../../../transactions/minterControl/configure_minter_allowance.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
@@ -62,7 +62,7 @@ func RemoveMinter(
 	g *gwtf.GoWithTheFlow,
 	minterControllerAcct string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/mint/remove_minter.cdc"
+	txFilename := "../../../transactions/minterControl/remove_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
@@ -79,9 +79,9 @@ func IncreaseOrDecreaseMinterAllowance(
 ) (events []*gwtf.FormatedEvent, err error) {
 	var txFilename string
 	if inc == 1 {
-		txFilename = "../../../transactions/mint/increase_minter_allowance.cdc"
+		txFilename = "../../../transactions/minterControl/increase_minter_allowance.cdc"
 	} else {
-		txFilename = "../../../transactions/mint/decrease_minter_allowance.cdc"
+		txFilename = "../../../transactions/minterControl/decrease_minter_allowance.cdc"
 	}
 
 	txScript := util.ParseCadenceTemplate(txFilename)
