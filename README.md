@@ -9,28 +9,29 @@
 [![Static Analysis](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml)
 
 <!-- TODO: Banner? -->
-<!-- TODO: Background? -->
 
-This repo contains the implementation of USDC in Cadence, on the Flow Blockchain. This is based
-mainly on Centre's [`FiatToken`] standard. The standard offers a number of capabilities. When
-possible, we refer back to the Solidity equivalent in parentheses.
+This Flow blockchain token, written in Cadence, is a combination of two interfaces:
 
-<!-- TODO: Link to interface resources here -->
-
-* **`FungibleToken` (a.k.a. ERC20) compatible**: The FiatToken implements the Flow core
-[`FungibleToken`] interface. This interface provides the baseline Minter, Burner, and Vault
+* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Minter, Burner, and Vault
 (a.k.a Ownable) resources.
-* **Pausable**: The entire contract can be frozen, in case a serious bug is found or there is a
-serious key compromise. No transfers can take place while the contract is paused. Access to the
-pause functionality is controlled by the `Pauser` resource (a.k.a pausing address).
-* **Blocklist**: The contract can blocklist certain addresses which will prevent those addresses
-from transferring or receiving tokens. Access to the blocklist functionality is controlled by the
-Blocklister resource (a.k.a. blacklister address).
+* **[`FiatToken`]**, implemented in this codebase. This interface builds off of the above
+`FungibleToken` core contract, adding the following capabilities
+  * **Capability-based Access Controls**: The interface defines the `Blocklister`, `Pauser`,
+  `MasterMinter`, `MinterController`, and `Minter` capabilities. Additionally, there is an `Owner`
+  capability which can grant other accounts the above capabilities.
+  * **Delegated Minting**: Once granted `MinterController` capabilities, a user can in turn create
+  `Minter` resources and configure their allowances.
+  * **Pausing and Unpausing**: If a situation like a major bug discovery or a serious key
+  compromise, a `Pauser` will be able to halt all transfers and approvals contract-wide, until a
+  mitigation takes place.
+  * **Blocklisting**: A user with `Blocklister` capabilities can manually prevent certain addresses
+  from transferring or approving token transfers.
 
-For more information, please see the [Requirements doc](./doc/requirements.md).
+All of the functionality above is equipped with [on-chain multi-signature support].
 
-[`FiatToken`]: https://github.com/centrehq/centre-tokens
+[`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
+[on-chain multi-signature support]: https://github.com/flow-hydraulics/onchain-multisig
 
 ## Table of Contents
 
