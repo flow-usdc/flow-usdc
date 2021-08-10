@@ -34,38 +34,16 @@ For more information, please see the [Requirements doc](./doc/requirements.md).
 
 ## Table of Contents
 
-* [Install](#install)
-  * [Prerequisites](#prerequisites)
-  * [Installing `flow-usdc`](#installing-flow-usdc)
 * [Usage](#usage)
   * [On Testnet](#on-testnet)
   * [Environment Variables](#environment-variables)
   * [Testing Script](#testing-script)
+* [Install](#install)
+  * [Prerequisites](#prerequisites)
+  * [Installing `flow-usdc`](#installing-flow-usdc)
 * [Contributing](#contributing)
   * [Repo Layout](#repo-layout)
 * [License](#license)
-
-## Install
-
-Theoretically, you should only need the Cadence code in this repo, but if you're looking to
-try it out locally or test, you will a couple other tools. If you're looking to simply
-interact with the contract on Testnet, you can skip ahead to the ["on testnet"](#on-testnet)
-section.
-
-### Prerequisites
-
-To run and test the code in this repo, it's required that you install:
-
-* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
-* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
-
-### Installing `flow-usdc`
-
-Once you have `flow` and `go` installed, then simply clone the repo to get started:
-
-```bash
-git clone https://github.com/flow-usdc/flow-usdc
-```
 
 ## Usage
 
@@ -125,6 +103,28 @@ root.
 
 ```bash
 ./test/test.sh
+```
+
+## Install
+
+Theoretically, you should only need the Cadence code in this repo, but if you're looking to
+try it out locally or test, you will a couple other tools. If you're looking to simply
+interact with the contract on Testnet, you can skip ahead to the ["on testnet"](#on-testnet)
+section.
+
+### Prerequisites
+
+To run and test the code in this repo, it's required that you install:
+
+* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
+* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
+
+### Installing `flow-usdc`
+
+Once you have `flow` and `go` installed, then simply clone the repo to get started:
+
+```bash
+git clone https://github.com/flow-usdc/flow-usdc
 ```
 
 ## Contributing
