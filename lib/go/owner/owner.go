@@ -74,8 +74,9 @@ func RemoveMinterController(
 	return
 }
 
+// MultiSig Functions
 // Uses the MasterMinter Resource Capabilities
-func MultiSig_NewConfigureMinterController(
+func MultiSig_ConfigureMinterController(
 	g *gwtf.GoWithTheFlow,
 	minterController uint64,
 	minter uint64,
@@ -113,20 +114,43 @@ func MultiSig_NewConfigureMinterController(
 	return
 }
 
+func MultiSig_VaultAddPayloadSignature(
+	g *gwtf.GoWithTheFlow,
+	sig string,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/add_payload_signature.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+
+	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(signerAcct).
+		StringArgument(sig).
+		UInt64Argument(txIndex).
+		StringArgument(signerPubKey[2:]).
+		AccountArgument(resourceAcct).
+		Run()
+	events = util.ParseTestEvents(e)
+	return
+}
+
 func MultiSig_MasterMinterExecuteTx(
 	g *gwtf.GoWithTheFlow,
 	index uint64,
-	ownerAcct string,
+	payerAcct string,
+	vaultAcct string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/owner/multisig/executeTx.cdc"
+	txFilename := "../../../transactions/owner/masterMinterExecuteTx.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
 	e, err := g.TransactionFromFile(txFilename, txScript).
-		SignProposeAndPayAs(ownerAcct).
-		AccountArgument("owner").
+		SignProposeAndPayAs(payerAcct).
+		AccountArgument(vaultAcct).
 		UInt64Argument(index).
 		Run()
 	events = util.ParseTestEvents(e)
 	return
-
 }
+

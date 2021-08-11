@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 	"time"
+    "encoding/hex"
 
 	"text/template"
 
@@ -148,48 +149,47 @@ func ConvertCadenceByteArray(a cadence.Value) (b []uint8) {
 // Multisig utility functions
 
 // Signing payload offline
-func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig []byte, err error) {
+func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig string, err error) {
 	s := g.Accounts[signingAcct]
 	signer := crypto.NewInMemorySigner(s.PrivateKey, s.HashAlgo)
-	sig, err = signer.Sign(message)
+	message = append(flow.UserDomainTag[:], message...)
+	sigbytes, err := signer.Sign(message)
+	if err != nil {
+		return
+	}
+
+	sig = hex.EncodeToString(sigbytes)
 	return
 }
 
 func GetSignableDataFromScript(
 	g *gwtf.GoWithTheFlow,
+	txIndex uint64,
 	method string,
-	args ...interface{},
+	args ...cadence.Value,
 ) (signable []byte, err error) {
-	filename := "../../../scripts/multisig/calc_signable_data.cdc"
+	filename := "../../../scripts/calc_signable_data.cdc"
 	script := ParseCadenceTemplate(filename)
 
+	ctxIndex, err := g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(cadence.UInt64(txIndex))).RunReturns()
+	if err != nil {
+		return
+	}
+	signable = append(signable, ConvertCadenceByteArray(ctxIndex)...)
 	cMethod, err := g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(cadence.String(method))).RunReturns()
+	if err != nil {
+		return
+	}
 	signable = append(signable, ConvertCadenceByteArray(cMethod)...)
 
-	// amount, err := cadence.NewUFix64(value)
 	for _, arg := range args {
 		var b cadence.Value
-		switch arg.(type) {
-		case string:
-			// TODO: do not assume all args with string is for UFix64
-			ufix64, err := cadence.NewUFix64(arg.(string))
-			if err != nil {
-				return nil, err
-			}
-			b, err = g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(ufix64)).RunReturns()
-			if err != nil {
-				return nil, err
-			}
-		case uint64:
-			b, err = g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(cadence.UInt64(arg.(uint64)))).RunReturns()
-			if err != nil {
-				return nil, err
-			}
-		default:
-			panic("arg type not supported")
+		b, err = g.ScriptFromFile(filename, script).Argument(cadence.NewOptional(arg)).RunReturns()
+		if err != nil {
+			return nil, err
 		}
 		signable = append(signable, ConvertCadenceByteArray(b)...)
-
 	}
 	return
 }
+
