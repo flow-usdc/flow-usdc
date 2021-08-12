@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -244,4 +245,28 @@ func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T
 
 	// Assertions: minter allowance should not change
 	assert.Equal(t, postAllowance, initAllowance)
+}
+
+func TestMultiSig_ConfigureMinterControllerAndExecute(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	minterController := uint64(222)
+	minter := uint64(111)
+
+	txIndex, err := util.GetTxIndex(g, "minterControl/get_store_tx_index.cdc", "owner")
+	assert.NoError(t, err)
+	events, err := owner.MultiSig_ConfigureMinterController(g, minterController, minter, txIndex+1, util.Acct1000, "owner", true)
+	assert.NoError(t, err)
+
+	txIndexStr := events[0].Fields["txIndex"]
+	newTxIndex, err := strconv.ParseUint(txIndexStr.(string), 10, 64)
+	assert.NoError(t, err)
+	fmt.Println("txindex: ", newTxIndex)
+
+	event, err := util.MultiSig_ExecuteTx(g, "owner/masterminter/executeTx.cdc", newTxIndex, "owner", "owner")
+	assert.NoError(t, err)
+	fmt.Println("Execute Event: \n", event)
+
+	managedMinter, err := GetManagedMinter(g, minterController)
+	assert.NoError(t, err)
+	assert.Equal(t, minter, managedMinter)
 }

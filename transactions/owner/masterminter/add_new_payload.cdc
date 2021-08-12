@@ -1,23 +1,20 @@
-// Masterminter uses this to configure which minter the minter controller manages
-
+// New payload to be added to multiSigManager for a resource 
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction (addr: Address, txIndex: UInt64) {
+transaction (sig: String, txIndex: UInt64, method: String, args: [AnyStruct], publicKey: String, addr: Address ) {
     prepare(oneOfMultiSig: AuthAccount) {
     }
 
     execute {
-        // Get the recipient's public account object
         let masterMinterOwnerAcct = getAccount(addr)
 
-        // Get a allowance reference to the fromAcct's vault 
         let pubSigRef = masterMinterOwnerAcct.getCapability(FiatToken.MasterMinterPubSigner)
             .borrow<&FiatToken.MasterMinter{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow master minter pub sig reference")
-            
-        let r <- pubSigRef.executeTx(txIndex: txIndex)
-        destroy(r)
+        
+        let p = OnChainMultiSig.PayloadDetails(txIndex: txIndex, method: method, args: args);
+        return pubSigRef.addNewPayload(payload: p, publicKey: publicKey, sig: sig.decodeHex()) 
     }
 }
