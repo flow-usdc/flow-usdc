@@ -37,11 +37,24 @@ func DeployFiatTokenContract(
 		"non-multisig-account",
 	)
 
-	pk := g.Accounts[ownerAcct].PrivateKey.PublicKey().String()
+	pk1000 := g.Accounts[util.Acct1000].PrivateKey.PublicKey().String()
+	pk500_1 := g.Accounts[util.Acct500_1].PrivateKey.PublicKey().String()
+	pk500_2 := g.Accounts[util.Acct500_2].PrivateKey.PublicKey().String()
+	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	pk250_2 := g.Accounts[util.Acct250_2].PrivateKey.PublicKey().String()
 
-	ownerAccountPubKeys := []cadence.Value{cadence.String(pk)}
-	w, _ := cadence.NewUFix64("1.0")
-	ownerAccountKeyWeight := []cadence.Value{w}
+	w1000, _ := cadence.NewUFix64("1000.0")
+	w500, _ := cadence.NewUFix64("500.0")
+	w250, _ := cadence.NewUFix64("250.0")
+
+	multiSigPubKeys := []cadence.Value{
+		cadence.String(pk1000[2:]),
+		cadence.String(pk500_1[2:]),
+		cadence.String(pk500_2[2:]),
+		cadence.String(pk250_1[2:]),
+		cadence.String(pk250_2[2:]),
+	}
+	multiSigKeyWeights := []cadence.Value{w1000, w500, w500, w250, w250}
 
 	e, err := g.TransactionFromFile(txFilename, code).
 		SignProposeAndPayAs(ownerAcct).
@@ -81,8 +94,8 @@ func DeployFiatTokenContract(
 		StringArgument("USDC").
 		UFix64Argument("10000.00000000").
 		BooleanArgument(false).
-		Argument(cadence.NewArray(ownerAccountPubKeys)).
-		Argument(cadence.NewArray(ownerAccountKeyWeight)).
+		Argument(cadence.NewArray(multiSigPubKeys)).
+		Argument(cadence.NewArray(multiSigKeyWeights)).
 		Run()
 	gwtf.PrintEvents(e, map[string][]string{})
 	events = util.ParseTestEvents(e)

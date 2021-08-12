@@ -2,11 +2,11 @@ package util
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"io/ioutil"
 	"testing"
 	"time"
-    "encoding/hex"
 
 	"text/template"
 
@@ -16,6 +16,15 @@ import (
 	"github.com/onflow/flow-go-sdk/crypto"
 	"github.com/stretchr/testify/assert"
 )
+
+// Useful multisig accounts
+// These are named by the weights
+// i.e. Account500_1 has a weight of 500.0
+const Acct1000 = "w-1000"
+const Acct500_1 = "w-500-1"
+const Acct500_2 = "w-500-2"
+const Acct250_1 = "w-250-1"
+const Acct250_2 = "w-250-2"
 
 type Addresses struct {
 	FungibleToken      string
@@ -146,6 +155,16 @@ func ConvertCadenceByteArray(a cadence.Value) (b []uint8) {
 
 }
 
+func ConvertCadenceStringArray(a cadence.Value) (b []string) {
+	// type assertion of interface
+	i := a.ToGoValue().([]interface{})
+
+	for _, e := range i {
+		b = append(b, e.(string))
+	}
+	return
+}
+
 // Multisig utility functions
 
 // Signing payload offline
@@ -193,3 +212,108 @@ func GetSignableDataFromScript(
 	return
 }
 
+func MultiSig_NewPayload(
+	g *gwtf.GoWithTheFlow,
+	filePath string,
+	sig string,
+	txIndex uint64,
+	method string,
+	args []cadence.Value,
+	signerAcct string,
+	resourceAcct string,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/" + filePath
+	txScript := ParseCadenceTemplate(txFilename)
+
+	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(signerAcct).
+		StringArgument(sig).
+		UInt64Argument(txIndex).
+		StringArgument(method).
+		Argument(cadence.NewArray(args)).
+		StringArgument(signerPubKey[2:]).
+		AccountArgument(resourceAcct).
+		Run()
+	events = ParseTestEvents(e)
+	return
+}
+
+func MultiSig_AddPayloadSignature(
+	g *gwtf.GoWithTheFlow,
+	filePath string,
+	sig string,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/" + filePath
+	txScript := ParseCadenceTemplate(txFilename)
+
+	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(signerAcct).
+		StringArgument(sig).
+		UInt64Argument(txIndex).
+		StringArgument(signerPubKey[2:]).
+		AccountArgument(resourceAcct).
+		Run()
+	events = ParseTestEvents(e)
+	return
+}
+
+func MultiSig_ExecuteTx(
+	g *gwtf.GoWithTheFlow,
+	filePath string,
+	index uint64,
+	payerAcct string,
+	resourceAcct string,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/" + filePath
+	txScript := ParseCadenceTemplate(txFilename)
+
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(payerAcct).
+		AccountArgument(resourceAcct).
+		UInt64Argument(index).
+		Run()
+	events = ParseTestEvents(e)
+	return
+}
+
+func GetStoreKeys(g *gwtf.GoWithTheFlow, filePath string, account string) (result []string, err error) {
+	filename := "../../../scripts/" + filePath
+	script := ParseCadenceTemplate(filename)
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	if err != nil {
+		return
+	}
+	result = ConvertCadenceStringArray(value)
+	return
+}
+
+func GetKeyWeight(g *gwtf.GoWithTheFlow, filePath string, resourceAcct string, signerAcct string) (result cadence.UFix64, err error) {
+	filename := "../../../scripts/" + filePath
+	script := ParseCadenceTemplate(filename)
+	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()[2:]
+	value, err := g.ScriptFromFile(filename, script).
+		AccountArgument(resourceAcct).
+		StringArgument(signerPubKey).
+		RunReturns()
+	if err != nil {
+		return
+	}
+	result = value.(cadence.UFix64)
+	return
+}
+
+func GetTxIndex(g *gwtf.GoWithTheFlow, filePath string, account string) (result uint64, err error) {
+	filename := "../../../scripts/" + filePath
+	script := ParseCadenceTemplate(filename)
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	if err != nil {
+		return
+	}
+	result = value.ToGoValue().(uint64)
+	return
+}
