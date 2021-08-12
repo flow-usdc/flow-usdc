@@ -214,17 +214,21 @@ func GetSignableDataFromScript(
 
 func MultiSig_NewPayload(
 	g *gwtf.GoWithTheFlow,
-	filePath string,
 	sig string,
 	txIndex uint64,
 	method string,
 	args []cadence.Value,
 	signerAcct string,
 	resourceAcct string,
+	resourceName string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/" + filePath
+	txFilename := "../../../transactions/onChainMultiSig/add_new_payload.cdc"
 	txScript := ParseCadenceTemplate(txFilename)
 
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
 	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(signerAcct).
@@ -234,6 +238,7 @@ func MultiSig_NewPayload(
 		Argument(cadence.NewArray(args)).
 		StringArgument(signerPubKey[2:]).
 		AccountArgument(resourceAcct).
+		Argument(path).
 		Run()
 	events = ParseTestEvents(e)
 	return
@@ -241,14 +246,19 @@ func MultiSig_NewPayload(
 
 func MultiSig_AddPayloadSignature(
 	g *gwtf.GoWithTheFlow,
-	filePath string,
 	sig string,
 	txIndex uint64,
 	signerAcct string,
 	resourceAcct string,
+	resourceName string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/" + filePath
+	txFilename := "../../../transactions/onChainMultiSig/add_payload_signature.cdc"
 	txScript := ParseCadenceTemplate(txFilename)
+
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
 
 	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
 	e, err := g.TransactionFromFile(txFilename, txScript).
@@ -257,6 +267,7 @@ func MultiSig_AddPayloadSignature(
 		UInt64Argument(txIndex).
 		StringArgument(signerPubKey[2:]).
 		AccountArgument(resourceAcct).
+		Argument(path).
 		Run()
 	events = ParseTestEvents(e)
 	return
@@ -264,18 +275,24 @@ func MultiSig_AddPayloadSignature(
 
 func MultiSig_ExecuteTx(
 	g *gwtf.GoWithTheFlow,
-	filePath string,
 	index uint64,
 	payerAcct string,
 	resourceAcct string,
+	resourceName string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/" + filePath
+	txFilename := "../../../transactions/onChainMultiSig/executeTx.cdc"
 	txScript := ParseCadenceTemplate(txFilename)
+
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
 
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(payerAcct).
-		AccountArgument(resourceAcct).
 		UInt64Argument(index).
+		AccountArgument(resourceAcct).
+		Argument(path).
 		Run()
 	events = ParseTestEvents(e)
 	return
@@ -307,13 +324,24 @@ func GetKeyWeight(g *gwtf.GoWithTheFlow, filePath string, resourceAcct string, s
 	return
 }
 
-func GetTxIndex(g *gwtf.GoWithTheFlow, filePath string, account string) (result uint64, err error) {
-	filename := "../../../scripts/" + filePath
+func GetTxIndex(g *gwtf.GoWithTheFlow, account string, resourceName string) (result uint64, err error) {
+	filename := "../../../scripts/onChainMultiSig/get_tx_index.cdc"
 	script := ParseCadenceTemplate(filename)
-	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	path, err := GetPubSignerPath(g, account, resourceName)
+	if err != nil {
+		return
+	}
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).Argument(path).RunReturns()
 	if err != nil {
 		return
 	}
 	result = value.ToGoValue().(uint64)
+	return
+}
+
+func GetPubSignerPath(g *gwtf.GoWithTheFlow, account string, resourceName string) (result cadence.Value, err error) {
+	filename := "../../../scripts/onChainMultiSig/get_path.cdc"
+	script := ParseCadenceTemplate(filename)
+	result, err = g.ScriptFromFile(filename, script).StringArgument(resourceName).RunReturns()
 	return
 }

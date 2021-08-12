@@ -100,9 +100,8 @@ func MultiSig_ConfigureMinterController(
 
 	if newPayload {
 		args := []cadence.Value{m, mc}
-		return util.MultiSig_NewPayload(g, "owner/masterminter/add_new_payload.cdc", sig, txIndex, method, args, signerAcct, resourceAcct)
+		return util.MultiSig_NewPayload(g, sig, txIndex, method, args, signerAcct, resourceAcct, "MasterMinter")
 	} else {
-		filePath := "owner/masterminter/add_payload_signature.cdc"
-		return util.MultiSig_AddPayloadSignature(g, filePath, sig, txIndex, signerAcct, resourceAcct)
+		return util.MultiSig_AddPayloadSignature(g, sig, txIndex, signerAcct, resourceAcct, "MasterMinter")
 	}
 }

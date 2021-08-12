@@ -252,7 +252,7 @@ func TestMultiSig_ConfigureMinterControllerAndExecute(t *testing.T) {
 	minterController := uint64(222)
 	minter := uint64(111)
 
-	txIndex, err := util.GetTxIndex(g, "minterControl/get_store_tx_index.cdc", "owner")
+	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
 	assert.NoError(t, err)
 	events, err := owner.MultiSig_ConfigureMinterController(g, minterController, minter, txIndex+1, util.Acct1000, "owner", true)
 	assert.NoError(t, err)
@@ -262,7 +262,7 @@ func TestMultiSig_ConfigureMinterControllerAndExecute(t *testing.T) {
 	assert.NoError(t, err)
 	fmt.Println("txindex: ", newTxIndex)
 
-	event, err := util.MultiSig_ExecuteTx(g, "owner/masterminter/executeTx.cdc", newTxIndex, "owner", "owner")
+	event, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
 	assert.NoError(t, err)
 	fmt.Println("Execute Event: \n", event)
 

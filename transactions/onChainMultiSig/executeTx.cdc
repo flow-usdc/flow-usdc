@@ -4,17 +4,15 @@ import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction (addr: Address, txIndex: UInt64) {
+transaction (txIndex: UInt64, resourceAddr: Address, resourcePubSignerPath: PublicPath) {
     prepare(oneOfMultiSig: AuthAccount) {
     }
 
     execute {
-        // Get the recipient's public account object
-        let masterMinterOwnerAcct = getAccount(addr)
+        let resourceAcct = getAccount(resourceAddr)
 
-        // Get a allowance reference to the fromAcct's vault 
-        let pubSigRef = masterMinterOwnerAcct.getCapability(FiatToken.MasterMinterPubSigner)
-            .borrow<&FiatToken.MasterMinter{OnChainMultiSig.PublicSigner}>()
+        let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
+            .borrow<&AnyResource{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow master minter pub sig reference")
             
         let r <- pubSigRef.executeTx(txIndex: txIndex)
