@@ -29,6 +29,12 @@ func DeployFiatTokenContract(
 		"non-minter",
 		"minterController1",
 		"minterController2",
+		"w-1000",
+		"w-500-1",
+		"w-500-2",
+		"w-250-1",
+		"w-250-2",
+		"non-multisig-account",
 	)
 
 	pk := g.Accounts[ownerAcct].PrivateKey.PublicKey().String()
