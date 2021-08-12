@@ -10,26 +10,24 @@
 
 <!-- TODO: Banner? -->
 
-This Flow blockchain token, written in Cadence, is a combination of two interfaces:
+This Flow blockchain [`FiatToken`], written in Cadence, implements two interfaces defined in the following contracts:
 
-* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Minter, Burner, and Vault
-(a.k.a Ownable) resources.
-* **[`FiatToken`]**, implemented in this codebase. This interface builds off of the above
-`FungibleToken` core contract, adding the following capabilities
-  * **Capability-based Access Controls**: The interface defines the `Blocklister`, `Pauser`,
-  `MasterMinter`, `MinterController`, and `Minter` capabilities. Additionally, there is an `Owner`
-  capability which can grant other accounts the above capabilities.
-  * **Delegated Minting**: Once granted `MinterController` capabilities, a user can in turn create
-  `Minter` resources and configure their allowances.
+* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault
+(a.k.a Ownable) resource and interfaces for compatibility.
+* **[`FiatTokenInterface`]**, implemented in this codebase. This interface builds off of the above
+`FungibleToken` core contract, adding the following resource interfaces and related states and events
+  * **FiatToken Resources**: The interface defines the `Blocklister`, `Pauser`,
+  `MasterMinter`, `MinterController`, and `Minter` functions. Additionally, enhanced `Vault` interfaces such as `VaultUUID` and `Allowance`.
+  * **Delegated Minting**: `MasterMinter` can granted `MinterController` capabilities to control the allowance / removal of a `Minter`. Both `MinterController` and `Minter` resources are created by the user and the unique resource uuid is used to grant / remove capabilities.
   * **Pausing and Unpausing**: If a situation like a major bug discovery or a serious key
   compromise, a `Pauser` will be able to halt all transfers and approvals contract-wide, until a
-  mitigation takes place.
-  * **Blocklisting**: A user with `Blocklister` capabilities can manually prevent certain addresses
-  from transferring or approving token transfers.
+  mitigation takes place. `Pauser` is granted the capability to pause / unpause a contract by the `owner`.
+  * **Blocklisting**: A user with `Blocklister` capabilities can manually prevent certain resources
+  from minting, burning, transferring or approving token transfers. `Blocklister` is granted the capability to blocklist / unblocklist resources by the `owner`.
 
 All of the functionality above is equipped with [on-chain multi-signature support].
-
-[`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
+- [`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
+[`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
 [on-chain multi-signature support]: https://github.com/flow-hydraulics/onchain-multisig
 
