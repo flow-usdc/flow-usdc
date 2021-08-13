@@ -233,6 +233,14 @@ pub contract OnChainMultiSig {
             assert(self.payloads.containsKey(txIndex), message: "Payload has not been added");
             assert(self.keyList.containsKey(publicKey), message: "Public key is not a registered signer");
 
+            let currentIndex = self.payloadSigs[txIndex]!.keyListSignatures.length
+            var i = 0;
+            while i < currentIndex {
+                if self.payloadSigs[txIndex]!.pubKeys[i] == publicKey {
+                    panic ("Signature already added for this txIndex")
+                }
+                i = i + 1;
+            } 
             // this is a temp keyListSig list that is used to verify a single signature so we use `keyIndex` as 0
             // the correct `keyIndex` will overwrite the 0 after we know it is a valid signature
             var keyListSig = Crypto.KeyListSignature( keyIndex: 0, signature: sig)
@@ -242,7 +250,6 @@ pub contract OnChainMultiSig {
             }
 
             // create the correct `keyIndex` with the current length of all the stored signatures
-            let currentIndex = self.payloadSigs[txIndex]!.keyListSignatures.length
             keyListSig = Crypto.KeyListSignature(keyIndex: currentIndex, signature: sig)
             
             // append signature to resource maps
