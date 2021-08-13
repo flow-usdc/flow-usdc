@@ -1,6 +1,6 @@
-# USD Coin (USDC), on Flow _(flow-usdc)_
+# The CENTRE Fiat Token, on Flow _(flow-usdc)_
 
-> A `FungibleToken`-compatible fiat coin on Flow, with additional support for pausing and blocklisting.
+> An implementation of the CENTRE Fiat Token in Cadence, on the Flow Blockchain.
 
 <!-- markdownlint-configure-file { "MD013": { "line_length": 100 } } -->
 
@@ -9,63 +9,48 @@
 [![Static Analysis](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/flow-usdc/flow-usdc/actions/workflows/static-analysis.yml)
 
 <!-- TODO: Banner? -->
-<!-- TODO: Background? -->
 
-This repo contains the implementation of USDC in Cadence, on the Flow Blockchain. This is based
-mainly on Centre's [`FiatToken`] standard. The standard offers a number of capabilities. When
-possible, we refer back to the Solidity equivalent in parentheses.
+A [`FiatToken`] on the Flow blockchain, written in Cadence, which implements two interfaces defined
+in the following contracts:
 
-<!-- TODO: Link to interface resources here -->
+* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault (a.k.a Ownable) resource
+and interfaces for compatibility.
+* **[`FiatTokenInterface`]**, implemented in this codebase. This interface builds off of the above
+`FungibleToken` core contract, adding the following resource interfaces, as well as the related
+states and events
+  * **FiatTokenInterface Resources**: The interface defines the `Blocklister`, `Pauser`,
+  `MasterMinter`, `MinterController`, and `Minter` functions. Additionally, it enhances `Vault`
+  interfaces with features such as `VaultUUID` and `Allowance`.
+  * **Delegated Minting**: `MasterMinter` can grant `MinterController` capabilities to control
+  the allowance / removal of a `Minter`. Both `MinterController` and `Minter` resources are created
+  by the user and the unique resource uuid is used to grant / remove capabilities.
+  * **Pausing and Unpausing**: If a situation like a major bug discovery or a serious key
+  compromise, a `Pauser` will be able to halt all transfers and approvals contract-wide, until a
+  mitigation takes place. `Pauser` is granted the capability to pause / unpause a contract by the
+  `owner`.
+  * **Blocklisting**: A user with `Blocklister` capabilities can manually prevent certain resources
+  from minting, burning, transferring or approving token transfers. `Blocklister` is granted the
+  capability to blocklist / unblocklist resources by the `owner`.
 
-* **`FungibleToken` (a.k.a. ERC20) compatible**: The FiatToken implements the Flow core
-[`FungibleToken`] interface. This interface provides the baseline Minter, Burner, and Vault
-(a.k.a Ownable) resources.
-* **Pausable**: The entire contract can be frozen, in case a serious bug is found or there is a
-serious key compromise. No transfers can take place while the contract is paused. Access to the
-pause functionality is controlled by the `Pauser` resource (a.k.a pausing address).
-* **Blocklist**: The contract can blocklist certain addresses which will prevent those addresses
-from transferring or receiving tokens. Access to the blocklist functionality is controlled by the
-Blocklister resource (a.k.a. blacklister address).
+All of the functionality above is equipped with [on-chain multi-signature support].
 
-For more information, please see the [Requirements doc](./doc/requirements.md).
-
-[`FiatToken`]: https://github.com/centrehq/centre-tokens
+[`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
+[`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
+[on-chain multi-signature support]: https://github.com/flow-hydraulics/onchain-multisig
 
 ## Table of Contents
 
-* [Install](#install)
-  * [Prerequisites](#prerequisites)
-  * [Installing `flow-usdc`](#installing-flow-usdc)
 * [Usage](#usage)
   * [On Testnet](#on-testnet)
   * [Environment Variables](#environment-variables)
   * [Testing Script](#testing-script)
+* [Install](#install)
+  * [Prerequisites](#prerequisites)
+  * [Installing `flow-usdc`](#installing-flow-usdc)
 * [Contributing](#contributing)
   * [Repo Layout](#repo-layout)
 * [License](#license)
-
-## Install
-
-Theoretically, you should only need the Cadence code in this repo, but if you're looking to
-try it out locally or test, you will a couple other tools. If you're looking to simply
-interact with the contract on Testnet, you can skip ahead to the ["on testnet"](#on-testnet)
-section.
-
-### Prerequisites
-
-To run and test the code in this repo, it's required that you install:
-
-* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
-* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
-
-### Installing `flow-usdc`
-
-Once you have `flow` and `go` installed, then simply clone the repo to get started:
-
-```bash
-git clone https://github.com/flow-usdc/flow-usdc
-```
 
 ## Usage
 
@@ -125,6 +110,28 @@ root.
 
 ```bash
 ./test/test.sh
+```
+
+## Install
+
+Theoretically, you should only need the Cadence code in this repo, but if you're looking to
+try it out locally or test, you will a couple other tools. If you're looking to simply
+interact with the contract on Testnet, you can skip ahead to the ["on testnet"](#on-testnet)
+section.
+
+### Prerequisites
+
+To run and test the code in this repo, it's required that you install:
+
+* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
+* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
+
+### Installing `flow-usdc`
+
+Once you have `flow` and `go` installed, then simply clone the repo to get started:
+
+```bash
+git clone https://github.com/flow-usdc/flow-usdc
 ```
 
 ## Contributing
