@@ -1,9 +1,12 @@
+import Crypto
 import FungibleToken from 0x{{.FungibleToken}} 
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
+import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
 // Below helps debug when using language server
 // import FungibleToken from "./FungibleToken.cdc"
 // import FiatTokenInterface from "./FiatTokenInterface.cdc" 
+// import OnChainMultiSig from "./OnChainMultiSig.cdc"
 
 pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
@@ -34,6 +37,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
+    pub let MasterMinterPubSigner: PublicPath;
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;
@@ -293,7 +297,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             self.approval(resourceId: resourceId, amount: newAllowance);
         };
 
-
         destroy() {
             FiatToken.totalSupply = FiatToken.totalSupply - self.balance
             emit DestroyVault(resourceId: self.uuid);
@@ -305,6 +308,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The owner is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
     /// Owner can assign all roles
+    /// 
+    /// `PauseExecutor` and `BlocklistExeuctor` do not support multisig as they themselves do not do any transactions.
+    /// Once the capability has been shared to `Pauser` and `Blocklister` respectively, those resources calls 
+    /// for the state change transactions 
     pub resource Owner {
 
         pub fun createNewPauseExecutor(): @PauseExecutor{
@@ -315,15 +322,15 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             return <-create BlocklistExecutor()
         }
 
-        pub fun createNewMasterMinter(): @MasterMinter{
-            return <-create MasterMinter()
+        pub fun createNewMasterMinter(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]): @MasterMinter{
+            return <-create MasterMinter(pk: pk, pka: pka)
         }
     }
 
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
     /// The master minter creates minter controller resources to delegate control for minters
-    pub resource MasterMinter: FiatTokenInterface.MasterMinter {
+    pub resource MasterMinter: FiatTokenInterface.MasterMinter, OnChainMultiSig.PublicSigner {
 
         /// Function to configure MinterController
         pub fun configureMinterController(minter: UInt64, minterController: UInt64) {
@@ -340,6 +347,69 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             FiatToken.managedMinters.remove(key: minterController);
             emit ControllerRemoved(controller: minterController)
         }
+        
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
+
+        pub fun addNewPayload(payload: OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+       }
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p = self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
+                    let weight = p.args[1] as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                case "removeKey":
+                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey])
+                case "configureMinterController":
+                    let m = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.args[1] as? UInt64 ?? panic ("cannot downcast minterController id") 
+                    self.configureMinterController(minter: m, minterController: mc);
+                case "removeMinterController":
+                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
+                    self.removeMinterController(minterController: mc);
+            }
+            return nil;
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }; 
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+
+        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
+            self.multiSigManager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights)
+        }
+
+        pub fun removeKeys( multiSigPubKeys: [String]) {
+            self.multiSigManager.removeKeys(pks: multiSigPubKeys)
+        }
+
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+        }
+        
+        
     }
     
     pub resource interface ResourceId{
@@ -616,14 +686,20 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         OwnerPrivPath: PrivatePath,
         MasterMinterStoragePath: StoragePath,
         MasterMinterPrivPath: PrivatePath,
+        MasterMinterPubSigner: PublicPath,
         MinterControllerStoragePath: StoragePath,
         MinterControllerUUIDPubPath: PublicPath,
         MinterStoragePath: StoragePath,
         MinterUUIDPubPath: PublicPath,
         tokenName: String,
         initTotalSupply: UFix64,
-        initPaused: Bool
+        initPaused: Bool, 
+        ownerAccountPubKeys: [String],
+        ownerAccountKeyWeights: [UFix64],
     ) {
+        
+        assert(ownerAccountPubKeys.length == ownerAccountKeyWeights.length, message: "pubkey length and weights length mismatched");
+
         self.name = tokenName;
         self.paused = initPaused;
         self.totalSupply = initTotalSupply;
@@ -659,6 +735,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
         self.MasterMinterStoragePath = MasterMinterStoragePath;
         self.MasterMinterPrivPath = MasterMinterPrivPath;
+        self.MasterMinterPubSigner = MasterMinterPubSigner;
 
         self.MinterControllerStoragePath = MinterControllerStoragePath;
         self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath;
@@ -671,54 +748,38 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         let vault <- create Vault(balance: self.totalSupply)
         self.account.save(<-vault, to: self.VaultStoragePath)
 
-        // Create a public capability to the stored Vault that only exposes
-        // the `deposit` method through the `Receiver` interface
+        // Create a public capability to the stored Vault for Reciever, Balance, VaultUUID and withdrawAllowance 
         //
-        adminAccount.link<&FiatToken.Vault{FungibleToken.Receiver}>(
-            self.VaultReceiverPubPath,
-            target: self.VaultStoragePath 
-        )
-
-        // Create a public capability to the stored Vault that only exposes
-        // the `balance` field through the `Balance` interface
-        //
-        adminAccount.link<&FiatToken.Vault{FungibleToken.Balance}>(
-            self.VaultBalancePubPath,
-            target: self.VaultStoragePath 
-        )
-
-        // Create a public capability to the stored Vault that only exposes
-        // the `uuid` field through the `VaultUUID` interface
-        //
-        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(
-            self.VaultUUIDPubPath,
-            target: self.VaultStoragePath 
-        )
-
-        // Create a public capability to the stored Vault that only exposes
-        // the `withdrawAllowance` method through the `WithdrawAllowance` interface
-        //
-        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(
-            self.VaultAllowancePubPath,
-            target: self.VaultStoragePath 
-        )
+        adminAccount.link<&FiatToken.Vault{FungibleToken.Receiver}>(self.VaultReceiverPubPath, target: self.VaultStoragePath)
+        adminAccount.link<&FiatToken.Vault{FungibleToken.Balance}>(self.VaultBalancePubPath, target: self.VaultStoragePath)
+        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(self.VaultUUIDPubPath, target: self.VaultStoragePath)
+        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(self.VaultAllowancePubPath, target: self.VaultStoragePath)
 
 
-        let owner <- create Owner()
+        let owner <- create Owner();
         adminAccount.save(<-owner, to: self.OwnerStoragePath);
-        // TODO: do we need to link this? 
         adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);
         
 
         // Create all the owner resources where capabilities can be shared.
         let ownerCap = adminAccount.getCapability<&Owner>(self.OwnerPrivPath);
+        
+        let pubKeyAttrs: [OnChainMultiSig.PubKeyAttr] = [];
+        var i = 0;
+        while i < ownerAccountPubKeys.length {
+            let pka = OnChainMultiSig.PubKeyAttr(sa: 1, w:  ownerAccountKeyWeights[i]);
+            pubKeyAttrs.append(pka);
+            i = i + 1;
+        }
+        
         adminAccount.save(<-ownerCap.borrow()!.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()!.createNewBlocklistExecutor(), to: self.BlocklistExecutorStoragePath);
-        adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(), to: self.MasterMinterStoragePath);
+        adminAccount.save(<-ownerCap.borrow()!.createNewMasterMinter(pk: ownerAccountPubKeys, pka: pubKeyAttrs), to: self.MasterMinterStoragePath);
         
         adminAccount.link<&PauseExecutor>(self.PauseExecutorPrivPath, target: self.PauseExecutorStoragePath);
         adminAccount.link<&BlocklistExecutor>(self.BlocklistExecutorPrivPath, target: self.BlocklistExecutorStoragePath);
         adminAccount.link<&MasterMinter>(self.MasterMinterPrivPath, target: self.MasterMinterStoragePath);
+        adminAccount.link<&MasterMinter{OnChainMultiSig.PublicSigner}>(self.MasterMinterPubSigner, target: self.MasterMinterStoragePath);
 
         // Emit an event that shows that the contract was initialized
         //
@@ -726,3 +787,4 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     }
 } 
+ 

@@ -23,7 +23,7 @@ func CreateMinter(
 }
 
 func GetMinterUUID(g *gwtf.GoWithTheFlow, minterAcct string) (uuid uint64, err error) {
-	filename := "../../../scripts/get_minter_uuid.cdc"
+	filename := "../../../scripts/mint/get_minter_uuid.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterAcct).RunReturns()
 	uuid, ok := r.ToGoValue().(uint64)
@@ -34,7 +34,7 @@ func GetMinterUUID(g *gwtf.GoWithTheFlow, minterAcct string) (uuid uint64, err e
 }
 
 func GetMinterAllowance(g *gwtf.GoWithTheFlow, minter uint64) (amount cadence.UFix64, err error) {
-	filename := "../../../scripts/get_minter_allowance.cdc"
+	filename := "../../../scripts/contract/get_minter_allowance.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).UInt64Argument(minter).RunReturns()
 	if err != nil {

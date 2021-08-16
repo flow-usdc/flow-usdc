@@ -3,6 +3,7 @@ package owner
 import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/onflow/cadence"
 )
 
 // Uses the Pause Executor Resource Capabilities
@@ -71,4 +72,36 @@ func RemoveMinterController(
 		Run()
 	events = util.ParseTestEvents(e)
 	return
+}
+
+// MultiSig Functions
+func MultiSig_ConfigureMinterController(
+	g *gwtf.GoWithTheFlow,
+	minterController uint64,
+	minter uint64,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+	newPayload bool,
+) (events []*gwtf.FormatedEvent, err error) {
+
+	method := "configureMinterController"
+	m := cadence.UInt64(minter)
+	mc := cadence.UInt64(minterController)
+	signable, err := util.GetSignableDataFromScript(g, txIndex, method, m, mc)
+	if err != nil {
+		return
+	}
+
+	sig, err := util.SignPayloadOffline(g, signable, signerAcct)
+	if err != nil {
+		return
+	}
+
+	if newPayload {
+		args := []cadence.Value{m, mc}
+		return util.MultiSig_NewPayload(g, sig, txIndex, method, args, signerAcct, resourceAcct, "MasterMinter")
+	} else {
+		return util.MultiSig_AddPayloadSignature(g, sig, txIndex, signerAcct, resourceAcct, "MasterMinter")
+	}
 }

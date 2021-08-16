@@ -28,7 +28,7 @@ func GetAllowance(
 	fromAcct string,
 	toResourceId uint64,
 ) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/get_allowance.cdc"
+	filename := "../../../scripts/vault/get_allowance.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).
 		AccountArgument(fromAcct).

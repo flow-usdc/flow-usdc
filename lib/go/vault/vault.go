@@ -9,7 +9,7 @@ func AddVaultToAccount(
 	g *gwtf.GoWithTheFlow,
 	vaultAcct string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/create_vault.cdc"
+	txFilename := "../../../transactions/vault/create_vault.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(vaultAcct).
@@ -24,7 +24,7 @@ func TransferTokens(
 	fromAcct string,
 	toAcct string,
 ) (events []*gwtf.FormatedEvent, err error) {
-	txFilename := "../../../transactions/transfer_FiatToken.cdc"
+	txFilename := "../../../transactions/vault/transfer_FiatToken.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
 	e, err := g.TransactionFromFile(txFilename, txScript).
