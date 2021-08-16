@@ -37,7 +37,7 @@ transaction {
 
         // Create a public capability to the Vault that only exposes
         // the UUID() function through the VaultUUID interface
-        signer.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(
+        signer.link<&FiatToken.Vault{FiatToken.ResourceId}>(
             FiatToken.VaultUUIDPubPath,
             target: FiatToken.VaultStoragePath
         )

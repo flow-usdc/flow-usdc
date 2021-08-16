@@ -1,8 +1,6 @@
 package mint
 
 import (
-	"errors"
-
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
@@ -19,17 +17,6 @@ func CreateMinter(
 		AccountArgument(account).
 		Run()
 	events = util.ParseTestEvents(e)
-	return
-}
-
-func GetMinterUUID(g *gwtf.GoWithTheFlow, minterAcct string) (uuid uint64, err error) {
-	filename := "../../../scripts/mint/get_minter_uuid.cdc"
-	script := util.ParseCadenceTemplate(filename)
-	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterAcct).RunReturns()
-	uuid, ok := r.ToGoValue().(uint64)
-	if !ok {
-		err = errors.New("returned not uint64")
-	}
 	return
 }
 

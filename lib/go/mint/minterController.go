@@ -21,17 +21,6 @@ func CreateMinterController(
 	return
 }
 
-func GetMinterControllerUUID(g *gwtf.GoWithTheFlow, minterControllerAcct string) (uuid uint64, err error) {
-	filename := "../../../scripts/minterControl/get_minter_controller_uuid.cdc"
-	script := util.ParseCadenceTemplate(filename)
-	r, err := g.ScriptFromFile(filename, script).AccountArgument(minterControllerAcct).RunReturns()
-	uuid, ok := r.ToGoValue().(uint64)
-	if !ok {
-		err = errors.New("returned not uint64")
-	}
-	return
-}
-
 func GetManagedMinter(g *gwtf.GoWithTheFlow, minterController uint64) (uuid uint64, err error) {
 	filename := "../../../scripts/contract/get_managed_minter.cdc"
 	script := util.ParseCadenceTemplate(filename)

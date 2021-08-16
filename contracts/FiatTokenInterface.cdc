@@ -167,10 +167,6 @@ pub contract interface FiatTokenInterface {
         pub fun unpause();
     }
 
-    pub resource interface VaultUUID {
-        pub fun UUID(): UInt64;
-    }
-    
     /// Interface for another vault to receive an allowance
     /// Should be linked to the public domain
     pub resource interface Allowance {

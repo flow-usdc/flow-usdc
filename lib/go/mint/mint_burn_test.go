@@ -24,7 +24,7 @@ func TestMintBurn_MintWithoutConfig(t *testing.T) {
 	assert.Empty(t, mintRawEvents)
 
 	// Test event
-	util.NewExpectedEvent("MinterCreated").AssertHasKey(t, createEvents[0], "resourceId")
+	util.NewExpectedEvent("FiatToken", "MinterCreated").AssertHasKey(t, createEvents[0], "resourceId")
 }
 
 func TestMintBurn_MintBelowAllowace(t *testing.T) {
@@ -33,7 +33,7 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 	// Params
 	_, err := vault.AddVaultToAccount(g, "minter")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	// Initial values
@@ -62,32 +62,32 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 	assert.Equal(t, mintAmount, postBalance-initBalance)
 	assert.Equal(t, mintAmount, initMintAllowance-postMintAllowance)
 
-	util.NewExpectedEvent("Mint").
+	util.NewExpectedEvent("FiatToken", "Mint").
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("amount", mintAmount.String()).
 		AssertEqual(t, events[0])
 
-	uuid, err := util.GetVaultUUID(g, "minter")
+	uuid, err := util.GetUUID(g, "minter", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenDeposited").
+	util.NewExpectedEvent("FiatToken", "FiatTokenDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AssertEqual(t, events[1])
 
 	toAddr := util.GetAccountAddr(g, "minter")
-	util.NewExpectedEvent("TokensDeposited").
+	util.NewExpectedEvent("FiatToken", "TokensDeposited").
 		AddField("amount", mintAmount.String()).
 		AddField("to", toAddr).
 		AssertEqual(t, events[2])
 
-	util.NewExpectedEvent("DestroyVault").
+	util.NewExpectedEvent("FiatToken", "DestroyVault").
 		AssertHasKey(t, events[3], "resourceId")
 }
 
 func TestMintBurn_Burn(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	// Initial values
@@ -116,23 +116,23 @@ func TestMintBurn_Burn(t *testing.T) {
 	assert.Equal(t, burnAmount, initBalance-postBalance)
 	assert.Equal(t, postMintAllowance, initMintAllowance)
 
-	uuid, err := util.GetVaultUUID(g, "minter")
+	uuid, err := util.GetUUID(g, "minter", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenWithdrawn").
+	util.NewExpectedEvent("FiatToken", "FiatTokenWithdrawn").
 		AddField("amount", burnAmount.String()).
 		AddField("from", strconv.Itoa(int(uuid))).
 		AssertEqual(t, events[0])
 
 	toAddr := util.GetAccountAddr(g, "minter")
-	util.NewExpectedEvent("TokensWithdrawn").
+	util.NewExpectedEvent("FiatToken", "TokensWithdrawn").
 		AddField("amount", burnAmount.String()).
 		AddField("from", toAddr).
 		AssertEqual(t, events[1])
 
-	util.NewExpectedEvent("DestroyVault").
+	util.NewExpectedEvent("FiatToken", "DestroyVault").
 		AssertHasKey(t, events[2], "resourceId")
 
-	util.NewExpectedEvent("Burn").
+	util.NewExpectedEvent("FiatToken", "Burn").
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("amount", burnAmount.String()).
 		AssertEqual(t, events[3])
@@ -144,7 +144,7 @@ func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
 	// Params
 	_, err := vault.AddVaultToAccount(g, "minter")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	// Initial values
@@ -186,7 +186,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 	assert.Equal(t, paused.String(), "true")
 
 	// Ensure all amounts would be valid in unpaused case
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initBalance, err := util.GetBalance(g, "minter")
 	assert.NoError(t, err)
@@ -211,7 +211,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	// blocklist minter
@@ -246,7 +246,7 @@ func TestMintBurn_FailedToMintOrBurnAfterRemoved(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// Ensure all amounts would be valid in valid case
-	minter, err := GetMinterUUID(g, "minter")
+    minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initBalance, err := util.GetBalance(g, "minter")
 	assert.NoError(t, err)

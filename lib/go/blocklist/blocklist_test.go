@@ -11,23 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetUUID(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-
-	_, err := vault.AddVaultToAccount(g, "vaulted-account")
-	assert.NoError(t, err)
-
-	_, err = util.GetVaultUUID(g, "vaulted-account")
-	assert.NoError(t, err)
-}
-
 func TestCreateBlocklister(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	events, err := CreateBlocklister(g, "blocklister")
 	assert.NoError(t, err)
 
 	// Test event
-	util.NewExpectedEvent("BlocklisterCreated").AssertHasKey(t, events[0], "resourceId")
+	util.NewExpectedEvent("FiatToken", "BlocklisterCreated").AssertHasKey(t, events[0], "resourceId")
 
 	_, err = CreateBlocklister(g, "non-blocklister")
 	assert.NoError(t, err)
@@ -42,14 +32,17 @@ func TestSetBlocklistCapability(t *testing.T) {
 func TestBlocklistWithCap(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "vaulted-account")
+	_, err := vault.AddVaultToAccount(g, "vaulted-account")
+	assert.NoError(t, err)
+
+	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
 
 	events, err := BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 1)
 	assert.NoError(t, err)
 
 	// Test event
-	util.NewExpectedEvent("Blocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, events[0])
+	util.NewExpectedEvent("FiatToken", "Blocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, events[0])
 
 	blockheight, err := GetBlocklistStatus(g, uuid)
 	assert.NoError(t, err)
@@ -75,14 +68,14 @@ func TestBlocklistWithCap(t *testing.T) {
 func TestUnblocklistWithCap(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "vaulted-account")
+	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
 
 	events, err := BlocklistOrUnblocklistRsc(g, "blocklister", uuid, 0)
 	assert.NoError(t, err)
 
 	// Test event
-	util.NewExpectedEvent("Unblocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, events[0])
+	util.NewExpectedEvent("FiatToken", "Unblocklisted").AddField("resourceId", strconv.Itoa(int(uuid))).AssertEqual(t, events[0])
 
 	// After blocklisted, "vaulted-account" should be able to transfer
 	// - the balance of post tx, recv should receive 10.0 more
@@ -103,7 +96,7 @@ func TestUnblocklistWithCap(t *testing.T) {
 func TestBlocklistWithoutCap(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "vaulted-account")
+	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
 
 	rawEvents, err := BlocklistOrUnblocklistRsc(g, "non-blocklister", uuid, 1)
