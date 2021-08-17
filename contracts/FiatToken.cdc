@@ -373,7 +373,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let mc = p.args[1] as? UInt64 ?? panic ("cannot downcast minterController id") 
                     self.configureMinterController(minter: m, minterController: mc);
                 case "removeMinterController":
-                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minterController id");
                     self.removeMinterController(minterController: mc);
                 default:
                     panic("Unknown transaction method")
