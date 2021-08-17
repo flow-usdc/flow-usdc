@@ -382,12 +382,17 @@ func GetStoreKeys(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName strin
 }
 
 func GetKeyWeight(g *gwtf.GoWithTheFlow, signerAcct string, resourceAcct string, resourceName string) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/onChainMultiSig/get_key_weight"
+	filename := "../../../scripts/onChainMultiSig/get_key_weight.cdc"
 	script := ParseCadenceTemplate(filename)
 	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()[2:]
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
 	value, err := g.ScriptFromFile(filename, script).
 		AccountArgument(resourceAcct).
 		StringArgument(signerPubKey).
+		Argument(path).
 		RunReturns()
 	if err != nil {
 		return
@@ -415,5 +420,17 @@ func GetPubSignerPath(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName s
 	filename := "../../../scripts/onChainMultiSig/get_pubsigner_path.cdc"
 	script := ParseCadenceTemplate(filename)
 	result, err = g.ScriptFromFile(filename, script).StringArgument(resourceName).RunReturns()
+	return
+}
+
+func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string, key string) (result bool, err error) {
+	keys, err := GetStoreKeys(g, resourceAcct, resourceName)
+	result = false
+	for _, k := range keys {
+		if k == key {
+			result = true
+			return
+		}
+	}
 	return
 }
