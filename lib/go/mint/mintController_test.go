@@ -1,7 +1,6 @@
 package mint
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -17,11 +16,11 @@ func TestController_Create(t *testing.T) {
 	events, err := CreateMinterController(g, "minterController1")
 	assert.NoError(t, err)
 
-   	_, err = util.GetUUID(g, "minterController1", "MinterController")
+	_, err = util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
 
 	// Test event
-	util.NewExpectedEvent( "FiatToken", "MinterControllerCreated").AssertHasKey(t, events[0], "resourceId")
+	util.NewExpectedEvent("FiatToken", "MinterControllerCreated").AssertHasKey(t, events[0], "resourceId")
 }
 
 func TestController_MasterMinterConfigureMinterController(t *testing.T) {
@@ -30,7 +29,7 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 	_, err := CreateMinter(g, "minter")
 	assert.NoError(t, err)
 
-    minterController, err := util.GetUUID(g, "minterController1", "MinterController")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
 
 	minter, err := util.GetUUID(g, "minter", "Minter")
@@ -111,7 +110,7 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-    minter, err := util.GetUUID(g, "minter", "Minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initAllowance, err := GetMinterAllowance(g, minter)
 	assert.NoError(t, err)
@@ -139,9 +138,9 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 func TestController_RemoveMinter(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-    minterController, err := util.GetUUID(g, "minterController1", "MinterController")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-    minter, err := util.GetUUID(g, "minter", "Minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	events, err := RemoveMinter(g, "minterController1")
@@ -180,7 +179,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 	assert.NoError(t, err)
 	minterController2, err := util.GetUUID(g, "minterController2", "MinterController")
 	assert.NoError(t, err)
-    minter, err := util.GetUUID(g, "minter", "Minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	_, err = owner.ConfigureMinterController(g, minterController1, minter, "owner")
 	assert.NoError(t, err)
@@ -252,33 +251,58 @@ func TestMultiSig_ConfigureMinterController(t *testing.T) {
 	minterController := uint64(222)
 	minter := uint64(111)
 
+	currentIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	m := util.Arg{V: minter, T: "UInt64"}
+	mc := util.Arg{V: minterController, T: "UInt64"}
+	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct500_1, "owner", "MasterMinter", "configureMinterController", m, mc)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	masterMinter, err := util.GetUUID(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
+		AddField("resourceId", strconv.Itoa(int(masterMinter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+		// This should error as there is not enough signer yet
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.Error(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, false, newTxIndex, util.Acct500_2, "owner", "MasterMinter", "configureMinterController", m, mc)
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	managedMinter, err := GetManagedMinter(g, minterController)
+	assert.NoError(t, err)
+	assert.Equal(t, minter, managedMinter)
+}
+
+func TestMultiSig_MinterControllerUnknowMethodFails(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	minterController := uint64(222)
+	minter := uint64(111)
+	m := util.Arg{V: minter, T: "UInt64"}
+	mc := util.Arg{V: minterController, T: "UInt64"}
+
 	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
 	assert.NoError(t, err)
-	events, err := owner.MultiSig_ConfigureMinterController(g, minterController, minter, txIndex+1, util.Acct500_1, "owner", true)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, txIndex+1, util.Acct1000, "owner", "MasterMinter", "configureUKNOWMETHODController", m, mc)
 	assert.NoError(t, err)
 
 	newTxIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
 	assert.NoError(t, err)
 
-	masterMinter, err := util.GetUUID(g, "owner", "MasterMinter")
-	assert.NoError(t, err)
-
-    util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
-	AddField("resourceId", strconv.Itoa(int(masterMinter))).
-	AddField("txIndex", strconv.Itoa(int(newTxIndex))).
-	AssertEqual(t, events[0])
-
-    // This should error as there is not enough signer yet
 	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
 	assert.Error(t, err)
-
-	_, err = owner.MultiSig_ConfigureMinterController(g, minterController, minter, newTxIndex, util.Acct500_2, "owner", false)
-
-    events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
-	assert.NoError(t, err)
-	fmt.Println("Execute Event: \n", events)
-
-	managedMinter, err := GetManagedMinter(g, minterController)
-	assert.NoError(t, err)
-	assert.Equal(t, minter, managedMinter)
 }

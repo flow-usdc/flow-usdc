@@ -41,6 +41,11 @@ type TestEvent struct {
 
 var addresses Addresses
 
+type Arg struct {
+	V interface{}
+	T string
+}
+
 func ParseCadenceTemplate(templatePath string) []byte {
 	fb, err := ioutil.ReadFile(templatePath)
 	if err != nil {
@@ -223,7 +228,59 @@ func GetSignableDataFromScript(
 	return
 }
 
-func MultiSig_NewPayload(
+func ConvertToCadenceValue(g *gwtf.GoWithTheFlow, args ...Arg) (a []cadence.Value, err error) {
+	for _, arg := range args {
+		var b cadence.Value
+		switch arg.T {
+		case "String":
+			b = cadence.String(arg.V.(string))
+		case "UFix64":
+			b, err = cadence.NewUFix64(arg.V.(string))
+		case "UInt64":
+			b = cadence.UInt64(arg.V.(uint64))
+		case "Address":
+			b = cadence.BytesToAddress(g.Accounts[arg.V.(string)].Address.Bytes())
+		default:
+			err = errors.New("Type not supported")
+		}
+		a = append(a, b)
+	}
+	return
+}
+
+func MultiSig_SignAndSubmit(
+	g *gwtf.GoWithTheFlow,
+	newPayload bool,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+	resourceName string,
+	method string,
+	args ...Arg,
+) (events []*gwtf.FormatedEvent, err error) {
+
+	cadenceArgs, err := ConvertToCadenceValue(g, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	signable, err := GetSignableDataFromScript(g, txIndex, method, cadenceArgs...)
+	if err != nil {
+		return
+	}
+
+	sig, err := SignPayloadOffline(g, signable, signerAcct)
+	if err != nil {
+		return
+	}
+	if newPayload {
+		return multiSig_NewPayload(g, sig, txIndex, method, cadenceArgs, signerAcct, resourceAcct, resourceName)
+	} else {
+		return multiSig_AddPayloadSignature(g, sig, txIndex, signerAcct, resourceAcct, resourceName)
+	}
+}
+
+func multiSig_NewPayload(
 	g *gwtf.GoWithTheFlow,
 	sig string,
 	txIndex uint64,
@@ -255,7 +312,7 @@ func MultiSig_NewPayload(
 	return
 }
 
-func MultiSig_AddPayloadSignature(
+func multiSig_AddPayloadSignature(
 	g *gwtf.GoWithTheFlow,
 	sig string,
 	txIndex uint64,

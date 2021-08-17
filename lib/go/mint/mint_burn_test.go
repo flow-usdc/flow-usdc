@@ -246,7 +246,7 @@ func TestMintBurn_FailedToMintOrBurnAfterRemoved(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// Ensure all amounts would be valid in valid case
-    minter, err := util.GetUUID(g, "minter", "Minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initBalance, err := util.GetBalance(g, "minter")
 	assert.NoError(t, err)
