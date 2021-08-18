@@ -38,6 +38,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
     pub let MasterMinterPubSigner: PublicPath;
+    pub let MasterMinterUUIDPubPath: PublicPath;
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;
@@ -178,7 +179,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
  
     // ===== FiatToken Resources: =====
     
-    pub resource Vault: FiatTokenInterface.VaultUUID, FiatTokenInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
+    pub resource Vault: ResourceId, FiatTokenInterface.Allowance, FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
 
         // initialize the balance at resource creation time
         init(balance: UFix64) {
@@ -222,7 +223,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         
         // ===== FiatToken interfacas =====
 
-        /// FiatToken VaultUUID Interface: should be linked to the public domain 
+        /// FiatToken ResourceId: should be linked to the public domain 
         /// uuid is implicitly created on resource init
         /// lets owner share uuid but there is not guarantee they would
         pub fun UUID(): UInt64 {
@@ -249,7 +250,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             let to = getAccount(recvAddr);
             // TODO: perhaps allow path as an arg
             let idRef = to.getCapability(FiatToken.VaultUUIDPubPath)
-                .borrow<&{FiatTokenInterface.VaultUUID}>()
+                .borrow<&{FiatToken.ResourceId}>()
                 ?? panic("Could not borrow uuid reference to the recipient's Vault")
 
             let resourceId = idRef.UUID(); 
@@ -330,7 +331,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
     /// The master minter creates minter controller resources to delegate control for minters
-    pub resource MasterMinter: FiatTokenInterface.MasterMinter, OnChainMultiSig.PublicSigner {
+    pub resource MasterMinter: FiatTokenInterface.MasterMinter, ResourceId, OnChainMultiSig.PublicSigner {
 
         /// Function to configure MinterController
         pub fun configureMinterController(minter: UInt64, minterController: UInt64) {
@@ -372,8 +373,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let mc = p.args[1] as? UInt64 ?? panic ("cannot downcast minterController id") 
                     self.configureMinterController(minter: m, minterController: mc);
                 case "removeMinterController":
-                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minterController id");
                     self.removeMinterController(minterController: mc);
+                default:
+                    panic("Unknown transaction method")
             }
             return nil;
         }
@@ -687,6 +690,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         MasterMinterStoragePath: StoragePath,
         MasterMinterPrivPath: PrivatePath,
         MasterMinterPubSigner: PublicPath,
+        MasterMinterUUIDPubPath: PublicPath,
         MinterControllerStoragePath: StoragePath,
         MinterControllerUUIDPubPath: PublicPath,
         MinterStoragePath: StoragePath,
@@ -736,6 +740,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.MasterMinterStoragePath = MasterMinterStoragePath;
         self.MasterMinterPrivPath = MasterMinterPrivPath;
         self.MasterMinterPubSigner = MasterMinterPubSigner;
+        self.MasterMinterUUIDPubPath = MasterMinterUUIDPubPath;
 
         self.MinterControllerStoragePath = MinterControllerStoragePath;
         self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath;
@@ -752,7 +757,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         //
         adminAccount.link<&FiatToken.Vault{FungibleToken.Receiver}>(self.VaultReceiverPubPath, target: self.VaultStoragePath)
         adminAccount.link<&FiatToken.Vault{FungibleToken.Balance}>(self.VaultBalancePubPath, target: self.VaultStoragePath)
-        adminAccount.link<&FiatToken.Vault{FiatTokenInterface.VaultUUID}>(self.VaultUUIDPubPath, target: self.VaultStoragePath)
+        adminAccount.link<&FiatToken.Vault{FiatToken.ResourceId}>(self.VaultUUIDPubPath, target: self.VaultStoragePath)
         adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(self.VaultAllowancePubPath, target: self.VaultStoragePath)
 
 
@@ -780,6 +785,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         adminAccount.link<&BlocklistExecutor>(self.BlocklistExecutorPrivPath, target: self.BlocklistExecutorStoragePath);
         adminAccount.link<&MasterMinter>(self.MasterMinterPrivPath, target: self.MasterMinterStoragePath);
         adminAccount.link<&MasterMinter{OnChainMultiSig.PublicSigner}>(self.MasterMinterPubSigner, target: self.MasterMinterStoragePath);
+        adminAccount.link<&MasterMinter{ResourceId}>(self.MasterMinterUUIDPubPath, target: self.MasterMinterStoragePath);
 
         // Emit an event that shows that the contract was initialized
         //

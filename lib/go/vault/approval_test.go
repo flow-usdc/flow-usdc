@@ -16,9 +16,9 @@ func TestApproval(t *testing.T) {
 	_, err := AddVaultToAccount(g, "allowance")
 	assert.NoError(t, err)
 
-	toUuid, err := util.GetVaultUUID(g, "allowance")
+	toUuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
-	fromUuid, err := util.GetVaultUUID(g, "owner")
+	fromUuid, err := util.GetUUID(g, "owner", "Vault")
 	assert.NoError(t, err)
 
 	allowanceAmount := "16.00000000"
@@ -30,7 +30,7 @@ func TestApproval(t *testing.T) {
 	assert.Equal(t, allowanceAmount, a.String())
 
 	// Test event
-	util.NewExpectedEvent("Approval").
+	util.NewExpectedEvent("FiatToken", "Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(toUuid))).
 		AddField("amount", allowanceAmount).
@@ -41,7 +41,7 @@ func TestApproval(t *testing.T) {
 func TestWithdrawAllowanceValidReq(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "allowance")
+	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
 
 	initFromBalance, err := util.GetBalance(g, "owner")
@@ -67,29 +67,29 @@ func TestWithdrawAllowanceValidReq(t *testing.T) {
 	assert.Equal(t, "10.00000000", (initAllowance - postAllowance).String())
 
 	// Test events
-	fromUuid, err := util.GetVaultUUID(g, "owner")
+	fromUuid, err := util.GetUUID(g, "owner", "Vault")
 	assert.NoError(t, err)
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenWithdrawn").
+	util.NewExpectedEvent("FiatToken", "FiatTokenWithdrawn").
 		AddField("amount", withdrawAmount).
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AssertEqual(t, events[0])
 
 	fromAddr := util.GetAccountAddr(g, "owner")
-	util.NewExpectedEvent("TokensWithdrawn").
+	util.NewExpectedEvent("FiatToken", "TokensWithdrawn").
 		AddField("amount", withdrawAmount).
 		AddField("from", fromAddr).
 		AssertEqual(t, events[1])
 
-	uuid, err = util.GetVaultUUID(g, "allowance")
+	uuid, err = util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenDeposited").
+	util.NewExpectedEvent("FiatToken", "FiatTokenDeposited").
 		AddField("amount", withdrawAmount).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AssertEqual(t, events[2])
 
 	toAddr := util.GetAccountAddr(g, "allowance")
-	util.NewExpectedEvent("TokensDeposited").
+	util.NewExpectedEvent("FiatToken", "TokensDeposited").
 		AddField("amount", withdrawAmount).
 		AddField("to", toAddr).
 		AssertEqual(t, events[3])
@@ -102,7 +102,7 @@ func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
 	_, err := AddVaultToAccount(g, "non-allowance")
 	assert.NoError(t, err)
 
-	uuid, err := util.GetVaultUUID(g, "non-allowance")
+	uuid, err := util.GetUUID(g, "non-allowance", "Vault")
 	assert.NoError(t, err)
 
 	initFromBalance, err := util.GetBalance(g, "owner")
@@ -128,7 +128,7 @@ func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
 func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "allowance")
+	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
 
 	initAllowance, err := GetAllowance(g, "owner", uuid)
@@ -152,7 +152,7 @@ func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
 func TestSetZeroApprovalRemoves(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "allowance")
+	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
 
 	_, err = Approve(g, "owner", uuid, "0.00000000")
@@ -165,7 +165,7 @@ func TestSetZeroApprovalRemoves(t *testing.T) {
 func TestIncreaseAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "allowance")
+	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
 
 	allowanceAmount := "10.00000000"
@@ -186,9 +186,9 @@ func TestIncreaseAllowance(t *testing.T) {
 	// Test event
 	// initial allowance(10) + increased allowance(10)
 	postAllowanceAmount := "20.00000000"
-	fromUuid, err := util.GetVaultUUID(g, "owner")
+	fromUuid, err := util.GetUUID(g, "owner", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("Approval").
+	util.NewExpectedEvent("FiatToken", "Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AddField("amount", postAllowanceAmount).
@@ -198,7 +198,7 @@ func TestIncreaseAllowance(t *testing.T) {
 func TestDecreaseAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	uuid, err := util.GetVaultUUID(g, "allowance")
+	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
 
 	allowanceAmount := "10.00000000"
@@ -219,9 +219,9 @@ func TestDecreaseAllowance(t *testing.T) {
 	// Test event
 	// initial allowance(10) + increased allowance(3)
 	postAllowanceAmount := "7.00000000"
-	fromUuid, err := util.GetVaultUUID(g, "owner")
+	fromUuid, err := util.GetUUID(g, "owner", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("Approval").
+	util.NewExpectedEvent("FiatToken", "Approval").
 		AddField("from", strconv.Itoa(int(fromUuid))).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AddField("amount", postAllowanceAmount).

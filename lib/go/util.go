@@ -71,9 +71,9 @@ func ParseTestEvents(events []flow.Event) (formatedEvents []*gwtf.FormatedEvent)
 	return
 }
 
-func NewExpectedEvent(name string) TestEvent {
+func NewExpectedEvent(contract string, name string) TestEvent {
 	return TestEvent{
-		Name:   "A." + addresses.FiatToken + ".FiatToken." + name,
+		Name:   "A." + addresses.FiatToken + "." + contract + "." + name,
 		Fields: map[string]string{},
 	}
 }
@@ -129,10 +129,14 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 	return
 }
 
-func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {
-	filename := "../../../scripts/vault/get_vault_uuid.cdc"
+func GetUUID(g *gwtf.GoWithTheFlow, account string, resourceName string) (r uint64, err error) {
+	filename := "../../../scripts/contract/get_resource_uuid.cdc"
 	script := ParseCadenceTemplate(filename)
-	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	path, err := GetUUIDPubPath(g, account, resourceName)
+	if err != nil {
+		return
+	}
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).Argument(path).RunReturns()
 	if err != nil {
 		return
 	}
@@ -140,6 +144,13 @@ func GetVaultUUID(g *gwtf.GoWithTheFlow, account string) (r uint64, err error) {
 	if !ok {
 		err = errors.New("returned not uint64")
 	}
+	return
+}
+
+func GetUUIDPubPath(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string) (result cadence.Value, err error) {
+	filename := "../../../scripts/contract/get_uuid_path.cdc"
+	script := ParseCadenceTemplate(filename)
+	result, err = g.ScriptFromFile(filename, script).StringArgument(resourceName).RunReturns()
 	return
 }
 
@@ -165,7 +176,16 @@ func ConvertCadenceStringArray(a cadence.Value) (b []string) {
 	return
 }
 
-// Multisig utility functions
+// Multisig utility functions and type
+
+// Arguement for Multisig functions `Multisig_SignAndSubmit`
+// This allows for generic functions to type cast the arguments into
+// correct cadence types.
+// i.e. for a cadence.UFix64, Arg {V: "12.00", T: "UFix64"}
+type Arg struct {
+	V interface{}
+	T string
+}
 
 // Signing payload offline
 func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig string, err error) {
@@ -212,7 +232,59 @@ func GetSignableDataFromScript(
 	return
 }
 
-func MultiSig_NewPayload(
+func ConvertToCadenceValue(g *gwtf.GoWithTheFlow, args ...Arg) (a []cadence.Value, err error) {
+	for _, arg := range args {
+		var b cadence.Value
+		switch arg.T {
+		case "String":
+			b = cadence.String(arg.V.(string))
+		case "UFix64":
+			b, err = cadence.NewUFix64(arg.V.(string))
+		case "UInt64":
+			b = cadence.UInt64(arg.V.(uint64))
+		case "Address":
+			b = cadence.BytesToAddress(g.Accounts[arg.V.(string)].Address.Bytes())
+		default:
+			err = errors.New("Type not supported")
+		}
+		a = append(a, b)
+	}
+	return
+}
+
+func MultiSig_SignAndSubmit(
+	g *gwtf.GoWithTheFlow,
+	newPayload bool,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+	resourceName string,
+	method string,
+	args ...Arg,
+) (events []*gwtf.FormatedEvent, err error) {
+
+	cadenceArgs, err := ConvertToCadenceValue(g, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	signable, err := GetSignableDataFromScript(g, txIndex, method, cadenceArgs...)
+	if err != nil {
+		return
+	}
+
+	sig, err := SignPayloadOffline(g, signable, signerAcct)
+	if err != nil {
+		return
+	}
+	if newPayload {
+		return multiSig_NewPayload(g, sig, txIndex, method, cadenceArgs, signerAcct, resourceAcct, resourceName)
+	} else {
+		return multiSig_AddPayloadSignature(g, sig, txIndex, signerAcct, resourceAcct, resourceName)
+	}
+}
+
+func multiSig_NewPayload(
 	g *gwtf.GoWithTheFlow,
 	sig string,
 	txIndex uint64,
@@ -244,7 +316,7 @@ func MultiSig_NewPayload(
 	return
 }
 
-func MultiSig_AddPayloadSignature(
+func multiSig_AddPayloadSignature(
 	g *gwtf.GoWithTheFlow,
 	sig string,
 	txIndex uint64,
@@ -298,10 +370,14 @@ func MultiSig_ExecuteTx(
 	return
 }
 
-func GetStoreKeys(g *gwtf.GoWithTheFlow, filePath string, account string) (result []string, err error) {
-	filename := "../../../scripts/" + filePath
+func GetStoreKeys(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string) (result []string, err error) {
+	filename := "../../../scripts/onChainMultiSig/get_store_keys.cdc"
 	script := ParseCadenceTemplate(filename)
-	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).RunReturns()
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(resourceAcct).Argument(path).RunReturns()
 	if err != nil {
 		return
 	}
@@ -309,13 +385,18 @@ func GetStoreKeys(g *gwtf.GoWithTheFlow, filePath string, account string) (resul
 	return
 }
 
-func GetKeyWeight(g *gwtf.GoWithTheFlow, filePath string, resourceAcct string, signerAcct string) (result cadence.UFix64, err error) {
-	filename := "../../../scripts/" + filePath
+func GetKeyWeight(g *gwtf.GoWithTheFlow, signerAcct string, resourceAcct string, resourceName string) (result cadence.UFix64, err error) {
+	filename := "../../../scripts/onChainMultiSig/get_key_weight.cdc"
 	script := ParseCadenceTemplate(filename)
 	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()[2:]
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
 	value, err := g.ScriptFromFile(filename, script).
 		AccountArgument(resourceAcct).
 		StringArgument(signerPubKey).
+		Argument(path).
 		RunReturns()
 	if err != nil {
 		return
@@ -324,14 +405,14 @@ func GetKeyWeight(g *gwtf.GoWithTheFlow, filePath string, resourceAcct string, s
 	return
 }
 
-func GetTxIndex(g *gwtf.GoWithTheFlow, account string, resourceName string) (result uint64, err error) {
+func GetTxIndex(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string) (result uint64, err error) {
 	filename := "../../../scripts/onChainMultiSig/get_tx_index.cdc"
 	script := ParseCadenceTemplate(filename)
-	path, err := GetPubSignerPath(g, account, resourceName)
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
 	if err != nil {
 		return
 	}
-	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).Argument(path).RunReturns()
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(resourceAcct).Argument(path).RunReturns()
 	if err != nil {
 		return
 	}
@@ -339,9 +420,21 @@ func GetTxIndex(g *gwtf.GoWithTheFlow, account string, resourceName string) (res
 	return
 }
 
-func GetPubSignerPath(g *gwtf.GoWithTheFlow, account string, resourceName string) (result cadence.Value, err error) {
-	filename := "../../../scripts/onChainMultiSig/get_path.cdc"
+func GetPubSignerPath(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string) (result cadence.Value, err error) {
+	filename := "../../../scripts/onChainMultiSig/get_pubsigner_path.cdc"
 	script := ParseCadenceTemplate(filename)
 	result, err = g.ScriptFromFile(filename, script).StringArgument(resourceName).RunReturns()
+	return
+}
+
+func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string, key string) (result bool, err error) {
+	keys, err := GetStoreKeys(g, resourceAcct, resourceName)
+	result = false
+	for _, k := range keys {
+		if k == key {
+			result = true
+			return
+		}
+	}
 	return
 }

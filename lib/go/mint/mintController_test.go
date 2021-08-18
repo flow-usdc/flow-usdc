@@ -1,7 +1,6 @@
 package mint
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -17,11 +16,11 @@ func TestController_Create(t *testing.T) {
 	events, err := CreateMinterController(g, "minterController1")
 	assert.NoError(t, err)
 
-	_, err = GetMinterControllerUUID(g, "minterController1")
+	_, err = util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
 
 	// Test event
-	util.NewExpectedEvent("MinterControllerCreated").AssertHasKey(t, events[0], "resourceId")
+	util.NewExpectedEvent("FiatToken", "MinterControllerCreated").AssertHasKey(t, events[0], "resourceId")
 }
 
 func TestController_MasterMinterConfigureMinterController(t *testing.T) {
@@ -30,10 +29,10 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 	_, err := CreateMinter(g, "minter")
 	assert.NoError(t, err)
 
-	minterController, err := GetMinterControllerUUID(g, "minterController1")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
 
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	events, err := owner.ConfigureMinterController(g, minterController, minter, "owner")
@@ -44,7 +43,7 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 	assert.Equal(t, minter, managedMinter)
 
 	// Test event
-	util.NewExpectedEvent("ControllerConfigured").
+	util.NewExpectedEvent("FiatToken", "ControllerConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AssertEqual(t, events[0])
@@ -53,9 +52,9 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 func TestController_ConfigureMinterAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minterController, err := GetMinterControllerUUID(g, "minterController1")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	allowanceInput := "500.00000000"
@@ -69,7 +68,7 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 	assert.Equal(t, expected, allowance)
 
 	// Test event
-	util.NewExpectedEvent("MinterConfigured").
+	util.NewExpectedEvent("FiatToken", "MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", allowanceInput).
@@ -79,9 +78,9 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 func TestController_IncreaseMinterAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minterController, err := GetMinterControllerUUID(g, "minterController1")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initAllowance, err := GetMinterAllowance(g, minter)
 	assert.NoError(t, err)
@@ -99,7 +98,7 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 	// Test event
 	// allowance (500.0) + inc (500.0)
 	expectedAllowance := "1000.00000000"
-	util.NewExpectedEvent("MinterConfigured").
+	util.NewExpectedEvent("FiatToken", "MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", expectedAllowance).
@@ -109,9 +108,9 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 func TestController_DecreaseMinterAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minterController, err := GetMinterControllerUUID(g, "minterController1")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	initAllowance, err := GetMinterAllowance(g, minter)
 	assert.NoError(t, err)
@@ -129,7 +128,7 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 	// Test event
 	// allowance (1000.0) + decr (500.0)
 	expectedAllowance := "500.00000000"
-	util.NewExpectedEvent("MinterConfigured").
+	util.NewExpectedEvent("FiatToken", "MinterConfigured").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AddField("allowance", expectedAllowance).
@@ -139,9 +138,9 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 func TestController_RemoveMinter(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minterController, err := GetMinterControllerUUID(g, "minterController1")
+	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	events, err := RemoveMinter(g, "minterController1")
@@ -152,7 +151,7 @@ func TestController_RemoveMinter(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test event
-	util.NewExpectedEvent("MinterRemoved").
+	util.NewExpectedEvent("FiatToken", "MinterRemoved").
 		AddField("controller", strconv.Itoa(int(minterController))).
 		AddField("minter", strconv.Itoa(int(minter))).
 		AssertEqual(t, events[0])
@@ -176,11 +175,11 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
 	// all minterController has been configured by masterMinter
-	minterController1, err := GetMinterControllerUUID(g, "minterController1")
+	minterController1, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
-	minterController2, err := GetMinterControllerUUID(g, "minterController2")
+	minterController2, err := util.GetUUID(g, "minterController2", "MinterController")
 	assert.NoError(t, err)
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 	_, err = owner.ConfigureMinterController(g, minterController1, minter, "owner")
 	assert.NoError(t, err)
@@ -210,7 +209,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 
 func TestController_MasterMinterRemoveController(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	minterController2, err := GetMinterControllerUUID(g, "minterController2")
+	minterController2, err := util.GetUUID(g, "minterController2", "MinterController")
 	assert.NoError(t, err)
 
 	events, err := owner.RemoveMinterController(g, minterController2, "owner")
@@ -220,7 +219,7 @@ func TestController_MasterMinterRemoveController(t *testing.T) {
 	assert.Error(t, err)
 
 	// Test event
-	util.NewExpectedEvent("ControllerRemoved").
+	util.NewExpectedEvent("FiatToken", "ControllerRemoved").
 		AddField("controller", strconv.Itoa(int(minterController2))).
 		AssertEqual(t, events[0])
 }
@@ -228,7 +227,7 @@ func TestController_MasterMinterRemoveController(t *testing.T) {
 func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
-	minter, err := GetMinterUUID(g, "minter")
+	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
 
 	initAllowance, err := GetMinterAllowance(g, minter)
@@ -247,26 +246,163 @@ func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T
 	assert.Equal(t, postAllowance, initAllowance)
 }
 
-func TestMultiSig_ConfigureMinterControllerAndExecute(t *testing.T) {
+func TestMultiSig_ConfigureMinterController(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
 	minterController := uint64(222)
 	minter := uint64(111)
-
-	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	m := util.Arg{V: minter, T: "UInt64"}
+	mc := util.Arg{V: minterController, T: "UInt64"}
+	// `true` for new payload
+	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct500_1, "owner", "MasterMinter", "configureMinterController", m, mc)
 	assert.NoError(t, err)
-	events, err := owner.MultiSig_ConfigureMinterController(g, minterController, minter, txIndex+1, util.Acct1000, "owner", true)
+
+	newTxIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	masterMinter, err := util.GetUUID(g, "owner", "MasterMinter")
 	assert.NoError(t, err)
 
-	txIndexStr := events[0].Fields["txIndex"]
-	newTxIndex, err := strconv.ParseUint(txIndexStr.(string), 10, 64)
-	assert.NoError(t, err)
-	fmt.Println("txindex: ", newTxIndex)
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
+		AddField("resourceId", strconv.Itoa(int(masterMinter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
 
-	event, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
-	assert.NoError(t, err)
-	fmt.Println("Execute Event: \n", event)
+		// Try to Execute without enough weight. This should error as there is not enough signer yet
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.Error(t, err)
 
+	// Add Another Payload Signature
+	// `false` for new signature for existing paylaod
+	events, err = util.MultiSig_SignAndSubmit(g, false, newTxIndex, util.Acct500_2, "owner", "MasterMinter", "configureMinterController", m, mc)
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadSigAdded").
+		AddField("resourceId", strconv.Itoa(int(masterMinter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+		// Try to Execute Tx after second signature
+	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.NoError(t, err)
+	util.NewExpectedEvent("FiatToken", "ControllerConfigured").
+		AddField("controller", strconv.Itoa(int(minterController))).
+		AddField("minter", strconv.Itoa(int(minter))).
+		AssertEqual(t, events[0])
 	managedMinter, err := GetManagedMinter(g, minterController)
 	assert.NoError(t, err)
 	assert.Equal(t, minter, managedMinter)
+}
+
+func TestMultiSig_RemoveMinterController(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	minterController := uint64(222)
+	mc := util.Arg{V: minterController, T: "UInt64"}
+	// `true` for new payload
+	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "owner", "MasterMinter", "removeMinterController", mc)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	masterMinter, err := util.GetUUID(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
+		AddField("resourceId", strconv.Itoa(int(masterMinter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.NoError(t, err)
+	util.NewExpectedEvent("FiatToken", "ControllerRemoved").
+		AddField("controller", strconv.Itoa(int(minterController))).
+		AssertEqual(t, events[0])
+
+	_, err = GetManagedMinter(g, minterController)
+	assert.Error(t, err)
+}
+
+func TestMultiSig_MinterControllerUnknowMethodFails(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	mc := util.Arg{V: uint64(222), T: "UInt64"}
+	m := util.Arg{V: uint64(111), T: "UInt64"}
+
+	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, txIndex+1, util.Acct1000, "owner", "MasterMinter", "configureUKNOWMETHODController", m, mc)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.Error(t, err)
+}
+
+func TestMultiSig_MinterControllerCanRemoveKey(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	k := util.Arg{V: pk250_1[2:], T: "String"}
+
+	hasKey, err := util.ContainsKey(g, "owner", "MasterMinter", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, true)
+
+	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	newTxIndex := txIndex + 1
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "owner", "MasterMinter", "removeKey", k)
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	hasKey, err = util.ContainsKey(g, "owner", "MasterMinter", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, false)
+}
+
+func TestMultiSig_MinterControllerCanAddKey(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	k := util.Arg{V: pk250_1[2:], T: "String"}
+	w := util.Arg{V: "250.00000000", T: "UFix64"}
+
+	hasKey, err := util.ContainsKey(g, "owner", "MasterMinter", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, false)
+
+	txIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
+	newTxIndex := txIndex + 1
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "owner", "MasterMinter", "configureKey", k, w)
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "owner", "MasterMinter")
+	assert.NoError(t, err)
+
+	hasKey, err = util.ContainsKey(g, "owner", "MasterMinter", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, true)
+
+	weight, err := util.GetKeyWeight(g, util.Acct250_1, "owner", "MasterMinter")
+	assert.NoError(t, err)
+	assert.Equal(t, w.V, weight.String())
 }

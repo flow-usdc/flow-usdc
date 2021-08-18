@@ -20,7 +20,7 @@ func TestAddVaultToAccount(t *testing.T) {
 	assert.Equal(t, balance.String(), "0.00000000")
 
 	// Test event
-	util.NewExpectedEvent("NewVault").AssertHasKey(t, events[0], "resourceId")
+	util.NewExpectedEvent("FiatToken", "NewVault").AssertHasKey(t, events[0], "resourceId")
 }
 
 func TestNonVaultedAccount(t *testing.T) {
@@ -45,33 +45,33 @@ func TestTransferTokens(t *testing.T) {
 	assert.Equal(t, transferAmount, balanceA.String())
 
 	// Test events
-	uuid, err := util.GetVaultUUID(g, "owner")
+	uuid, err := util.GetUUID(g, "owner", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenWithdrawn").
+	util.NewExpectedEvent("FiatToken", "FiatTokenWithdrawn").
 		AddField("amount", transferAmount).
 		AddField("from", strconv.Itoa(int(uuid))).
 		AssertEqual(t, events[0])
 
 	fromAddr := util.GetAccountAddr(g, "owner")
-	util.NewExpectedEvent("TokensWithdrawn").
+	util.NewExpectedEvent("FiatToken", "TokensWithdrawn").
 		AddField("amount", transferAmount).
 		AddField("from", fromAddr).
 		AssertEqual(t, events[1])
 
-	uuid, err = util.GetVaultUUID(g, "vaulted-account")
+	uuid, err = util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatTokenDeposited").
+	util.NewExpectedEvent("FiatToken", "FiatTokenDeposited").
 		AddField("amount", transferAmount).
 		AddField("to", strconv.Itoa(int(uuid))).
 		AssertEqual(t, events[2])
 
 	toAddr := util.GetAccountAddr(g, "vaulted-account")
-	util.NewExpectedEvent("TokensDeposited").
+	util.NewExpectedEvent("FiatToken", "TokensDeposited").
 		AddField("amount", transferAmount).
 		AddField("to", toAddr).
 		AssertEqual(t, events[3])
 
-	util.NewExpectedEvent("DestroyVault").AssertHasKey(t, events[4], "resourceId")
+	util.NewExpectedEvent("FiatToken", "DestroyVault").AssertHasKey(t, events[4], "resourceId")
 
 	// Transfer the 100 token back from account A to FT minter
 	_, err = TransferTokens(g, "100.00000000", "vaulted-account", "owner")
