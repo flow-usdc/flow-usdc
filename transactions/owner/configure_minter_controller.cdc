@@ -11,6 +11,6 @@ transaction (minter: UInt64, minterController: UInt64) {
         mm.configureMinterController(minter: minter, minterController: minterController);
     }
     post {
-        FiatToken.managedMinters[minterController] == minter : "minterController not configured"
+        FiatToken.getManagedMinter(resourceId: minterController) == minter : "minterController not configured"
     }
 }

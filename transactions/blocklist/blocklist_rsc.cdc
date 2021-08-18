@@ -12,8 +12,8 @@ transaction(resourceId: UInt64) {
     } 
 
     post {
-        FiatToken.blocklist[resourceId]! != nil: "Resource not blocklisted";
-        FiatToken.blocklist[resourceId] == getCurrentBlock().height : "Blocklisted on incorrect height";
+        FiatToken.getBlocklist(resourceId:resourceId)! != nil: "Resource not blocklisted";
+        FiatToken.getBlocklist(resourceId:resourceId) == getCurrentBlock().height : "Blocklisted on incorrect height";
 
     }
 }

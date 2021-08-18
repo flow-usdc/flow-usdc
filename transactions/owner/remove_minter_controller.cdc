@@ -11,6 +11,6 @@ transaction (minterController: UInt64 ) {
         mm.removeMinterController(minterController: minterController);
     }
     post {
-        !FiatToken.managedMinters.containsKey(minterController) : "minterController not removed"
+        FiatToken.getManagedMinter(resourceId: minterController) == nil : "minterController not removed"
     }
 }
