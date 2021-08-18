@@ -41,11 +41,6 @@ type TestEvent struct {
 
 var addresses Addresses
 
-type Arg struct {
-	V interface{}
-	T string
-}
-
 func ParseCadenceTemplate(templatePath string) []byte {
 	fb, err := ioutil.ReadFile(templatePath)
 	if err != nil {
@@ -181,7 +176,16 @@ func ConvertCadenceStringArray(a cadence.Value) (b []string) {
 	return
 }
 
-// Multisig utility functions
+// Multisig utility functions and type
+
+// Arguement for Multisig functions `Multisig_SignAndSubmit`
+// This allows for generic functions to type cast the arguments into
+// correct cadence types.
+// i.e. for a cadence.UFix64, Arg {V: "12.00", T: "UFix64"}
+type Arg struct {
+	V interface{}
+	T string
+}
 
 // Signing payload offline
 func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig string, err error) {
