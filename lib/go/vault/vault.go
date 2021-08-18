@@ -35,3 +35,19 @@ func TransferTokens(
 	events = util.ParseTestEvents(e)
 	return
 }
+
+func MoveAndDeposit(
+	g *gwtf.GoWithTheFlow,
+	fromAcct string,
+	toAcct string,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/vault/move_and_deposit.cdc"
+	txScript := util.ParseCadenceTemplate(txFilename)
+
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(fromAcct).
+		AccountArgument(toAcct).
+		Run()
+	events = util.ParseTestEvents(e)
+	return
+}

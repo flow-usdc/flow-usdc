@@ -194,7 +194,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 !FiatToken.paused: "FiatToken contract paused" 
                 FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
-            // todo check blocklist and pause state
             self.balance = self.balance - amount
             emit FiatTokenWithdrawn(amount: amount, from: self.uuid);
             emit TokensWithdrawn(amount: amount, from: self.owner?.address);
@@ -205,9 +204,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
                 !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[from.uuid] == nil: "Receiving Vault Blocklisted"
                 FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
-            // todo check blocklist and pause state 
             let vault <- from as! @FiatToken.Vault
             self.balance = self.balance + vault.balance
             emit FiatTokenDeposited(amount: vault.balance, to: self.uuid);

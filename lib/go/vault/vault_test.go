@@ -20,7 +20,9 @@ func TestAddVaultToAccount(t *testing.T) {
 	assert.Equal(t, balance.String(), "0.00000000")
 
 	// Test event
-	util.NewExpectedEvent("FiatToken", "NewVault").AssertHasKey(t, events[0], "resourceId")
+	if len(events) != 0 {
+		util.NewExpectedEvent("FiatToken", "NewVault").AssertHasKey(t, events[0], "resourceId")
+	}
 }
 
 func TestNonVaultedAccount(t *testing.T) {
