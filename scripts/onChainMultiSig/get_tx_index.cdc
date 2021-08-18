@@ -7,7 +7,7 @@ import FiatToken from 0x{{.FiatToken}}
 pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): UInt64{
     let resourcAcct = getAccount(resourceAddr)
     let ref = resourcAcct.getCapability(resourcePubSignerPath)
-        .borrow<&AnyResource{OnChainMultiSig.PublicSigner}>()
+        .borrow<&{OnChainMultiSig.PublicSigner}>()
         ?? panic("Could not borrow Pub Signer reference to MasterMinter")
 
     return ref.getTxIndex()

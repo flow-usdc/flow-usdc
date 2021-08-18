@@ -11,7 +11,7 @@ transaction (sig: String, txIndex: UInt64, publicKey: String, resourceAddr: Addr
        let resourceAcct = getAccount(resourceAddr)
 
         let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
-            .borrow<&AnyResource{OnChainMultiSig.PublicSigner}>()
+            .borrow<&{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow master minter pub sig reference")
             
         return pubSigRef.addPayloadSignature(txIndex: txIndex, publicKey: publicKey, sig: sig.decodeHex())

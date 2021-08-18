@@ -11,7 +11,7 @@ transaction (sig: String, txIndex: UInt64, method: String, args: [AnyStruct], pu
         let resourceAcct = getAccount(resourceAddr)
 
         let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
-            .borrow<&AnyResource{OnChainMultiSig.PublicSigner}>()
+            .borrow<&{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow Public Signer reference")
         
         let p = OnChainMultiSig.PayloadDetails(txIndex: txIndex, method: method, args: args);
