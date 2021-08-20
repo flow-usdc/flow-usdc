@@ -35,6 +35,9 @@ func TestBlocklistWithCap(t *testing.T) {
 	_, err := vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
 
+	_, err = vault.TransferTokens(g, "1.00000000", "owner", "vaulted-account")
+	assert.NoError(t, err)
+
 	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
 
@@ -48,14 +51,26 @@ func TestBlocklistWithCap(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, true, blockheight > 0)
 
-	// Once blocklisted, "vaulted-account" should not be able to transfer
+	// Once blocklisted, "vaulted-account" should not be able to transfer / recv / load
+	// its vault and deposit its content into another vault
 	// - check initial and post tx balance is the same
 	// - ensure that tx fails
 
 	init_rec_balance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
+	// Test cannot receive
 	events, err = vault.TransferTokens(g, "10.00000000", "owner", "vaulted-account")
+	assert.Error(t, err)
+	assert.Empty(t, events)
+
+	// Test cannot withdraw
+	events, err = vault.TransferTokens(g, "0.50000000", "vaulted-account", "owner")
+	assert.Error(t, err)
+	assert.Empty(t, events)
+
+	// Test cannot load and deposit
+	events, err = vault.MoveAndDeposit(g, "vaulted-account", "owner")
 	assert.Error(t, err)
 	assert.Empty(t, events)
 

@@ -71,7 +71,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// This is managed by the blocklister
     /// Resources such as Vaults and Minters can be blocked
     /// {resourceId: Block Height}
-    pub var blocklist: {UInt64: UInt64};
+    access(contract) let blocklist: {UInt64: UInt64};
     /// Blocklisted
     ///
     /// The event that is emitted when new resource has been blocklisted 
@@ -114,14 +114,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
     /// Dict of minter controller to their minter
     /// Only one minter per minter controller but each minter may be controller by multiple controllers
-    pub var managedMinters: {UInt64: UInt64}
+    access(contract) let managedMinters: {UInt64: UInt64}
     /// Minting restrictions include allowance, deadline, vault reciever
     /// Dict of all minters and their allowances
-    pub var minterAllowances: { UInt64: UFix64};
-    /// Dict of all minters and their deadlines in terms of block height 
-    pub var minterDeadlines: { UInt64: UInt64};
-    /// Dict of all minters and their restricted vault reciever
-    pub var minterReceivers: { UInt64: UInt64};
+    access(contract) let minterAllowances: { UInt64: UFix64};
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
@@ -198,7 +194,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 !FiatToken.paused: "FiatToken contract paused" 
                 FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
-            // todo check blocklist and pause state
             self.balance = self.balance - amount
             emit FiatTokenWithdrawn(amount: amount, from: self.uuid);
             emit TokensWithdrawn(amount: amount, from: self.owner?.address);
@@ -209,9 +204,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
                 !FiatToken.paused: "FiatToken contract paused" 
+                FiatToken.blocklist[from.uuid] == nil: "Receiving Vault Blocklisted"
                 FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
             }
-            // todo check blocklist and pause state 
             let vault <- from as! @FiatToken.Vault
             self.balance = self.balance + vault.balance
             emit FiatTokenDeposited(amount: vault.balance, to: self.uuid);
@@ -670,6 +665,17 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <-blocklister
     }
 
+    pub fun getBlocklist(resourceId: UInt64): UInt64?{
+        return FiatToken.blocklist[resourceId]
+    }
+
+    pub fun getManagedMinter(resourceId: UInt64): UInt64?{
+        return FiatToken.managedMinters[resourceId]
+    }
+    pub fun getMinterAllowance(resourceId: UInt64): UFix64?{
+        return FiatToken.minterAllowances[resourceId]
+    }
+    
     init(
         adminAccount: AuthAccount, 
         VaultStoragePath: StoragePath,
@@ -709,8 +715,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.totalSupply = initTotalSupply;
         self.blocklist = {};
         self.minterAllowances = {};
-        self.minterDeadlines = {};
-        self.minterReceivers = {};
         self.managedMinters = {};
 
         // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc

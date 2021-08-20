@@ -6,7 +6,7 @@ import FiatToken from 0x{{.FiatToken}}
 pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): [String] {
     let resourceAcct = getAccount(resourceAddr)
     let ref = resourceAcct.getCapability(resourcePubSignerPath)
-        .borrow<&AnyResource{OnChainMultiSig.PublicSigner}>()
+        .borrow<&{OnChainMultiSig.PublicSigner}>()
         ?? panic("Could not borrow Pub Signer reference to the Vault")
 
     return ref.getSignerKeys()

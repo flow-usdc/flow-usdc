@@ -381,7 +381,7 @@ transaction (minter: UInt64, minterController: UInt64) {
         mm.configureMinterController(minter: minter, minterController: minterController);
     }
     post {
-        FiatToken.managedMinters[minterController] == minter : "minterController not configured"
+        FiatToken.getManagedMinters(resourceId: minterController) == minter : "minterController not configured"
     }
 }
 ```
@@ -400,7 +400,7 @@ transaction (minterController: UInt64 ) {
         mm.removeMinterController(minterController: minterController);
     }
     post {
-        !FiatToken.managedMinters.containsKey(minterController) : "minterController not removed"
+        FiatToken.getManagedMinters(resourceId: minterController) == nil : "minterController not configured"
     }
 }
 ```

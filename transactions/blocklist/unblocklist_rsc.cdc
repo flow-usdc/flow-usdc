@@ -12,6 +12,6 @@ transaction(resourceId: UInt64) {
     } 
 
     post {
-        FiatToken.blocklist[resourceId] == nil : "Resource still on blocklist"
+        FiatToken.getBlocklist(resourceId: resourceId) == nil : "Resource still on blocklist"
     }
 }

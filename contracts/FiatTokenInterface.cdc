@@ -61,7 +61,11 @@ pub contract interface FiatTokenInterface {
     /// This is managed by the blocklister
     /// Resources such as Vaults and Minters can be blocked
     /// {resourceId: Block Height}
-    pub var blocklist: {UInt64: UInt64};
+    access(contract) let blocklist: {UInt64: UInt64};
+    /// getBlockList
+    ///
+    /// Returns block when resource is blocklisted, nil otherwise
+    pub fun getBlocklist(resourceId: UInt64): UInt64?;
     /// Blocklisted
     ///
     /// The event that is emitted when new resource has been blocklisted 
@@ -80,14 +84,19 @@ pub contract interface FiatTokenInterface {
 
     /// Dict of minter controller to their minter
     /// Only one minter per minter controller but each minter may be controller by multiple controllers
-    pub var managedMinters: {UInt64: UInt64}
+    access(contract) let managedMinters: {UInt64: UInt64}
     /// Minting restrictions include allowance, deadline, vault reciever
     /// Dict of all minters and their allowances
-    pub var minterAllowances: { UInt64: UFix64};
-    /// Dict of all minters and their deadlines in terms of block height 
-    pub var minterDeadlines: { UInt64: UInt64};
-    /// Dict of all minters and their restricted vault reciever
-    pub var minterReceivers: { UInt64: UInt64};
+    access(contract) let minterAllowances: { UInt64: UFix64};
+    /// getManagedMinter
+    ///
+    /// Returns the minter managed by the minterController, nil if none is managed
+    pub fun getManagedMinter(resourceId: UInt64): UInt64?;
+    /// getMinterAllowance
+    ///
+    /// Returns the allowanced assigned to the minter, nil if none is assigned
+    pub fun getMinterAllowance(resourceId: UInt64): UFix64?;
+    
     /// MinterCreated
     ///
     /// The event that is emitted when a new minter resource is created
