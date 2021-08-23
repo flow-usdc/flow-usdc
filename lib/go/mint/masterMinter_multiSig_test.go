@@ -99,7 +99,7 @@ func TestMultiSig_RemoveMinterController(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMultiSig_MinterControllerUnknowMethodFails(t *testing.T) {
+func TestMultiSig_MasterMinterUnknowMethodFails(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 	m := util.Arg{V: uint64(111), T: "UInt64"}
@@ -117,7 +117,7 @@ func TestMultiSig_MinterControllerUnknowMethodFails(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMultiSig_MinterControllerCanRemoveKey(t *testing.T) {
+func TestMultiSig_MasterMinterCanRemoveKey(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
@@ -141,7 +141,7 @@ func TestMultiSig_MinterControllerCanRemoveKey(t *testing.T) {
 	assert.Equal(t, hasKey, false)
 }
 
-func TestMultiSig_MinterControllerCanAddKey(t *testing.T) {
+func TestMultiSig_MasterMinterCanAddKey(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
