@@ -280,7 +280,6 @@ func TestControllerMultiSig_removeMinter(t *testing.T) {
 	assert.Error(t, err)
 }
 
-
 func TestControllerMultiSig_configureMinter(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 
@@ -364,8 +363,8 @@ func TestControllerMultiSig_incrementMinterAllowance(t *testing.T) {
 		AddField("txIndex", strconv.Itoa(int(expectedNewIndex))).
 		AssertEqual(t, events[0])
 
-    // previous 5500 plus incr 500
-    expectedAllowance := "6000.00000000"
+	// previous 5500 plus incr 500
+	expectedAllowance := "6000.00000000"
 	// Try to Execute Tx after second signature
 	events, err = util.MultiSig_ExecuteTx(g, expectedNewIndex, "owner", "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -407,8 +406,8 @@ func TestControllerMultiSig_decrementMinterAllowance(t *testing.T) {
 		AddField("txIndex", strconv.Itoa(int(expectedNewIndex))).
 		AssertEqual(t, events[0])
 
-    // previous 5500 + incr 500 - decr 100
-    expectedAllowance := "5900.00000000"
+	// previous 5500 + incr 500 - decr 100
+	expectedAllowance := "5900.00000000"
 	// Try to Execute Tx after second signature
 	events, err = util.MultiSig_ExecuteTx(g, expectedNewIndex, "owner", "minterController1", "MinterController")
 	assert.NoError(t, err)

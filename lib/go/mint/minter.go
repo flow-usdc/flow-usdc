@@ -13,7 +13,7 @@ func CreateMinter(
 	txFilename := "../../../transactions/mint/create_new_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-    MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
 
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).

@@ -487,7 +487,6 @@ func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string
 	return
 }
 
-
 func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, MultiSigKeyWeights []cadence.Value) {
 	pk1000 := g.Accounts[Acct1000].PrivateKey.PublicKey().String()
 	pk500_1 := g.Accounts[Acct500_1].PrivateKey.PublicKey().String()
@@ -507,5 +506,5 @@ func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, Mu
 		cadence.String(pk250_2[2:]),
 	}
 	MultiSigKeyWeights = []cadence.Value{w1000, w500, w500, w250, w250}
-    return
+	return
 }
