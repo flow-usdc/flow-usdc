@@ -65,4 +65,5 @@ go test ./pause -v
 go test ./blocklist -v
 go test ./mint -run Controller -v
 go test ./mint -run MintBurn -v
+go test ./mint -run MasterMinterMultiSig -v
 
