@@ -72,6 +72,7 @@ func DeployFiatTokenContract(
 		// Minter Controller
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinterController"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterControllerUUID"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterControllerPublicSigner"}).
 		// Minter
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinter"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterUUID"}).

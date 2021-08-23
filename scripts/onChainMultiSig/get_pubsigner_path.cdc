@@ -6,6 +6,8 @@ pub fun main(resourceName: String): PublicPath {
             return FiatToken.MasterMinterPubSigner
         case "Minter":
             return FiatToken.MinterPubSigner
+        case "MinterController":
+            return FiatToken.MinterControllerPubSigner
     }
     return FiatToken.MasterMinterPubSigner
 }
