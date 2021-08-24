@@ -181,7 +181,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 	assert.NoError(t, err)
 	paused, err := pause.GetPaused(g)
 	assert.NoError(t, err)
-	assert.Equal(t, paused.String(), "true")
+	assert.Equal(t, true, paused)
 
 	// Ensure all amounts would be valid in unpaused case
 	minter, err := util.GetUUID(g, "minter", "Minter")
