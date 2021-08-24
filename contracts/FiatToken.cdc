@@ -12,6 +12,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
     // ===== Token Info =====
     pub let name: String;
+    pub let version: String;
 
     // ===== Contract Paths =====
     pub let VaultStoragePath: StoragePath;
@@ -1031,6 +1032,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         MinterUUIDPubPath: PublicPath,
         MinterPubSigner: PublicPath,
         tokenName: String,
+        version: String,
         initTotalSupply: UFix64,
         initPaused: Bool, 
         ownerAccountPubKeys: [String],
@@ -1040,6 +1042,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         assert(ownerAccountPubKeys.length == ownerAccountKeyWeights.length, message: "pubkey length and weights length mismatched");
 
         self.name = tokenName;
+        self.version = version;
         self.paused = initPaused;
         self.totalSupply = initTotalSupply;
         self.blocklist = {};

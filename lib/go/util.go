@@ -118,6 +118,22 @@ func GetTotalSupply(g *gwtf.GoWithTheFlow) (result cadence.UFix64, err error) {
 	return
 }
 
+func GetName(g *gwtf.GoWithTheFlow) (result string, err error) {
+	filename := "../../../scripts/contract/get_name.cdc"
+	script := ParseCadenceTemplate(filename)
+	r, err := g.ScriptFromFile(filename, script).RunReturns()
+	result = r.ToGoValue().(string)
+	return
+}
+
+func GetVersion(g *gwtf.GoWithTheFlow) (result string, err error) {
+	filename := "../../../scripts/contract/get_version.cdc"
+	script := ParseCadenceTemplate(filename)
+	r, err := g.ScriptFromFile(filename, script).RunReturns()
+	result = r.ToGoValue().(string)
+	return
+}
+
 func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, err error) {
 	filename := "../../../scripts/vault/get_balance.cdc"
 	script := ParseCadenceTemplate(filename)

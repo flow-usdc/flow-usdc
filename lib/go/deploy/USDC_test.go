@@ -18,3 +18,17 @@ func TestFiatTokenTotalSupplyInOwnerVault(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "10000.00000000", balance.String())
 }
+
+func TestFiatTokenName(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	name, err := util.GetName(g)
+	assert.NoError(t, err)
+	assert.Equal(t, "USDC", name)
+}
+
+func TestFiatTokenVersion(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	version, err := util.GetVersion(g)
+	assert.NoError(t, err)
+	assert.Equal(t, "0.1.0", version)
+}
