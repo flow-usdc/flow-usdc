@@ -12,9 +12,14 @@ func CreateMinter(
 ) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/mint/create_new_minter.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
+
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
+		Argument(cadence.NewArray(MultiSigPubKeys)).
+		Argument(cadence.NewArray(MultiSigKeyWeights)).
 		Run()
 	events = util.ParseTestEvents(e)
 	return

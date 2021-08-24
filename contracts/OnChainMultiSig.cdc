@@ -1,41 +1,17 @@
 import Crypto
+import FungibleToken from "./FungibleToken.cdc"
 
 pub contract OnChainMultiSig {
     
+    //
+    // ------- Events ------- 
+    //
     pub event NewPayloadAdded(resourceId: UInt64, txIndex: UInt64);
     pub event NewPayloadSigAdded(resourceId: UInt64, txIndex: UInt64);
 
-    pub struct PayloadDetails {
-        pub var txIndex: UInt64;
-        pub var method: String;
-        pub var args: [AnyStruct];
-        
-        init(txIndex: UInt64, method: String, args: [AnyStruct]) {
-            self.txIndex = txIndex;
-            self.method = method;
-            self.args = args;
-        }
-    }
-    
-    pub struct PubKeyAttr{
-        pub let sigAlgo: UInt8;
-        pub let weight: UFix64
-        
-        init(sa: UInt8, w: UFix64) {
-            self.sigAlgo = sa;
-            self.weight = w;
-        }
-    }
-    
-    pub struct PayloadSigDetails {
-        pub var keyListSignatures: [Crypto.KeyListSignature];
-        pub var pubKeys: [String];
-
-        init(keyListSignatures: [Crypto.KeyListSignature], pubKeys: [String]){
-            self.keyListSignatures = keyListSignatures;
-            self.pubKeys = pubKeys 
-        }
-    }
+    //
+    // ------- Interfaces ------- 
+    //
 
     /// Public Signer
     /// 
@@ -55,7 +31,7 @@ pub contract OnChainMultiSig {
     /// For example, a `Vault` resource with onchain multisig capabilities should implement these interfaces,
     /// see example in "./MultiSigFlowToken"
     pub resource interface PublicSigner {
-        pub fun addNewPayload(payload: PayloadDetails, publicKey: String, sig: [UInt8]);
+        pub fun addNewPayload(payload: @PayloadDetails, publicKey: String, sig: [UInt8]);
         pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]);
         pub fun executeTx(txIndex: UInt64): @AnyResource?;
         pub fun UUID(): UInt64;
@@ -79,13 +55,165 @@ pub contract OnChainMultiSig {
     pub resource interface SignatureManager {
         pub fun getSignerKeys(): [String];
         pub fun getSignerKeyAttr(publicKey: String): PubKeyAttr?;
-        pub fun addNewPayload (resourceId: UInt64, payload: PayloadDetails, publicKey: String, sig: [UInt8]);
+        pub fun addNewPayload (resourceId: UInt64, payload: @PayloadDetails, publicKey: String, sig: [UInt8]);
         pub fun addPayloadSignature (resourceId: UInt64, txIndex: UInt64, publicKey: String, sig: [UInt8]);
-        pub fun readyForExecution(txIndex: UInt64): PayloadDetails?;
+        pub fun readyForExecution(txIndex: UInt64): @PayloadDetails?;
         pub fun configureKeys (pks: [String], kws: [UFix64]);
         pub fun removeKeys (pks: [String]);
     }
+    
+    //
+    // ------- Struct ------- 
+    //
 
+    pub struct PubKeyAttr{
+        pub let sigAlgo: UInt8;
+        pub let weight: UFix64
+        
+        init(sa: UInt8, w: UFix64) {
+            self.sigAlgo = sa;
+            self.weight = w;
+        }
+    }
+
+    //
+    // ------- Resources ------- 
+    //
+
+    /// PayloadDetails
+    ///
+    /// A resource that contains the method, args, resource required to execute a transaction
+    /// The signatures from the signers are also stored here to be verified if enough signers
+    /// have signed
+    ///
+    /// Payload Details is not exposed outside of @Manager until it is 
+    /// returned when the transaction is ready in `readyForExecution`
+    /// Once it has been returned, it is no longer signable
+    pub resource PayloadDetails {
+        pub var txIndex: UInt64;
+        pub var method: String;
+        // This is settable because we need to swap the vault out AFTER
+        // it has been returned to use it. 
+        pub(set) var rsc: @AnyResource?;
+        access(self) let args: [AnyStruct];
+        /// Payload Signatures
+        ///
+        /// All the added signatures from signers in the `keyList`
+        access(contract) let keyListSignatures: [Crypto.KeyListSignature];
+        access(contract) let pubKeys: [String];
+        
+        pub fun getArg(i: UInt): AnyStruct? {
+            return self.args[i]
+        }      
+
+        /// Calculates the bytes of a given payload. 
+        /// This is used to create the message to verify the signatures when
+        /// they are added
+        ///
+        /// Note: Currently only support limited types 
+        pub fun getSignableData(): [UInt8] {
+            var s = self.txIndex.toBigEndianBytes();
+            s = s.concat(self.method.utf8);
+            for a in self.args {
+                var b: [UInt8] = [];
+                switch a.getType() {
+                    case Type<String>():
+                        let temp = a as? String;
+                        b = temp!.utf8; 
+                    case Type<UInt64>():
+                        let temp = a as? UInt64;
+                        b = temp!.toBigEndianBytes(); 
+                    case Type<UFix64>():
+                        let temp = a as? UFix64;
+                        b = temp!.toBigEndianBytes(); 
+                    case Type<Address>():
+                        let temp = a as? Address;
+                        b = temp!.toBytes(); 
+                    default:
+                        panic ("Payload arg type not supported")
+                }
+                s = s.concat(b);
+            }
+            return s; 
+        }
+        
+        /// Verifies the signature matches the `payload`
+        /// 
+        /// The total weight of valid sigatures is returned, if any.
+        pub fun verifySigners (pks: [String], sigs: [Crypto.KeyListSignature], currentKeyList: {String: PubKeyAttr}): UFix64? {
+            assert(pks.length == sigs.length, message: "Cannot verify signatures without corresponding public keys");
+            
+            var totalAuthorisedWeight: UFix64 = 0.0;
+            var keyList = Crypto.KeyList();
+
+            // get the message of the signature
+            var payloadInBytes: [UInt8] = self.getSignableData();
+
+            var i = 0;
+            while (i < pks.length) {
+                // check if the public key is a registered signer
+                if (currentKeyList[pks[i]] == nil){
+                    return nil
+                }
+
+                let pk = PublicKey(
+                    publicKey: pks[i].decodeHex(),
+                    signatureAlgorithm: SignatureAlgorithm(rawValue: currentKeyList[pks[i]]!.sigAlgo) ?? panic ("Invalid signature algo")
+                )
+                
+                keyList.add(
+                    pk, 
+                    hashAlgorithm: HashAlgorithm.SHA3_256,
+                    weight: currentKeyList[pks[i]]!.weight
+                )
+                totalAuthorisedWeight = totalAuthorisedWeight + currentKeyList[pks[i]]!.weight
+                i = i + 1;
+            }
+            
+            let isValid = keyList.verify(
+                signatureSet: sigs,
+                signedData: payloadInBytes,
+            )
+            if (isValid) {
+                return totalAuthorisedWeight
+            } else {
+                return nil
+            }
+        }
+        
+        /// addSignature
+        ///
+        /// Once signature has been verified, it can be added here
+        pub fun addSignature(keyListSig: Crypto.KeyListSignature, publicKey: String){
+            self.keyListSignatures.append(keyListSig);
+            self.pubKeys.append(publicKey);
+        }
+        
+        destroy () {
+            destroy self.rsc
+        }
+
+        init(txIndex: UInt64, method: String, args: [AnyStruct], rsc: @AnyResource?) {
+            self.args = args;
+            self.txIndex = txIndex;
+            self.method = method;
+            self.keyListSignatures = []
+            self.pubKeys = []
+            
+            // Checks that the resource details are within the args
+            // This ensures that new signatures signers are aware of the details.
+            // Note: This is currently only for FungibleToken, not generic 
+            let r: @AnyResource <- rsc ?? nil
+            if r != nil && r.isInstance(Type<@FungibleToken.Vault>()) {
+                    let vault <- r as! @FungibleToken.Vault
+                    assert(vault.balance == args[0] as! UFix64, message: "First arguement must be balance of Vault")
+                    self.rsc <- vault;
+            } else {
+                self.rsc <- r;
+            }
+        }
+    }
+    
     /// Manager
     ///
     /// The main resource that stores, keys, payloads and signature before all signatures are collected / executed
@@ -109,13 +237,8 @@ pub contract OnChainMultiSig {
         ///
         /// A Map of an assigned Transaction Index and the Payload represented 
         /// by `PayloadDetails`
-        access(self) let payloads: {UInt64: PayloadDetails}
+        access(self) let payloads: @{UInt64: PayloadDetails}
 
-        /// Payload Signatures
-        ///
-        /// A Map of assigned Transaction Index and all the added signatures
-        /// from signers in the `keyList`
-        access(self) let payloadSigs: {UInt64: PayloadSigDetails}
 
         /// Returns the public keys store in this resource
         pub fun getSignerKeys(): [String] {
@@ -127,35 +250,9 @@ pub contract OnChainMultiSig {
             return self.keyList[publicKey]
         }
         
-        /// Calculates the bytes of a given payload. 
-        /// This is used to create the message to verify the signatures when
-        /// they are added
-        ///
-        /// Note: Currently only support limited types 
-        pub fun getSignableData(payload: PayloadDetails): [UInt8] {
-            var s = payload.txIndex.toBigEndianBytes();
-            s = s.concat(payload.method.utf8);
-            for a in payload.args {
-                var b: [UInt8] = [];
-                switch a.getType() {
-                    case Type<String>():
-                        let temp = a as? String;
-                        b = temp!.utf8; 
-                    case Type<UInt64>():
-                        let temp = a as? UInt64;
-                        b = temp!.toBigEndianBytes(); 
-                    case Type<UFix64>():
-                        let temp = a as? UFix64;
-                        b = temp!.toBigEndianBytes(); 
-                    case Type<Address>():
-                        let temp = a as? Address;
-                        b = temp!.toBytes(); 
-                    default:
-                        panic ("Payload arg type not supported")
-                }
-                s = s.concat(b);
-            }
-            return s; 
+        pub fun removePayload(txIndex: UInt64): @PayloadDetails {
+            assert(self.payloads.containsKey(txIndex), message: "no payload at txIndex")
+            return <- self.payloads.remove(key: txIndex)!
         }
         
         /// Add / replace stored public keys and respected attributes
@@ -185,7 +282,7 @@ pub contract OnChainMultiSig {
         /// `payload`   : the payload of the transaction represented by the `PayloadDetails` struct
         /// `publicKey` : the public key (must be in the keyList) that signed the `sig`
         /// `sig`       : the signature where the message is the signable data of the payload
-        pub fun addNewPayload (resourceId: UInt64, payload: PayloadDetails, publicKey: String, sig: [UInt8]) {
+        pub fun addNewPayload (resourceId: UInt64, payload: @PayloadDetails, publicKey: String, sig: [UInt8]) {
 
             // if the provided key is not in keyList, tx is rejected
             assert(self.keyList.containsKey(publicKey), message: "Public key is not a registered signer");
@@ -198,28 +295,19 @@ pub contract OnChainMultiSig {
 
             // the first signature is at keyIndex 0 of the `KeyListSignature` 
             // Note: `keyIndex` must match the order of the Crypto.KeyList constructed during `verifySigners`
-            let keyListSig = [Crypto.KeyListSignature(keyIndex: 0, signature: sig)]
+            let keyListSig = Crypto.KeyListSignature(keyIndex: 0, signature: sig)
 
             // check if the payloadSig is signed by one of the keys in `keyList`, preventing others from adding to storage
             // if approvalWeight is nil, the public key is not in the `keyList` or cannot be verified
-            let approvalWeight = self.verifySigners(payload: payload, txIndex: nil, pks: [publicKey], sigs: keyListSig)
+            let approvalWeight = payload.verifySigners(pks: [publicKey], sigs: [keyListSig], currentKeyList: self.keyList)
             if ( approvalWeight == nil) {
                 panic ("Invalid signer")
             }
-
+            
             // insert the payload and the first signature into the resource maps
-            self.payloads.insert(key: txIndex, payload);
+            payload.addSignature(keyListSig: keyListSig, publicKey: publicKey)
+            self.payloads[txIndex] <-! payload;
 
-            let payloadSigDetails = PayloadSigDetails(
-                    keyListSignatures: keyListSig,
-                    pubKeys: [publicKey]
-                )
-            
-            self.payloadSigs.insert(
-                key: txIndex, 
-                payloadSigDetails 
-            )
-            
             emit NewPayloadAdded(resourceId: resourceId, txIndex: txIndex)
         }
 
@@ -233,30 +321,38 @@ pub contract OnChainMultiSig {
             assert(self.payloads.containsKey(txIndex), message: "Payload has not been added");
             assert(self.keyList.containsKey(publicKey), message: "Public key is not a registered signer");
 
-            let currentIndex = self.payloadSigs[txIndex]!.keyListSignatures.length
+            let p <- self.payloads.remove(key: txIndex)!;
+            let currentIndex = p.keyListSignatures.length
             var i = 0;
             while i < currentIndex {
-                if self.payloadSigs[txIndex]!.pubKeys[i] == publicKey {
-                    panic ("Signature already added for this txIndex")
+                if p.pubKeys[i] == publicKey {
+                    break
                 }
                 i = i + 1;
             } 
-            // this is a temp keyListSig list that is used to verify a single signature so we use `keyIndex` as 0
-            // the correct `keyIndex` will overwrite the 0 after we know it is a valid signature
-            var keyListSig = Crypto.KeyListSignature( keyIndex: 0, signature: sig)
-            let approvalWeight = self.verifySigners(payload: nil, txIndex: txIndex, pks: [publicKey], sigs: [keyListSig])
-            if ( approvalWeight == nil) {
-                panic ("Invalid signer")
+            if i < currentIndex {
+                self.payloads[txIndex] <-! p;
+                panic ("Signature already added for this txIndex")
+            } else {
+                // this is a temp keyListSig list that is used to verify a single signature so we use `keyIndex` as 0
+                // the correct `keyIndex` will overwrite the 0 after we know it is a valid signature
+                var keyListSig = Crypto.KeyListSignature( keyIndex: 0, signature: sig)
+                    let approvalWeight = p.verifySigners( pks: [publicKey], sigs: [keyListSig], currentKeyList: self.keyList)
+                    if ( approvalWeight == nil) {
+                        self.payloads[txIndex] <-! p;
+                        panic ("Invalid signer")
+                    } else {
+                        // create the correct `keyIndex` with the current length of all the stored signatures
+                        keyListSig = Crypto.KeyListSignature(keyIndex: currentIndex, signature: sig)
+
+                        // append signature to resource maps
+                        p.addSignature(keyListSig: keyListSig, publicKey: publicKey)
+                        self.payloads[txIndex] <-! p;
+
+                        emit NewPayloadSigAdded(resourceId: resourceId, txIndex: txIndex)
+                    }
             }
 
-            // create the correct `keyIndex` with the current length of all the stored signatures
-            keyListSig = Crypto.KeyListSignature(keyIndex: currentIndex, signature: sig)
-            
-            // append signature to resource maps
-            self.payloadSigs[txIndex]!.keyListSignatures.append(keyListSig);
-            self.payloadSigs[txIndex]!.pubKeys.append(publicKey);
-
-            emit NewPayloadSigAdded(resourceId: resourceId, txIndex: txIndex)
         }
 
         /// Checks to see if the total weights of the signers who signed the transaction 
@@ -266,81 +362,25 @@ pub contract OnChainMultiSig {
         /// https://docs.onflow.org/concepts/accounts-and-keys/#weighted-keys
         ///
         /// Note: if the transaction is ready, the payload and signatures are removed from the maps and must be executed
-        pub fun readyForExecution(txIndex: UInt64): PayloadDetails? {
+        pub fun readyForExecution(txIndex: UInt64): @PayloadDetails? {
             assert(self.payloads.containsKey(txIndex), message: "No payload for such index");
-            let pks = self.payloadSigs[txIndex]!.pubKeys;
-            let sigs = self.payloadSigs[txIndex]!.keyListSignatures;
-            let approvalWeight = self.verifySigners(payload: nil, txIndex: txIndex, pks: pks, sigs: sigs)
-            if (approvalWeight == nil) {
-                return nil
-            }
+            let p <- self.payloads.remove(key: txIndex)!;
+            let approvalWeight = p.verifySigners( pks: p.pubKeys, sigs: p.keyListSignatures, currentKeyList: self.keyList)
             if (approvalWeight! >= 1000.0) {
-                self.payloadSigs.remove(key: txIndex)!;
-                let pd = self.payloads.remove(key: txIndex)!;
-                return pd
+                return <- p
             } else {
+                self.payloads[txIndex] <-! p;
                 return nil
             }
         }
-        
-        /// Verifies the signature matches the `payload` or the `txIndex`, exclusively.
-        /// We do not match the payload from a txIndex and the provided, therefore we reject caller if both are provided.
-        /// 
-        /// The total weight of valid sigatures is returned, if any.
-        pub fun verifySigners (payload: PayloadDetails?, txIndex: UInt64?, pks: [String], sigs: [Crypto.KeyListSignature]): UFix64? {
-            assert(payload != nil || txIndex != nil, message: "Cannot verify signature without payload or txIndex");
-            assert(!(payload != nil && txIndex != nil), message: "can only verify signature for either payload or txIndex");
-            assert(pks.length == sigs.length, message: "Cannot verify signatures without corresponding public keys");
-            
-            var totalAuthorisedWeight: UFix64 = 0.0;
-            var keyList = Crypto.KeyList();
 
-            // get the message of the signature
-            var payloadInBytes: [UInt8] = []
-            if (payload != nil) {
-                payloadInBytes = self.getSignableData(payload: payload!);
-            } else {
-                let p = self.payloads[txIndex!];
-                payloadInBytes = self.getSignableData(payload: p!);
-            }
-
-            var i = 0;
-            while (i < pks.length) {
-                // check if the public key is a registered signer
-                if (self.keyList[pks[i]] == nil){
-                    return nil
-                }
-
-                let pk = PublicKey(
-                    publicKey: pks[i].decodeHex(),
-                    signatureAlgorithm: SignatureAlgorithm(rawValue: self.keyList[pks[i]]!.sigAlgo) ?? panic ("Invalid signature algo")
-                )
-                
-                keyList.add(
-                    pk, 
-                    hashAlgorithm: HashAlgorithm.SHA3_256,
-                    weight: self.keyList[pks[i]]!.weight
-                )
-                totalAuthorisedWeight = totalAuthorisedWeight + self.keyList[pks[i]]!.weight
-                i = i + 1;
-            }
-            
-            let isValid = keyList.verify(
-                signatureSet: sigs,
-                signedData: payloadInBytes,
-            )
-            if (isValid) {
-                return totalAuthorisedWeight
-            } else {
-                return nil
-            }
-            
+        destroy () {
+            destroy self.payloads
         }
         
         init(publicKeys: [String], pubKeyAttrs: [PubKeyAttr]){
             assert( publicKeys.length == pubKeyAttrs.length, message: "Public keys must have associated attributes")
-            self.payloads = {};
-            self.payloadSigs = {};
+            self.payloads <- {};
             self.keyList = {};
             self.txIndex = 0;
             
@@ -351,8 +391,16 @@ pub contract OnChainMultiSig {
             }
         }
     }
-    
+
+    // 
+    // ------- Functions --------
+    //
+        
     pub fun createMultiSigManager(publicKeys: [String], pubKeyAttrs: [PubKeyAttr]): @Manager {
         return <- create Manager(publicKeys: publicKeys, pubKeyAttrs: pubKeyAttrs)
+    }
+
+    pub fun createPayload(txIndex: UInt64, method: String, args: [AnyStruct], rsc: @AnyResource?): @PayloadDetails{
+        return <- create PayloadDetails(txIndex: txIndex, method: method, args: args, rsc: <-rsc)
     }
 }

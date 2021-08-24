@@ -8,7 +8,7 @@ pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): UInt64{
     let resourcAcct = getAccount(resourceAddr)
     let ref = resourcAcct.getCapability(resourcePubSignerPath)
         .borrow<&{OnChainMultiSig.PublicSigner}>()
-        ?? panic("Could not borrow Pub Signer reference to MasterMinter")
+        ?? panic("Could not borrow Pub Signer reference to Resource")
 
     return ref.getTxIndex()
 }

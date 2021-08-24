@@ -316,6 +316,54 @@ func multiSig_NewPayload(
 	return
 }
 
+// The first argument must be the amount of the vault to be
+// stored as the vault resource in the `@Manager`
+func MultiSig_SignAndSubmitNewPayloadWithVault(
+	g *gwtf.GoWithTheFlow,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+	resourceName string,
+	method string,
+	args ...Arg,
+) (events []*gwtf.FormatedEvent, err error) {
+
+	cadenceArgs, err := ConvertToCadenceValue(g, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	signable, err := GetSignableDataFromScript(g, txIndex, method, cadenceArgs...)
+	if err != nil {
+		return
+	}
+
+	sig, err := SignPayloadOffline(g, signable, signerAcct)
+	if err != nil {
+		return
+	}
+
+	txFilename := "../../../transactions/onChainMultiSig/add_new_payload_with_vault.cdc"
+	txScript := ParseCadenceTemplate(txFilename)
+
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
+	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(signerAcct).
+		StringArgument(sig).
+		UInt64Argument(txIndex).
+		StringArgument(method).
+		Argument(cadence.NewArray(cadenceArgs)).
+		StringArgument(signerPubKey[2:]).
+		AccountArgument(resourceAcct).
+		Argument(path).
+		Run()
+	events = ParseTestEvents(e)
+	return
+}
 func multiSig_AddPayloadSignature(
 	g *gwtf.GoWithTheFlow,
 	sig string,
@@ -436,5 +484,27 @@ func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string
 			return
 		}
 	}
+	return
+}
+
+func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, MultiSigKeyWeights []cadence.Value) {
+	pk1000 := g.Accounts[Acct1000].PrivateKey.PublicKey().String()
+	pk500_1 := g.Accounts[Acct500_1].PrivateKey.PublicKey().String()
+	pk500_2 := g.Accounts[Acct500_2].PrivateKey.PublicKey().String()
+	pk250_1 := g.Accounts[Acct250_1].PrivateKey.PublicKey().String()
+	pk250_2 := g.Accounts[Acct250_2].PrivateKey.PublicKey().String()
+
+	w1000, _ := cadence.NewUFix64("1000.0")
+	w500, _ := cadence.NewUFix64("500.0")
+	w250, _ := cadence.NewUFix64("250.0")
+
+	MultiSigPubKeys = []cadence.Value{
+		cadence.String(pk1000[2:]),
+		cadence.String(pk500_1[2:]),
+		cadence.String(pk500_2[2:]),
+		cadence.String(pk250_1[2:]),
+		cadence.String(pk250_2[2:]),
+	}
+	MultiSigKeyWeights = []cadence.Value{w1000, w500, w500, w250, w250}
 	return
 }

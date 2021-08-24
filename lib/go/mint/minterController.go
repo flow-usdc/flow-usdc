@@ -5,6 +5,7 @@ import (
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/onflow/cadence"
 )
 
 func CreateMinterController(
@@ -13,9 +14,14 @@ func CreateMinterController(
 ) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/minterControl/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
+
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
+		Argument(cadence.NewArray(MultiSigPubKeys)).
+		Argument(cadence.NewArray(MultiSigKeyWeights)).
 		Run()
 	events = util.ParseTestEvents(e)
 	return

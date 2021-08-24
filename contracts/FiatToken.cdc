@@ -42,9 +42,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;
+    pub let MinterControllerPubSigner: PublicPath;
 
     pub let MinterStoragePath: StoragePath;
     pub let MinterUUIDPubPath: PublicPath;
+    pub let MinterPubSigner: PublicPath;
 
     // ===== Pause state and events =====
     
@@ -328,6 +330,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The master minter creates minter controller resources to delegate control for minters
     pub resource MasterMinter: FiatTokenInterface.MasterMinter, ResourceId, OnChainMultiSig.PublicSigner {
 
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
+
         /// Function to configure MinterController
         pub fun configureMinterController(minter: UInt64, minterController: UInt64) {
             /// we overwrite the key here since minterController can only control 1 minter
@@ -344,35 +348,34 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             emit ControllerRemoved(controller: minterController)
         }
         
-        access(self) let multiSigManager: @OnChainMultiSig.Manager;
-
-        pub fun addNewPayload(payload: OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: payload, publicKey: publicKey, sig: sig);
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig);
         }
 
         pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
        }
         pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p = self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
             switch p.method {
                 case "configureKey":
-                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
-                    let weight = p.args[1] as? UFix64 ?? panic ("cannot downcast weight");
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
                     self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
                 case "removeKey":
-                    let pubKey = p.args[0] as? String ?? panic ("cannot downcast public key");
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey])
                 case "configureMinterController":
-                    let m = p.args[0] as? UInt64 ?? panic ("cannot downcast minter id");
-                    let mc = p.args[1] as? UInt64 ?? panic ("cannot downcast minterController id") 
+                    let m = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast minter id");
+                    let mc = p.getArg(i: 1)! as? UInt64 ?? panic ("cannot downcast minterController id") 
                     self.configureMinterController(minter: m, minterController: mc);
                 case "removeMinterController":
-                    let mc = p.args[0] as? UInt64 ?? panic ("cannot downcast minterController id");
+                    let mc = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast minterController id");
                     self.removeMinterController(minterController: mc);
                 default:
                     panic("Unknown transaction method")
             }
+            destroy (p)
             return nil;
         }
 
@@ -391,14 +394,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
         }
 
-        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
-            self.multiSigManager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights)
-        }
-
-        pub fun removeKeys( multiSigPubKeys: [String]) {
-            self.multiSigManager.removeKeys(pks: multiSigPubKeys)
-        }
-
         destroy() {
             destroy self.multiSigManager
         }
@@ -415,7 +410,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     /// This is a resource to manage minters, delegated from MasterMinter
-    pub resource MinterController: FiatTokenInterface.MinterController, ResourceId {
+    pub resource MinterController: FiatTokenInterface.MinterController, ResourceId, OnChainMultiSig.PublicSigner  {
+
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         /// The resourceId this MinterController manages
         pub fun managedMinter(): UInt64? {
@@ -472,11 +469,77 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             FiatToken.minterAllowances.remove(key: managedMinter);
             emit MinterRemoved(controller: self.uuid, minter: managedMinter)
         }
+        
+        // OnChainMultiSig.PublicSigner interfaces
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+       }
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                case "removeKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey])
+                case "removePayload":
+                    let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
+                    let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
+                    var temp: @AnyResource? <- nil;
+                    payloadToRemove.rsc <-> temp;
+                    destroy(p);
+                    destroy(payloadToRemove);
+                    return <- temp;
+                case "configureMinterAllowance":
+                    let allowance = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast allowance");
+                    self.configureMinterAllowance(allowance: allowance);
+                case "increaseMinterAllowance":
+                    let increment = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast increment");
+                    self.increaseMinterAllowance(increment: increment);
+                case "decreaseMinterAllowance":
+                    let decrement = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast decrement");
+                    self.decreaseMinterAllowance(decrement: decrement);
+                case "removeMinter":
+                    self.removeMinter();
+                default:
+                    panic("Unknown transaction method")
+            }
+            destroy (p)
+            return nil;
+        }
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+        }
+        
     }
 
     /// The actual minter resource, the resourceId must be added to the minter restrictions lists
     /// for minter to successfully mint / burn within restrictions
-    pub resource Minter: FiatTokenInterface.Minter, ResourceId {
+    pub resource Minter: FiatTokenInterface.Minter, ResourceId, OnChainMultiSig.PublicSigner {
+
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         pub fun UUID(): UInt64 {
             return self.uuid
@@ -514,6 +577,76 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             destroy vault;
 
             emit Burn(minter: self.uuid, amount: amount);
+        }
+
+        // OnChainMultiSig.PublicSigner interfaces 
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+        }
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight]);
+                case "removeKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey]);
+                case "removePayload":
+                    let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
+                    let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
+                    var temp: @AnyResource? <- nil;
+                    payloadToRemove.rsc <-> temp;
+                    destroy(p);
+                    destroy(payloadToRemove);
+                    return <- temp;
+                case "mint":
+                    let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
+                    destroy (p);
+                    return <- self.mint(amount: amount);
+                case "mintTo":
+                    let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
+                    let recvAddress = p.getArg(i: 1)! as? Address ?? panic ("cannot downcast address");
+                    let recvAcct = getAccount(recvAddress);
+                    let recv = recvAcct.getCapability(FiatToken.VaultReceiverPubPath)!
+                        .borrow<&{FungibleToken.Receiver}>()
+                        ?? panic("Unable to borrow receiver reference for recipient");
+                    let v <- self.mint(amount: amount);
+                    recv.deposit(from: <-v);
+                case "burn":
+                    var temp: @AnyResource? <- nil;
+                    p.rsc <-> temp;
+                    let vault <- temp! as! @FungibleToken.Vault;
+                    self.burn(vault: <- vault);
+                default:
+                    panic("Unknown transaction method");
+            }
+            destroy(p);
+            return nil;
+        }
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
         }
     }
 
@@ -647,14 +780,14 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <- pauser
     }
 
-    pub fun createNewMinterController(): @MinterController{
-        let minterController <- create MinterController()
+    pub fun createNewMinterController(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @MinterController{
+        let minterController <- create MinterController(pk: publicKeys, pka: pubKeyAttrs)
         emit MinterControllerCreated(resourceId: minterController.uuid);
         return <- minterController
     }
 
-    pub fun createNewMinter(): @Minter{
-        let minter <- create Minter();
+    pub fun createNewMinter(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Minter{
+        let minter <- create Minter(pk: publicKeys, pka: pubKeyAttrs);
         emit MinterCreated(resourceId: minter.uuid);
         return <- minter
     }
@@ -699,8 +832,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         MasterMinterUUIDPubPath: PublicPath,
         MinterControllerStoragePath: StoragePath,
         MinterControllerUUIDPubPath: PublicPath,
+        MinterControllerPubSigner: PublicPath,
         MinterStoragePath: StoragePath,
         MinterUUIDPubPath: PublicPath,
+        MinterPubSigner: PublicPath,
         tokenName: String,
         initTotalSupply: UFix64,
         initPaused: Bool, 
@@ -748,9 +883,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
         self.MinterControllerStoragePath = MinterControllerStoragePath;
         self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath;
+        self.MinterControllerPubSigner = MinterControllerPubSigner;
 
         self.MinterStoragePath = MinterStoragePath;
         self.MinterUUIDPubPath = MinterUUIDPubPath;
+        self.MinterPubSigner = MinterPubSigner;
 
         // Create the Vault with the total supply of tokens and save it in storage
         //
