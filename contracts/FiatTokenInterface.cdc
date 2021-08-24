@@ -4,6 +4,7 @@ pub contract interface FiatTokenInterface {
 
     // ===== Token Info =====
     pub let name: String;
+    pub let version: String;
 
     // ===== Contract Paths =====
     pub let VaultStoragePath: StoragePath;
@@ -11,18 +12,21 @@ pub contract interface FiatTokenInterface {
     pub let VaultUUIDPubPath: PublicPath;
     pub let VaultAllowancePubPath: PublicPath;
     pub let VaultReceiverPubPath: PublicPath;
+    pub let VaultPubSigner: PublicPath;
 
     pub let BlocklistExecutorStoragePath: StoragePath;
     pub let BlocklistExecutorPrivPath: PrivatePath;
     
     pub let BlocklisterStoragePath: StoragePath;
     pub let BlocklisterCapReceiverPubPath: PublicPath;
+    pub let BlocklisterPubSigner: PublicPath;
 
     pub let PauseExecutorStoragePath: StoragePath;
     pub let PauseExecutorPrivPath: PrivatePath;
 
     pub let PauserStoragePath: StoragePath;
     pub let PauserCapReceiverPubPath: PublicPath;
+    pub let PauserPubSigner: PublicPath;
 
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
@@ -30,13 +34,16 @@ pub contract interface FiatTokenInterface {
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
     pub let MasterMinterPubSigner: PublicPath;
+    pub let MasterMinterUUIDPubPath: PublicPath;
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;
+    pub let MinterControllerPubSigner: PublicPath;
 
     pub let MinterStoragePath: StoragePath;
     pub let MinterUUIDPubPath: PublicPath;
-    
+    pub let MinterPubSigner: PublicPath;
+
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
