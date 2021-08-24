@@ -26,12 +26,14 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     
     pub let BlocklisterStoragePath: StoragePath;
     pub let BlocklisterCapReceiverPubPath: PublicPath;
+    pub let BlocklisterPubSigner: PublicPath;
 
     pub let PauseExecutorStoragePath: StoragePath;
     pub let PauseExecutorPrivPath: PrivatePath;
 
     pub let PauserStoragePath: StoragePath;
     pub let PauserCapReceiverPubPath: PublicPath;
+    pub let PauserPubSigner: PublicPath;
 
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
@@ -757,20 +759,22 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// Delegate blocklister for actually adding resources to blocklist
     //  Blocklisting is not paused in the event the contract is paused\
     // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#pausing
-    pub resource Blocklister: BlocklistCapReceiver {
+    pub resource Blocklister: BlocklistCapReceiver, OnChainMultiSig.PublicSigner {
         // Optional value, initially nil until set by BlocklistExecutor
         access(self) var blocklistcap: Capability<&BlocklistExecutor>?;
         
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
+
         pub fun blocklist(resourceId: UInt64){
-            pre {
-                !FiatToken.blocklist.containsKey(resourceId): "Resource already on blocklist"
+            post {
+                FiatToken.blocklist.containsKey(resourceId): "Resource not blocklisted"
             }
             self.blocklistcap!.borrow()!.blocklist(resourceId: resourceId);
         };
 
         pub fun unblocklist(resourceId: UInt64){
-            pre {
-                FiatToken.blocklist.containsKey(resourceId): "Resource not on blocklist"
+            post {
+                !FiatToken.blocklist.containsKey(resourceId): "Resource still on blocklist"
             }
             self.blocklistcap!.borrow()!.unblocklist(resourceId: resourceId);
         };
@@ -782,8 +786,60 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             self.blocklistcap = blocklistCap;
         }
         
-        init(){
+        // OnChainMultiSig.PublicSigner interfaces 
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight]);
+                case "removeKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey]);
+                case "blocklist":
+                    let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast resourceId");
+                    self.blocklist(resourceId: resourceId)
+                case "unblocklist":
+                    let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast resourceId");
+                    self.unblocklist(resourceId: resourceId)
+                default:
+                    panic("Unknown transaction method");
+            }
+            destroy(p);
+            return nil;
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
             self.blocklistcap = nil;
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
         }
     }
 
@@ -808,10 +864,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     }
 
     /// Delegate pauser 
-    pub resource Pauser: PauseCapReceiver {
+    pub resource Pauser: PauseCapReceiver, OnChainMultiSig.PublicSigner {
         // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
         // MasterMinter will call setPauseCapability to provide it.
         access(self) var pauseCap:  Capability<&PauseExecutor>?;
+        
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
         
         // Called by the Account that owns PauseExecutor
         // (since they are the only account that can create such Capability as input arg)
@@ -837,8 +895,58 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             cap.unpause();
         }
 
-        init(){
+        // OnChainMultiSig.PublicSigner interfaces 
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight]);
+                case "removeKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey]);
+                case "pause":
+                    self.pause()
+                case "unpause":
+                    self.unpause()
+                default:
+                    panic("Unknown transaction method");
+            }
+            destroy(p);
+            return nil;
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
             self.pauseCap = nil;
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
         }
     }
 
@@ -857,8 +965,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <-r;
     }
 
-    pub fun createNewPauser(): @Pauser{
-        let pauser <-create Pauser()
+    pub fun createNewPauser(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Pauser{
+        let pauser <-create Pauser(pk: publicKeys, pka: pubKeyAttrs)
         emit PauserCreated(resourceId: pauser.uuid);
         return <- pauser
     }
@@ -875,8 +983,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <- minter
     }
 
-    pub fun createNewBlocklister(): @Blocklister{
-        let blocklister <-create Blocklister()
+    pub fun createNewBlocklister(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Blocklister{
+        let blocklister <-create Blocklister(pk: publicKeys, pka: pubKeyAttrs)
         emit BlocklisterCreated(resourceId: blocklister.uuid);
         return <-blocklister
     }
@@ -904,10 +1012,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         BlocklistExecutorPrivPath: PrivatePath,
         BlocklisterStoragePath: StoragePath,
         BlocklisterCapReceiverPubPath: PublicPath,
+        BlocklisterPubSigner: PublicPath,
         PauseExecutorStoragePath: StoragePath,
         PauseExecutorPrivPath: PrivatePath,
         PauserStoragePath: StoragePath,
         PauserCapReceiverPubPath: PublicPath,
+        PauserPubSigner: PublicPath,
         OwnerStoragePath: StoragePath,
         OwnerPrivPath: PrivatePath,
         MasterMinterStoragePath: StoragePath,
@@ -951,12 +1061,14 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
         self.BlocklisterStoragePath =  BlocklisterStoragePath;
         self.BlocklisterCapReceiverPubPath = BlocklisterCapReceiverPubPath;
+        self.BlocklisterPubSigner = BlocklisterPubSigner;
 
         self.PauseExecutorStoragePath = PauseExecutorStoragePath; 
         self.PauseExecutorPrivPath = PauseExecutorPrivPath;
 
         self.PauserStoragePath = PauseExecutorStoragePath; 
         self.PauserCapReceiverPubPath = PauserCapReceiverPubPath;
+        self.PauserPubSigner = PauserPubSigner;
 
         self.OwnerStoragePath = OwnerStoragePath;
         self.OwnerPrivPath = OwnerPrivPath;

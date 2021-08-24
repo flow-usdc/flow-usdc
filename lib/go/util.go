@@ -132,11 +132,7 @@ func GetBalance(g *gwtf.GoWithTheFlow, account string) (result cadence.UFix64, e
 func GetUUID(g *gwtf.GoWithTheFlow, account string, resourceName string) (r uint64, err error) {
 	filename := "../../../scripts/contract/get_resource_uuid.cdc"
 	script := ParseCadenceTemplate(filename)
-	path, err := GetUUIDPubPath(g, account, resourceName)
-	if err != nil {
-		return
-	}
-	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).Argument(path).RunReturns()
+	value, err := g.ScriptFromFile(filename, script).AccountArgument(account).StringArgument(resourceName).RunReturns()
 	if err != nil {
 		return
 	}
@@ -144,13 +140,6 @@ func GetUUID(g *gwtf.GoWithTheFlow, account string, resourceName string) (r uint
 	if !ok {
 		err = errors.New("returned not uint64")
 	}
-	return
-}
-
-func GetUUIDPubPath(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string) (result cadence.Value, err error) {
-	filename := "../../../scripts/contract/get_uuid_path.cdc"
-	script := ParseCadenceTemplate(filename)
-	result, err = g.ScriptFromFile(filename, script).StringArgument(resourceName).RunReturns()
 	return
 }
 

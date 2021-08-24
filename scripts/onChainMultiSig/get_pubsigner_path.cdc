@@ -10,6 +10,12 @@ pub fun main(resourceName: String): PublicPath {
             return FiatToken.MinterControllerPubSigner
         case "Vault":
             return FiatToken.VaultPubSigner
+        case "Pauser":
+            return FiatToken.PauserPubSigner
+        case "Blocklister":
+            return FiatToken.BlocklisterPubSigner
+        default:
+            panic("Resource not supported")
     }
-    return FiatToken.MasterMinterPubSigner
+    return FiatToken.VaultPubSigner
 }

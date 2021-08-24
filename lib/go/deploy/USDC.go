@@ -56,12 +56,14 @@ func DeployFiatTokenContract(
 		// Blocklister
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklister"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterCapReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterPublicSigner"}).
 		// Pause executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauseExe"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCPauseExeCap"}).
 		// Pauser
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauser"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserCapReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserPublicSigner"}).
 		// Owner
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCOwner"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCOwnerCap"}).

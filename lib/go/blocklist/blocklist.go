@@ -12,9 +12,14 @@ func CreateBlocklister(
 ) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/blocklist/create_new_blocklister.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
+
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
+		Argument(cadence.NewArray(MultiSigPubKeys)).
+		Argument(cadence.NewArray(MultiSigKeyWeights)).
 		Run()
 	events = util.ParseTestEvents(e)
 	return
