@@ -3,6 +3,7 @@ package vault
 import (
 	"github.com/bjartek/go-with-the-flow/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
+	"github.com/onflow/cadence"
 )
 
 func AddVaultToAccount(
@@ -11,8 +12,12 @@ func AddVaultToAccount(
 ) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/vault/create_vault.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
+
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(vaultAcct).
+		Argument(cadence.NewArray(MultiSigPubKeys)).
+		Argument(cadence.NewArray(MultiSigKeyWeights)).
 		Run()
 	events = util.ParseTestEvents(e)
 	return

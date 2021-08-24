@@ -49,6 +49,7 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultUUID"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultAllowance"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultPublicSigner"}).
 		// Blocklist executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklistExe"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCBlocklistExeCap"}).
