@@ -3,7 +3,9 @@ import FungibleToken from "./FungibleToken.cdc"
 pub contract interface FiatTokenInterface {
 
     // ===== Token Info =====
+    /// The name of the Token
     pub let name: String;
+    /// The current version of this contract
     pub let version: String;
 
     // ===== Contract Paths =====
