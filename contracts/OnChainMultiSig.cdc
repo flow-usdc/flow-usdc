@@ -99,7 +99,7 @@ pub contract OnChainMultiSig {
         /// Payload Signatures
         ///
         /// All the added signatures from signers in the `keyList`
-        access(contract) let keyListSignatures: [Crypto.KeyListSignature];
+        access(contract) let signatures: [[UInt8]];
         access(contract) let pubKeys: [String];
         
         pub fun getArg(i: UInt): AnyStruct? {
@@ -140,20 +140,24 @@ pub contract OnChainMultiSig {
         /// Verifies the signature matches the `payload`
         /// 
         /// The total weight of valid sigatures is returned, if any.
-        pub fun verifySigners (pks: [String], sigs: [Crypto.KeyListSignature], currentKeyList: {String: PubKeyAttr}): UFix64? {
+        pub fun verifySigners (pks: [String], sigs: [[UInt8]], currentKeyList: {String: PubKeyAttr}): UFix64? {
             assert(pks.length == sigs.length, message: "Cannot verify signatures without corresponding public keys");
             
             var totalAuthorisedWeight: UFix64 = 0.0;
             var keyList = Crypto.KeyList();
-
+            let keyListSignatures: [Crypto.KeyListSignature] = []
             // get the message of the signature
             var payloadInBytes: [UInt8] = self.getSignableData();
 
+            // index of the public keys and signature list
             var i = 0;
+            // keyIndex, i.e. only increment when pubkey is in the currentKeyList
+            var keyIndex = 0;
             while (i < pks.length) {
                 // check if the public key is a registered signer
                 if (currentKeyList[pks[i]] == nil){
-                    return nil
+                    i = i + 1;
+                   continue;
                 }
 
                 let pk = PublicKey(
@@ -161,6 +165,13 @@ pub contract OnChainMultiSig {
                     signatureAlgorithm: SignatureAlgorithm(rawValue: currentKeyList[pks[i]]!.sigAlgo) ?? panic ("Invalid signature algo")
                 )
                 
+                // Note: `keyIndex` must match the order of the Crypto.KeyList constructed during `verify`
+                // This is why we have left the construction of the Crypto.KeyListSiganture till the last minute.
+                // i.e. if a key that was in the allowed signer keyList added a signature but gets removed before `executeTx` is called,
+                // then we must neglect that signature and ensure keyIndex is sequential 
+                let keyListSig = Crypto.KeyListSignature(keyIndex: keyIndex, signature: sigs[i]);
+                keyListSignatures.append(keyListSig);
+
                 keyList.add(
                     pk, 
                     hashAlgorithm: HashAlgorithm.SHA3_256,
@@ -168,13 +179,15 @@ pub contract OnChainMultiSig {
                 )
                 totalAuthorisedWeight = totalAuthorisedWeight + currentKeyList[pks[i]]!.weight
                 i = i + 1;
+                keyIndex = keyIndex + 1;
             }
             
             let isValid = keyList.verify(
-                signatureSet: sigs,
+                signatureSet: keyListSignatures,
                 signedData: payloadInBytes,
             )
             if (isValid) {
+                log(totalAuthorisedWeight)
                 return totalAuthorisedWeight
             } else {
                 return nil
@@ -184,8 +197,8 @@ pub contract OnChainMultiSig {
         /// addSignature
         ///
         /// Once signature has been verified, it can be added here
-        pub fun addSignature(keyListSig: Crypto.KeyListSignature, publicKey: String){
-            self.keyListSignatures.append(keyListSig);
+        pub fun addSignature(sig: [UInt8], publicKey: String){
+            self.signatures.append(sig);
             self.pubKeys.append(publicKey);
         }
         
@@ -197,7 +210,7 @@ pub contract OnChainMultiSig {
             self.args = args;
             self.txIndex = txIndex;
             self.method = method;
-            self.keyListSignatures = []
+            self.signatures= []
             self.pubKeys = []
             
             // Checks that the resource details are within the args
@@ -293,19 +306,15 @@ pub contract OnChainMultiSig {
             assert(!self.payloads.containsKey(txIndex), message: "Payload index already exist");
             self.txIndex = txIndex;
 
-            // the first signature is at keyIndex 0 of the `KeyListSignature` 
-            // Note: `keyIndex` must match the order of the Crypto.KeyList constructed during `verifySigners`
-            let keyListSig = Crypto.KeyListSignature(keyIndex: 0, signature: sig)
-
             // check if the payloadSig is signed by one of the keys in `keyList`, preventing others from adding to storage
             // if approvalWeight is nil, the public key is not in the `keyList` or cannot be verified
-            let approvalWeight = payload.verifySigners(pks: [publicKey], sigs: [keyListSig], currentKeyList: self.keyList)
+            let approvalWeight = payload.verifySigners(pks: [publicKey], sigs: [sig], currentKeyList: self.keyList)
             if ( approvalWeight == nil) {
                 panic ("Invalid signer")
             }
             
             // insert the payload and the first signature into the resource maps
-            payload.addSignature(keyListSig: keyListSig, publicKey: publicKey)
+            payload.addSignature(sig: sig, publicKey: publicKey)
             self.payloads[txIndex] <-! payload;
 
             emit NewPayloadAdded(resourceId: resourceId, txIndex: txIndex)
@@ -322,8 +331,9 @@ pub contract OnChainMultiSig {
             assert(self.keyList.containsKey(publicKey), message: "Public key is not a registered signer");
 
             let p <- self.payloads.remove(key: txIndex)!;
-            let currentIndex = p.keyListSignatures.length
+            let currentIndex = p.signatures.length
             var i = 0;
+            // check that the same signer has not added a signature before
             while i < currentIndex {
                 if p.pubKeys[i] == publicKey {
                     break
@@ -334,23 +344,17 @@ pub contract OnChainMultiSig {
                 self.payloads[txIndex] <-! p;
                 panic ("Signature already added for this txIndex")
             } else {
-                // this is a temp keyListSig list that is used to verify a single signature so we use `keyIndex` as 0
-                // the correct `keyIndex` will overwrite the 0 after we know it is a valid signature
-                var keyListSig = Crypto.KeyListSignature( keyIndex: 0, signature: sig)
-                    let approvalWeight = p.verifySigners( pks: [publicKey], sigs: [keyListSig], currentKeyList: self.keyList)
-                    if ( approvalWeight == nil) {
-                        self.payloads[txIndex] <-! p;
-                        panic ("Invalid signer")
-                    } else {
-                        // create the correct `keyIndex` with the current length of all the stored signatures
-                        keyListSig = Crypto.KeyListSignature(keyIndex: currentIndex, signature: sig)
+                let approvalWeight = p.verifySigners( pks: [publicKey], sigs: [sig], currentKeyList: self.keyList)
+                if ( approvalWeight == nil) {
+                    self.payloads[txIndex] <-! p;
+                    panic ("Invalid signer")
+                } else {
+                    // append signature to resource maps
+                    p.addSignature(sig: sig, publicKey: publicKey)
+                    self.payloads[txIndex] <-! p;
 
-                        // append signature to resource maps
-                        p.addSignature(keyListSig: keyListSig, publicKey: publicKey)
-                        self.payloads[txIndex] <-! p;
-
-                        emit NewPayloadSigAdded(resourceId: resourceId, txIndex: txIndex)
-                    }
+                    emit NewPayloadSigAdded(resourceId: resourceId, txIndex: txIndex)
+                }
             }
 
         }
@@ -365,10 +369,14 @@ pub contract OnChainMultiSig {
         pub fun readyForExecution(txIndex: UInt64): @PayloadDetails? {
             assert(self.payloads.containsKey(txIndex), message: "No payload for such index");
             let p <- self.payloads.remove(key: txIndex)!;
-            let approvalWeight = p.verifySigners( pks: p.pubKeys, sigs: p.keyListSignatures, currentKeyList: self.keyList)
+            let approvalWeight = p.verifySigners( pks: p.pubKeys, sigs: p.signatures, currentKeyList: self.keyList)
             if (approvalWeight! >= 1000.0) {
+                log("approval weight: ")
+                log(approvalWeight)
                 return <- p
             } else {
+                log("Failed approval weight: ")
+                log(approvalWeight)
                 self.payloads[txIndex] <-! p;
                 return nil
             }
