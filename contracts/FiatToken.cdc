@@ -360,6 +360,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey])
                 case "transfer":
+                    // This combines withdraw + deposit as withdraw cannot ensure that the withdrawmn amount
+                    // be deposited at a signers' agreed address
                     let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
                     let to = p.getArg(i: 1)! as? Address ?? panic ("cannot downcast address");
                     let toAcct = getAccount(to);
@@ -687,6 +689,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey]);
                 case "removePayload":
+                    // This helps to retrieve the Vault added to burn in case signers change their minds
                     let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
                     let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
                     var temp: @AnyResource? <- nil;
@@ -694,11 +697,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     destroy(p);
                     destroy(payloadToRemove);
                     return <- temp;
-                case "mint":
-                    let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
-                    destroy (p);
-                    return <- self.mint(amount: amount);
                 case "mintTo":
+                    // This replaces Mint because Mint does not enforced minted amount should deposit to 
+                    // certain account that multisig signers can be sure of
                     let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
                     let recvAddress = p.getArg(i: 1)! as? Address ?? panic ("cannot downcast address");
                     let recvAcct = getAccount(recvAddress);
