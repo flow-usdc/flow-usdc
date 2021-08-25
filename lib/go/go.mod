@@ -13,5 +13,4 @@ require (
 	github.com/onflow/flow-go-sdk v0.20.0
 	github.com/onflow/flow/protobuf/go/flow v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	google.golang.org/grpc v1.38.0
 )
