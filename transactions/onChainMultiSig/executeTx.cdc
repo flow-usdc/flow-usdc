@@ -1,4 +1,8 @@
-// Masterminter uses this to configure which minter the minter controller manages
+// Executes an added Payload for onchain-multisig of a resource
+// Note: Currently on supports the returning of a Vault.
+// If the payload method returns a vault, it will be deposited to the caller's vault
+// other types of returned resource is destroyed (both cases not used in FiatToken)
+// 
 
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}

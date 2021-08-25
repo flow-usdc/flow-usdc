@@ -1,4 +1,7 @@
-// New payload to be added to multiSigManager for a resource 
+// New payload (without a resource in the payload) to be added to multiSigManager for a resource 
+// `resourcePubSignerPath` must have been linked by the resource owner
+// `txIndex` must be the current resource index incremented by 1
+
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}

@@ -1,4 +1,4 @@
-// Masterminter uses this to configure which minter the minter controller manages
+// Masterminter uses this to configure which Minter the MinterController manages
 
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}

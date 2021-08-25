@@ -1,7 +1,5 @@
-// This transaction is a template for a transaction that
-// could be used by accounts with a FiatToken Vault to move it and deposit
+// This transaction is used by accounts with a FiatToken Vault to move it and deposit
 // its content into other vault
-//
 
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}

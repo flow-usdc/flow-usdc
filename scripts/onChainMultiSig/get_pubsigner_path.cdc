@@ -1,3 +1,4 @@
+// This gets the pubsigner path for different resources
 import FiatToken from 0x{{.FiatToken}}
 
 pub fun main(resourceName: String): PublicPath {

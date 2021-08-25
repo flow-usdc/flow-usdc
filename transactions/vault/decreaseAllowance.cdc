@@ -1,3 +1,5 @@
+// Vault owner decreases allowance for another Vault
+
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
