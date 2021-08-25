@@ -1,5 +1,5 @@
-// Minter can burn tokens from a given vault
 // This script withdraws tokens from minter own vault to burn the tokens
+// Minter can burn tokens from a given vault
 
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}

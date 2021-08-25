@@ -1,5 +1,5 @@
 // This script mints token on FiatToken contract and deposits the minted amount to the receiver's Vault 
-// It will fail if minter does not have allowance, is blocklisted or contract is paused
+// It will fail if minter does not have enough allowance, is blocklisted or contract is paused
 
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}

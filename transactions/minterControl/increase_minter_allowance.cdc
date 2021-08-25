@@ -1,4 +1,5 @@
-// MinterController uses this to increase minter allowance 
+// MinterController uses this to increase Minter allowance 
+// It succeeds of MinterController has assigned Minter from MasterMinter
 
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
