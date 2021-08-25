@@ -1,3 +1,10 @@
+// This creates a new blocklsiter resource.
+// If no onchain-multisig is required, empty publicKeys and pubKeyWeights array can be used.
+// If account already has a blocklisted, it will remove it and create a new one. 
+// 
+// Blocklister does not have capability to blocklist until granted by owner of BlocklistExecutor.
+// If a new one is created, the capability will be lost
+
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
