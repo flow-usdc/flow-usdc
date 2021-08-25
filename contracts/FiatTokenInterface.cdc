@@ -179,7 +179,6 @@ pub contract interface FiatTokenInterface {
     /// Interface for another vault to receive an allowance
     /// Should be linked to the public domain
     pub resource interface Allowance {
-        pub var allowed: {UInt64: UFix64};
         pub fun allowance(resourceId: UInt64): UFix64?;
         pub fun withdrawAllowance(recvAddr: Address, amount: UFix64);
     }

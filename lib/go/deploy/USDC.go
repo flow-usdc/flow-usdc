@@ -11,11 +11,12 @@ import (
 
 func DeployFiatTokenContract(
 	g *gwtf.GoWithTheFlow,
-	ownerAcct string) (events []*gwtf.FormatedEvent, err error) {
+	ownerAcct string, tokenName string, version string) (events []*gwtf.FormatedEvent, err error) {
 	contractCode := util.ParseCadenceTemplate("../../contracts/FiatToken.cdc")
 	txFilename := "../../transactions/deploy/deploy_contract_with_auth.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
+
 	g.CreateAccountPrintEvents(
 		"vaulted-account",
 		"non-vaulted-account",
@@ -49,18 +50,21 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultUUID"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultAllowance"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultPublicSigner"}).
 		// Blocklist executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklistExe"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCBlocklistExeCap"}).
 		// Blocklister
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklister"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterCapReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterPublicSigner"}).
 		// Pause executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauseExe"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCPauseExeCap"}).
 		// Pauser
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauser"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserCapReceiver"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserPublicSigner"}).
 		// Owner
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCOwner"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCOwnerCap"}).
@@ -77,7 +81,8 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinter"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterUUID"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterPublicSigner"}).
-		StringArgument("USDC").
+		StringArgument(tokenName).
+		StringArgument(version).
 		UFix64Argument("10000.00000000").
 		BooleanArgument(false).
 		Argument(cadence.NewArray(multiSigPubKeys)).

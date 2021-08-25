@@ -227,3 +227,134 @@ func TestDecreaseAllowance(t *testing.T) {
 		AddField("amount", postAllowanceAmount).
 		AssertEqual(t, events[0])
 }
+
+func TestMultiSig_Apporval(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	_, err := AddVaultToAccount(g, "vaulted-account")
+	assert.NoError(t, err)
+
+	toUuid, err := util.GetUUID(g, "allowance", "Vault")
+	assert.NoError(t, err)
+	fromUuid, err := util.GetUUID(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	allowanceAmount := "16.00000000"
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	resourceId := util.Arg{V: toUuid, T: "UInt64"}
+	amount := util.Arg{V: allowanceAmount, T: "UFix64"}
+
+	// `true` for new payload
+	_, err = util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "vaulted-account", "Vault", "approval", resourceId, amount)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	events, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "vaulted-account", "Vault")
+	assert.NoError(t, err)
+
+	// Test event
+	util.NewExpectedEvent("FiatToken", "Approval").
+		AddField("from", strconv.Itoa(int(fromUuid))).
+		AddField("to", strconv.Itoa(int(toUuid))).
+		AddField("amount", allowanceAmount).
+		AssertEqual(t, events[0])
+
+	a, err := GetAllowance(g, "vaulted-account", toUuid)
+	assert.NoError(t, err)
+	assert.Equal(t, allowanceAmount, a.String())
+}
+
+func TestMultiSig_IncreaseAllowance(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	toUuid, err := util.GetUUID(g, "allowance", "Vault")
+	assert.NoError(t, err)
+	fromUuid, err := util.GetUUID(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	increaseAmount := "4.00000000"
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	resourceId := util.Arg{V: toUuid, T: "UInt64"}
+	amount := util.Arg{V: increaseAmount, T: "UFix64"}
+
+	// `true` for new payload
+	_, err = util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "vaulted-account", "Vault", "increaseAllowance", resourceId, amount)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	init, err := GetAllowance(g, "vaulted-account", toUuid)
+	assert.NoError(t, err)
+
+	events, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "vaulted-account", "Vault")
+	assert.NoError(t, err)
+
+	// Test event
+	// Total allowed = 16 + 4
+	util.NewExpectedEvent("FiatToken", "Approval").
+		AddField("from", strconv.Itoa(int(fromUuid))).
+		AddField("to", strconv.Itoa(int(toUuid))).
+		AddField("amount", "20.00000000").
+		AssertEqual(t, events[0])
+
+	post, err := GetAllowance(g, "vaulted-account", toUuid)
+	assert.NoError(t, err)
+	assert.Equal(t, increaseAmount, (post - init).String())
+}
+
+func TestMultiSig_DecreaseAllowance(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	toUuid, err := util.GetUUID(g, "allowance", "Vault")
+	assert.NoError(t, err)
+	fromUuid, err := util.GetUUID(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	decreaseAmount := "5.00000000"
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	resourceId := util.Arg{V: toUuid, T: "UInt64"}
+	amount := util.Arg{V: decreaseAmount, T: "UFix64"}
+
+	// `true` for new payload
+	_, err = util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "vaulted-account", "Vault", "decreaseAllowance", resourceId, amount)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	init, err := GetAllowance(g, "vaulted-account", toUuid)
+	assert.NoError(t, err)
+
+	events, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "vaulted-account", "Vault")
+	assert.NoError(t, err)
+
+	// Test event
+	// Total allowed = 16 + 4
+	util.NewExpectedEvent("FiatToken", "Approval").
+		AddField("from", strconv.Itoa(int(fromUuid))).
+		AddField("to", strconv.Itoa(int(toUuid))).
+		AddField("amount", "15.00000000").
+		AssertEqual(t, events[0])
+
+	post, err := GetAllowance(g, "vaulted-account", toUuid)
+	assert.NoError(t, err)
+	assert.Equal(t, decreaseAmount, (init - post).String())
+}

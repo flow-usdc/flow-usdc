@@ -4,8 +4,9 @@
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
+import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction {
+transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
 
     prepare(signer: AuthAccount) {
 
@@ -36,6 +37,14 @@ transaction {
         )
 
         // Create a public capability to the Vault that only exposes
+        // the PublicSigner functions 
+        // Anyone can all this method but only signatures from added public keys will succeed
+        signer.link<&FiatToken.Vault{OnChainMultiSig.PublicSigner}>(
+            FiatToken.VaultPubSigner,
+            target: FiatToken.VaultStoragePath
+        )
+
+        // Create a public capability to the Vault that only exposes
         // the UUID() function through the VaultUUID interface
         signer.link<&FiatToken.Vault{FiatToken.ResourceId}>(
             FiatToken.VaultUUIDPubPath,
@@ -48,5 +57,9 @@ transaction {
             FiatToken.VaultBalancePubPath,
             target: FiatToken.VaultStoragePath
         )
+
+        // The transaction that creates the vault can also add required multiSig public keys to the multiSigManager
+        let s = signer.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath) ?? panic ("cannot borrow own resource")
+        s.addKeys(multiSigPubKeys: multiSigPubKeys, multiSigKeyWeights: multiSigKeyWeights)
     }
 }

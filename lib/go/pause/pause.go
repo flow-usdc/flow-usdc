@@ -12,9 +12,14 @@ func CreatePauser(
 ) (events []*gwtf.FormatedEvent, err error) {
 	txFilename := "../../../transactions/pause/create_new_pauser.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
+
+	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
+		Argument(cadence.NewArray(MultiSigPubKeys)).
+		Argument(cadence.NewArray(MultiSigKeyWeights)).
 		Run()
 	events = util.ParseTestEvents(e)
 	return
@@ -41,10 +46,10 @@ func PauseOrUnpauseContract(
 	return
 }
 
-func GetPaused(g *gwtf.GoWithTheFlow) (cadence.Bool, error) {
+func GetPaused(g *gwtf.GoWithTheFlow) (bool, error) {
 	filename := "../../../scripts/contract/get_paused.cdc"
 	script := util.ParseCadenceTemplate(filename)
 	r, err := g.ScriptFromFile(filename, script).RunReturns()
-	paused := r.(cadence.Bool)
+	paused := r.ToGoValue().(bool)
 	return paused, err
 }

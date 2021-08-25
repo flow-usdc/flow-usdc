@@ -19,7 +19,7 @@ transaction (txIndex: UInt64, resourceAddr: Address, resourcePubSignerPath: Publ
 
         let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
             .borrow<&{OnChainMultiSig.PublicSigner}>()
-            ?? panic("Could not borrow master minter pub sig reference")
+            ?? panic("Could not borrow resource pub sig reference")
 
         let r <- pubSigRef.executeTx(txIndex: txIndex)
         if r != nil {

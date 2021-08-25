@@ -1,6 +1,7 @@
 package pause
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/bjartek/go-with-the-flow/gwtf"
@@ -36,7 +37,7 @@ func TestPauserContractWithCap(t *testing.T) {
 	// Test contract pause state
 	paused, pauseerr := GetPaused(g)
 	assert.NoError(t, pauseerr)
-	assert.Equal(t, paused.String(), "true")
+	assert.Equal(t, true, paused)
 
 	// Test event
 	util.NewExpectedEvent("FiatToken", "Paused").AssertEqual(t, events[0])
@@ -67,7 +68,7 @@ func TestUnPauserContractWithCap(t *testing.T) {
 	// Test contract pause state
 	paused, pauseerr := GetPaused(g)
 	assert.NoError(t, pauseerr)
-	assert.Equal(t, paused.String(), "false")
+	assert.Equal(t, false, paused)
 
 	// Test event
 	util.NewExpectedEvent("FiatToken", "Unpaused").AssertEqual(t, events[0])
@@ -77,4 +78,151 @@ func TestUnPauserContractWithCap(t *testing.T) {
 
 	_, err = vault.TransferTokens(g, "100.00000000", "owner", "vaulted-account")
 	assert.NoError(t, err)
+}
+
+func TestMultiSig_Pause(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	// `true` for new payload
+	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct500_1, "pauser", "Pauser", "pause")
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	pauser, err := util.GetUUID(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
+		AddField("resourceId", strconv.Itoa(int(pauser))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+	// Try to Execute without enough weight. This should error as there is not enough signer yet
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.Error(t, err)
+
+	// Add Another Payload Signature
+	// `false` for new signature for existing paylaod
+	events, err = util.MultiSig_SignAndSubmit(g, false, expectedNewIndex, util.Acct500_2, "pauser", "Pauser", "pause")
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadSigAdded").
+		AddField("resourceId", strconv.Itoa(int(pauser))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	// Test event
+	util.NewExpectedEvent("FiatToken", "Paused").AssertEqual(t, events[0])
+
+	paused, err := GetPaused(g)
+	assert.NoError(t, err)
+	assert.Equal(t, true, paused)
+}
+
+func TestMultiSig_Unpause(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+
+	// Add New Payload
+	currentIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+	expectedNewIndex := currentIndex + 1
+
+	// `true` for new payload
+	// signed with full account
+	_, err = util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "pauser", "Pauser", "unpause")
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
+
+	events, err := util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	// Test event
+	util.NewExpectedEvent("FiatToken", "Unpaused").AssertEqual(t, events[0])
+
+	paused, err := GetPaused(g)
+	assert.NoError(t, err)
+	assert.Equal(t, false, paused)
+}
+
+func TestMultiSig_PauserUnknowMethodFails(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	m := util.Arg{V: uint64(111), T: "UInt64"}
+
+	txIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, txIndex+1, util.Acct1000, "pauser", "Pauser", "unknowmethod", m)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.Error(t, err)
+}
+
+func TestMultiSig_PauserCanRemoveKey(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	k := util.Arg{V: pk250_1[2:], T: "String"}
+
+	hasKey, err := util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, true)
+
+	txIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	newTxIndex := txIndex + 1
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "pauser", "Pauser", "removeKey", k)
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	hasKey, err = util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, false)
+}
+
+func TestMultiSig_PauserCanAddKey(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	k := util.Arg{V: pk250_1[2:], T: "String"}
+	w := util.Arg{V: "250.00000000", T: "UFix64"}
+
+	hasKey, err := util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, false)
+
+	txIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
+	newTxIndex := txIndex + 1
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "pauser", "Pauser", "configureKey", k, w)
+	assert.NoError(t, err)
+
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")
+	assert.NoError(t, err)
+
+	hasKey, err = util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
+	assert.NoError(t, err)
+	assert.Equal(t, hasKey, true)
+
+	weight, err := util.GetKeyWeight(g, util.Acct250_1, "pauser", "Pauser")
+	assert.NoError(t, err)
+	assert.Equal(t, w.V, weight.String())
 }

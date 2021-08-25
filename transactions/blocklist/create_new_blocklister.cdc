@@ -1,23 +1,39 @@
 import FiatToken from 0x{{.FiatToken}}
+import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction(blocklisterAddr: Address) {
+transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64]) {
     prepare (blocklister: AuthAccount) {
         
         // Check if they already have a blocklister resource, if so, destroy it
         if blocklister.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) != nil {
             blocklister.unlink(FiatToken.BlocklisterCapReceiverPubPath)
+            blocklister.unlink(FiatToken.BlocklisterPubSigner)
             let b <- blocklister.load<@FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) 
             destroy b
         }
         
-        blocklister.save(<- FiatToken.createNewBlocklister(), to: FiatToken.BlocklisterStoragePath);
+        var i = 0;
+        let pka: [OnChainMultiSig.PubKeyAttr] = []
+        while i < pubKeyWeights.length {
+            let a = OnChainMultiSig.PubKeyAttr(sa: 1, w: pubKeyWeights[i])
+            pka.append(a)
+            i = i + 1;
+        }
+
+        blocklister.save(<- FiatToken.createNewBlocklister(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.BlocklisterStoragePath);
         
         blocklister.link<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath, target: FiatToken.BlocklisterStoragePath)
         ??  panic("Could not link BlocklistCapReceiver");
+
+        blocklister.link<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner, target: FiatToken.BlocklisterStoragePath)
+        ??  panic("Could not link pauser pub signer");
     } 
 
     post {
         getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
         "BlocklistCapReceiver link not set"
+
+        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner).check() :
+        "BlocklistPubSigner link not set"
     }
 }
