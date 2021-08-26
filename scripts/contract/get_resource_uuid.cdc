@@ -1,3 +1,8 @@
+// This script uses the resources PubSigner Public path to use the UUID function for uuid
+//
+// Alternatively, if the resource owner do not want to link PubSigner path, they can simply
+// link the ResourceId interfaces and this script should then use the <Resource>UUIDPubPath, i.e. VaultUUIDPubPath
+
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 

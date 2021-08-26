@@ -1,4 +1,8 @@
-// New payload with a resource to be added to multiSigManager for a resource
+// New payload with a Vault resource to be added to multiSigManager for a resource
+// 
+// `resourcePubSignerPath` must have been linked by the resource owner
+// `txIndex` must be the current resource index incremented by 1
+// The first argument in `args` must be the balance in the vault
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}

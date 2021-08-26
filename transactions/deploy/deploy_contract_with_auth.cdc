@@ -1,7 +1,6 @@
 // This transactions deploys the FiatToken contract
 //
-// Owner of the contract has exclusive functions
-// We only provide the AuthAccount holder the owner resource
+// Owner (AuthAccount) of this script is the owner of the contract
 //
 transaction(
     contractName: String, 

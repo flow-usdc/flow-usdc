@@ -1,4 +1,5 @@
-// Masterminter uses this to remove minter controller
+// Masterminter uses this to remove MinterController
+// Minter previously assigned allowances will still be valid.
 
 import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}

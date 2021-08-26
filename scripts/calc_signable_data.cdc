@@ -1,6 +1,4 @@
-// This script reads the allowance field set in a vault for another resource 
-
-
+// This script returns cadence conversion from different types to bytes 
 // Currently AnyStruct is input arg is not allowed, hence wrapping it in optional
 pub fun main(v: AnyStruct?): [UInt8] {
     let value = v!;

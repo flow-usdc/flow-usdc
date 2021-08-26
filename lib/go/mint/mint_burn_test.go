@@ -240,64 +240,12 @@ func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestMintBurnMultiSig_Mint(t *testing.T) {
+func TestMintBurnMultiSig_MintTo(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow("../../../flow.json")
 	_, err := vault.AddVaultToAccount(g, util.Acct1000)
 	assert.NoError(t, err)
 	_, err = vault.AddVaultToAccount(g, util.Acct500_1)
 	assert.NoError(t, err)
-
-	// Add New Payload
-	currentIndex, err := util.GetTxIndex(g, "minter", "Minter")
-	assert.NoError(t, err)
-	expectedNewIndex := currentIndex + 1
-
-	// Params
-	minter, err := util.GetUUID(g, "minter", "Minter")
-	assert.NoError(t, err)
-	initMintAllowance, err := GetMinterAllowance(g, minter)
-	assert.NoError(t, err)
-	mintAmount := initMintAllowance / 2.0
-	m := util.Arg{V: mintAmount.String(), T: "UFix64"}
-	// `true` for new payload
-	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct500_1, "minter", "Minter", "mint", m)
-	assert.NoError(t, err)
-
-	newTxIndex, err := util.GetTxIndex(g, "minter", "Minter")
-	assert.NoError(t, err)
-	assert.Equal(t, expectedNewIndex, newTxIndex)
-
-	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
-		AddField("resourceId", strconv.Itoa(int(minter))).
-		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
-		AssertEqual(t, events[0])
-
-		// Try to Execute without enough weight. This should error as there is not enough signer yet
-	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "minter", "Minter")
-	assert.Error(t, err)
-
-	// Add Another Payload Signature
-	// `false` for new signature for existing paylaod
-	events, err = util.MultiSig_SignAndSubmit(g, false, newTxIndex, util.Acct500_2, "minter", "Minter", "mint", m)
-	assert.NoError(t, err)
-
-	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadSigAdded").
-		AddField("resourceId", strconv.Itoa(int(minter))).
-		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
-		AssertEqual(t, events[0])
-
-		// Try to Execute Tx after second signature
-	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "minter", "Minter")
-	assert.NoError(t, err)
-	util.NewExpectedEvent("FiatToken", "Mint").
-		AddField("minter", strconv.Itoa(int(minter))).
-		AddField("amount", mintAmount.String()).
-		AssertEqual(t, events[0])
-}
-
-func TestMintBurnMultiSig_MintTo(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "minter", "Minter")
 	assert.NoError(t, err)
@@ -316,15 +264,41 @@ func TestMintBurnMultiSig_MintTo(t *testing.T) {
 	to := util.Arg{V: util.Acct1000, T: "Address"}
 	// `true` for new payload
 	// signed by account with full weight
-	_, err = util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct1000, "minter", "Minter", "mintTo", m, to)
+	events, err := util.MultiSig_SignAndSubmit(g, true, expectedNewIndex, util.Acct500_1, "minter", "Minter", "mintTo", m, to)
 	assert.NoError(t, err)
 
 	newTxIndex, err := util.GetTxIndex(g, "minter", "Minter")
 	assert.NoError(t, err)
 	assert.Equal(t, expectedNewIndex, newTxIndex)
 
-	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, util.Acct500_1, "minter", "Minter")
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
+		AddField("resourceId", strconv.Itoa(int(minter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+	// Try to Execute without enough weight. This should error as there is not enough signer yet
+	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "minter", "Minter")
+	assert.Error(t, err)
+
+	// Add Another Payload Signature
+	// `false` for new signature for existing paylaod
+	events, err = util.MultiSig_SignAndSubmit(g, false, newTxIndex, util.Acct500_2, "minter", "Minter", "mintTo", m, to)
 	assert.NoError(t, err)
+
+	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadSigAdded").
+		AddField("resourceId", strconv.Itoa(int(minter))).
+		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
+		AssertEqual(t, events[0])
+
+	// Try to Execute Tx after second signature
+	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, util.Acct500_1, "minter", "Minter")
+	assert.NoError(t, err)
+
+	util.NewExpectedEvent("FiatToken", "Mint").
+		AddField("minter", strconv.Itoa(int(minter))).
+		AddField("amount", mintAmount.String()).
+		AssertEqual(t, events[0])
+
 	postBalance, err := util.GetBalance(g, util.Acct1000)
 	assert.NoError(t, err)
 	assert.Equal(t, mintAmount.String(), (postBalance - initBalance).String())

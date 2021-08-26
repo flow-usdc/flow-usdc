@@ -1,3 +1,10 @@
+// This script creates a new Minter resource.
+// If no onchain-multisig is required, empty publicKeys and pubKeyWeights array can be used.
+// If account already has a Minter, it will remove it and create a new one. 
+// 
+// Minter are granted allowance by the UUID.
+// If a new one is created, the UUID will be different and will not have the same allowance. 
+
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 

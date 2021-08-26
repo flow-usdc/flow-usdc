@@ -1,3 +1,10 @@
+// This script creates a new MinterController resource.
+// If no onchain-multisig is required, empty publicKeys and pubKeyWeights array can be used.
+// If account already has a MinterController, it will remove it and create a new one. 
+// 
+// MinterController are assigned Minter by the UUID.
+// If a new one is created, the UUID will be different and will not have the same Minter to control.
+
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 

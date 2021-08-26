@@ -1,3 +1,5 @@
+// This unpauses the contract by a Pauser if capability was granted
+
 import FiatToken from 0x{{.FiatToken}}
 
 transaction {

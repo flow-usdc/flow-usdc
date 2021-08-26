@@ -3,18 +3,115 @@ import FungibleToken from 0x{{.FungibleToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-// Below helps debug when using language server
-// import FungibleToken from "./FungibleToken.cdc"
-// import FiatTokenInterface from "./FiatTokenInterface.cdc" 
-// import OnChainMultiSig from "./OnChainMultiSig.cdc"
-
 pub contract FiatToken: FiatTokenInterface, FungibleToken {
-    
-    // ===== Token Info =====
-    pub let name: String;
-    pub let version: String;
 
-    // ===== Contract Paths =====
+    // ===== FiatToken Events =====
+
+    /// ===== Pause events =====
+    /// Paused
+    ///
+    /// The event that is emitted when the contract is set to be paused 
+    pub event Paused();
+    /// Unpaused
+    ///
+    /// The event that is emitted when the contract is set from paused to unpaused 
+    pub event Unpaused();
+    /// PauserCreated 
+    ///
+    /// The event that is emitted when a new pauser resource is created
+    pub event PauserCreated(resourceId: UInt64)
+
+    // ===== Blocklist events =====
+    /// Blocklisted
+    ///
+    /// The event that is emitted when new resource has been blocklisted 
+    pub event Blocklisted(resourceId: UInt64);
+    /// Unblocklisted
+    ///
+    /// The event that is emitted when new resource has been unblocklisted 
+    pub event Unblocklisted(resourceId: UInt64);
+    /// BlocklisterCreated
+    ///
+    /// The event that is emitted when a new blocklister resource is created
+    pub event BlocklisterCreated(resourceId: UInt64);
+    
+    /// ===== FiatToken Vault events =====
+    /// NewVault 
+    ///
+    /// The event that is emitted when new vault resource has been created 
+    pub event NewVault(resourceId: UInt64);
+    /// Destroy Vault 
+    ///
+    /// The event that is emitted when a vault resource has been destroyed 
+    pub event DestroyVault(resourceId: UInt64);
+    /// FiatTokenWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a FiatToken Vault
+    /// Note: we emit UUID as blocklisting requires this 
+    pub event FiatTokenWithdrawn(amount: UFix64, from: UInt64);
+    /// FiatTokenDeposited
+    ///
+    /// The event that is emitted when tokens are deposited into a FiatToken Vault
+    /// Note: we emit UUID as blocklisting requires this 
+    pub event FiatTokenDeposited(amount: UFix64, to: UInt64);
+    /// Approval 
+    ///
+    /// The event that is emitted when a FiatToken vault approves another to  
+    /// withdraw some set allowance 
+    pub event Approval(from: UInt64, to: UInt64, amount: UFix64);
+    /// ===== Minting events =====
+    /// MinterCreated
+    ///
+    /// The event that is emitted when a new minter resource is created
+    pub event MinterCreated(resourceId: UInt64);
+    /// MinterControllerCreated
+    ///
+    /// The event that is emitted when a new minter controller resource is created
+    /// A minter controller manages the restrictions of exactly 1 minter.
+    pub event MinterControllerCreated(resourceId: UInt64);
+    /// Mint
+    ///
+    /// The event that is emitted when new tokens are minted
+    pub event Mint(minter: UInt64, amount: UFix64);
+    /// Burn
+    ///
+    /// The event that is emitted when tokens are burnt by minter
+    pub event Burn(minter: UInt64, amount: UFix64);
+    /// MinterConfigured 
+    ///
+    /// The event that is emitted when minter controller has configured a minter's restrictions 
+    /// Currently only support allowance
+    pub event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64);
+    /// MinterRemoved
+    ///
+    /// The event that is emitted when minter controller has removed the minter 
+    pub event MinterRemoved(controller: UInt64, minter: UInt64);
+    /// ControllerConfigured
+    ///
+    /// The event that is emitted when master minter has set the mint controller's minter 
+    pub event ControllerConfigured(controller: UInt64, minter: UInt64);
+    /// ControllerRemoved
+    ///
+    /// The event that is emitted when master minter has removed the mint controller 
+    pub event ControllerRemoved(controller: UInt64);
+    
+    /// ===== Fungible Token vents =====
+    /// TokensInitialized
+    ///
+    /// The event that is emitted when the contract is created
+    pub event TokensInitialized(initialSupply: UFix64)
+    /// TokensWithdrawn
+    ///
+    /// The event that is emitted when tokens are withdrawn from a Vault
+    pub event TokensWithdrawn(amount: UFix64, from: Address?)
+    /// TokensDeposited
+    ///
+    /// The event that is emitted when tokens are deposited into a Vault
+    pub event TokensDeposited(amount: UFix64, to: Address?)
+ 
+
+    // ===== FiatToken Paths =====
+
     pub let VaultStoragePath: StoragePath;
     pub let VaultBalancePubPath: PublicPath;
     pub let VaultUUIDPubPath: PublicPath;
@@ -51,136 +148,81 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     pub let MinterStoragePath: StoragePath;
     pub let MinterUUIDPubPath: PublicPath;
     pub let MinterPubSigner: PublicPath;
-
-    // ===== Pause state and events =====
     
+
+    // ===== FiatToken States / Variables =====
+
+    pub let name: String;
+    pub let version: String;
+    /// paused 
+    ///
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
     /// No transaction, apart from unpaused, can occur when paused
     pub var paused: Bool;
-    /// Paused
+    /// blocklist
     ///
-    /// The event that is emitted when the contract is set to be paused 
-    pub event Paused();
-    /// Unpaused
-    ///
-    /// The event that is emitted when the contract is set from paused to unpaused 
-    pub event Unpaused();
-    /// PauserCreated 
-    ///
-    /// The event that is emitted when a new pauser resource is created
-    pub event PauserCreated(resourceId: UInt64)
-
-    // ===== Blocklist state and events =====
-
     /// Dict of all blocklisted
     /// This is managed by the blocklister
     /// Resources such as Vaults and Minters can be blocked
     /// {resourceId: Block Height}
     access(contract) let blocklist: {UInt64: UInt64};
-    /// Blocklisted
+    /// managedMinters
     ///
-    /// The event that is emitted when new resource has been blocklisted 
-    pub event Blocklisted(resourceId: UInt64);
-    /// Unblocklisted
-    ///
-    /// The event that is emitted when new resource has been unblocklisted 
-    pub event Unblocklisted(resourceId: UInt64);
-    /// BlocklisterCreated
-    ///
-    /// The event that is emitted when a new blocklister resource is created
-    pub event BlocklisterCreated(resourceId: UInt64);
-    
-    /// ===== FiatToken Vault events =====
-    /// NewVault 
-    ///
-    /// The event that is emitted when new vault resource has been created 
-    pub event NewVault(resourceId: UInt64);
-    /// Destroy Vault 
-    ///
-    /// The event that is emitted when a vault resource has been destroyed 
-    pub event DestroyVault(resourceId: UInt64);
-    /// FiatTokenWithdrawn
-    ///
-    /// The event that is emitted when tokens are withdrawn from a FiatToken Vault
-    /// note we emit UUID as blocklisting requires this 
-    pub event FiatTokenWithdrawn(amount: UFix64, from: UInt64);
-    /// FiatTokenDeposited
-    ///
-    /// The event that is emitted when tokens are deposited into a FiatToken Vault
-    /// note we emit UUID as blocklisting requires this 
-    pub event FiatTokenDeposited(amount: UFix64, to: UInt64);
-    /// Approval 
-    ///
-    /// The event that is emitted when a FiatToken vault approves another to  
-    /// withdraw some set allowance 
-    pub event Approval(from: UInt64, to: UInt64, amount: UFix64);
-
-    // ===== Minting states and events =====
-    
     /// Dict of minter controller to their minter
     /// Only one minter per minter controller but each minter may be controller by multiple controllers
+    /// The masterminter (owned by the owner of this contract) sets this
+    /// https://github.com/centrehq/centre-tokens/blob/master/doc/masterminter.md#roles
     access(contract) let managedMinters: {UInt64: UInt64}
-    /// Minting restrictions include allowance, deadline, vault reciever
+    /// minterAllowances
+    ///
     /// Dict of all minters and their allowances
+    /// Minting restricted to mint up to their allowance
+    /// The minter controller sets this
     access(contract) let minterAllowances: { UInt64: UFix64};
-    /// MinterCreated
-    ///
-    /// The event that is emitted when a new minter resource is created
-    pub event MinterCreated(resourceId: UInt64);
-    /// MinterControllerCreated
-    ///
-    /// The event that is emitted when a new minter controller resource is created
-    /// A minter controller manages the restrictions of exactly 1 minter.
-    pub event MinterControllerCreated(resourceId: UInt64);
-    /// Mint
-    ///
-    /// The event that is emitted when new tokens are minted
-    pub event Mint(minter: UInt64, amount: UFix64);
-    /// Burn
-    ///
-    /// The event that is emitted when tokens are burnt by minter
-    pub event Burn(minter: UInt64, amount: UFix64);
-    /// MinterConfigured 
-    ///
-    /// The event that is emitted when minter controller has configured a minter's restrictions 
-    /// Currently only support allowance
-    pub event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64);
-    /// MinterRemoved
-    ///
-    /// The event that is emitted when minter controller has removed the minter 
-    pub event MinterRemoved(controller: UInt64, minter: UInt64);
-    /// ControllerConfigured
-    ///
-    /// The event that is emitted when master minter has set the mint controller's minter 
-    pub event ControllerConfigured(controller: UInt64, minter: UInt64);
-    /// ControllerRemoved
-    ///
-    /// The event that is emitted when master minter has removed the mint controller 
-    pub event ControllerRemoved(controller: UInt64);
-    
-    // ===== Fungible Token state and events =====
 
     /// Total supply of FiatToken in existence
+    /// Updated when mint, burn and vaults destroyed
     pub var totalSupply: UFix64;
 
-    /// TokensInitialized
-    ///
-    /// The event that is emitted when the contract is created
-    pub event TokensInitialized(initialSupply: UFix64)
 
-    /// TokensWithdrawn
-    ///
-    /// The event that is emitted when tokens are withdrawn from a Vault
-    pub event TokensWithdrawn(amount: UFix64, from: Address?)
+    // ===== FiatToken Interfaces  =====
 
-    /// TokensDeposited
+    /// ResourceId
     ///
-    /// The event that is emitted when tokens are deposited into a Vault
-    pub event TokensDeposited(amount: UFix64, to: Address?)
- 
-    // ===== FiatToken Resources: =====
+    /// This allows resources' UUID to be shared
+    /// uuid is implicitly created on resource init
+    /// There is no guarantee owners of resources would
+    pub resource interface ResourceId{
+        pub fun UUID(): UInt64; 
+    }
+    /// BlocklistCapReceiver
+    ///
+    /// This must be linked Publicly so that the BlockListExecutor owner can have access to set this
+    /// Without the Capability, Blocklisters cannot do any blocklist / unblocklist actions 
+    pub resource interface BlocklistCapReceiver {
+        // This is used to set the blocklist capability of a Blocklister
+        pub fun setBlocklistCap(blocklistCap: Capability<&BlocklistExecutor>) 
+    }
+    /// PauseCapReceiver
+    ///
+    /// This must be linked Publicly so that the PauseExecutor owner can have access to set this
+    /// Without the Capability, Pauser cannot do any pause/ unpause actions 
+    pub resource interface PauseCapReceiver {
+        // This is used by some account with the PauseExecutor resource
+        // to share it with a Pauser
+        pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) 
+    }
+
+
+    // ===== FiatToken Resources =====
     
+    /// Vault
+    ///
+    /// The resource to hold FiatTokens
+    /// It is compatible with FungibleToken Interfaces with addition functions 
+    /// 1. Allowance: https://github.com/centrehq/centre-tokens/blob/master/contracts/v1/FiatTokenV1.sol#L172
+    /// 2. OnChainMultiSig: https://github.com/flow-hydraulics/onchain-multisig
     pub resource Vault: 
         ResourceId, 
         FiatTokenInterface.Allowance, 
@@ -190,10 +232,16 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         OnChainMultiSig.KeyManager, 
         OnChainMultiSig.PublicSigner {
 
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         /// The total balance of this vault
         pub var balance: UFix64
+
+        /// The allowances state of this vault
+        ///
+        /// Receiving vault uuid : Amount
+        access(self) let allowed: {UInt64: UFix64};
 
         // ===== Fungible Token Interfaces =====
 
@@ -224,20 +272,12 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             destroy vault 
         }
 
-        
         // ===== FiatToken interfacas =====
 
-        /// FiatToken ResourceId: should be linked to the public domain 
-        /// uuid is implicitly created on resource init
-        /// lets owner share uuid but there is not guarantee they would
+        /// Public interface to check UUID
         pub fun UUID(): UInt64 {
             return self.uuid;
         }
-
-        /// The allowances state of this vault
-        ///
-        /// Receiving vault uuid : Amount
-        access(self) let allowed: {UInt64: UFix64};
 
         /// Public interface to check allowance
         ///
@@ -274,8 +314,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
 
         // ===== Private capabilities to set / modify allowances
-
-        /// Sets allowance for this vault
+        /// Owner of the vault can set allowance for this vault
         pub fun approval(resourceId: UInt64, amount: UFix64) {
             if (amount != 0.0){
                 self.allowed.insert(key: resourceId, amount);
@@ -303,7 +342,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         };
 
         // ===== OnChainMultiSig.PublicSigner interfaces
-
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig);
         }
@@ -322,6 +360,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey])
                 case "transfer":
+                    // This combines withdraw + deposit as withdraw cannot ensure that the withdrawmn amount
+                    // be deposited at a signers' agreed address
                     let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
                     let to = p.getArg(i: 1)! as? Address ?? panic ("cannot downcast address");
                     let toAcct = getAccount(to);
@@ -361,16 +401,13 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
         
         // ======== OnChainMultiSig.KeyManager interfaces
-        // Should be private if linked
-
+        // Private (if linked) interfaces to set the keys for the OnChainMultiSig.Manager
         pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
             self.multiSigManager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights)
         }
-
         pub fun removeKeys( multiSigPubKeys: [String]) {
             self.multiSigManager.removeKeys(pks: multiSigPubKeys)
         }
-
 
         destroy() {
             FiatToken.totalSupply = FiatToken.totalSupply - self.balance
@@ -391,11 +428,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
 
     /// The owner is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
-    /// Owner can assign all roles
-    /// 
-    /// `PauseExecutor` and `BlocklistExeuctor` do not support multisig as they themselves do not do any transactions.
-    /// Once the capability has been shared to `Pauser` and `Blocklister` respectively, those resources calls 
-    /// for the state change transactions 
+    /// Owner of the contract creates these 3 resources when deploying the contract 
     pub resource Owner {
 
         pub fun createNewPauseExecutor(): @PauseExecutor{
@@ -416,6 +449,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The master minter creates minter controller resources to delegate control for minters
     pub resource MasterMinter: FiatTokenInterface.MasterMinter, ResourceId, OnChainMultiSig.PublicSigner {
 
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         /// Function to configure MinterController
@@ -434,6 +468,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             emit ControllerRemoved(controller: minterController)
         }
         
+        // ===== OnChainMultiSig.PublicSigner interfaces
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig);
         }
@@ -487,70 +522,48 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
             self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
         }
-        
-        
     }
     
-    pub resource interface ResourceId{
-        pub fun UUID(): UInt64; 
-    }
-
     /// This is a resource to manage minters, delegated from MasterMinter
+    /// https://github.com/centrehq/centre-tokens/blob/master/doc/masterminter.md#interaction-with-fiattoken-contract
     pub resource MinterController: FiatTokenInterface.MinterController, ResourceId, OnChainMultiSig.PublicSigner  {
 
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
-
-        /// The resourceId this MinterController manages
-        pub fun managedMinter(): UInt64? {
-            return FiatToken.managedMinters[self.uuid];
-        }
 
         pub fun UUID(): UInt64 {
             return self.uuid;
         }
 
-        /// configureMinter 
-        ///
         /// Function that updates existing minter restrictions
         pub fun configureMinterAllowance(allowance: UFix64) {
-            pre {
-                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
-            }
-            let managedMinter = self.managedMinter()!;
+            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("controller does not manage any minters");
             FiatToken.minterAllowances[managedMinter] = allowance;
             emit MinterConfigured(controller: self.uuid, minter: managedMinter, allowance: allowance);
         }
         
+        /// Function that increase existing minter allowance 
         pub fun increaseMinterAllowance(increment: UFix64) {
-            pre {
-                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
-            }
-            let managedMinter = self.managedMinter()!;
+            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("controller does not manage any minters");
             let allowance = FiatToken.minterAllowances[managedMinter] ?? 0.0;
             let newAllowance = allowance.saturatingAdd(increment);
             self.configureMinterAllowance(allowance: newAllowance);
         }
 
+        /// Function that decrease existing minter allowance 
         pub fun decreaseMinterAllowance(decrement: UFix64) {
-            pre {
-                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
-            }
-            let managedMinter = self.managedMinter()!;
+            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("controller does not manage any minters");
+
             // If there is no allowance already, we cannot decrease it
-            let allowance = FiatToken.minterAllowances[managedMinter];
-            assert(allowance != nil, message: "Cannot decrease nil mint allowance")
+            let allowance = FiatToken.minterAllowances[managedMinter] ?? panic("Cannot decrease nil mint allowance");
+
             let newAllowance = allowance!.saturatingSubtract(decrement);
             self.configureMinterAllowance(allowance: newAllowance);
         }
         
-        /// removeMinter
-        /// 
         /// Function to remove minter
         pub fun removeMinter(){
-            pre {
-                FiatToken.managedMinters.containsKey(self.uuid): "controller does not manage any minters"
-            }
-            let managedMinter = self.managedMinter()!;
+            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("controller does not manage any minters");
             assert(FiatToken.minterAllowances.containsKey(managedMinter), message: "cannot remove unknown minter");
             FiatToken.minterAllowances.remove(key: managedMinter);
             emit MinterRemoved(controller: self.uuid, minter: managedMinter)
@@ -574,14 +587,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey])
-                case "removePayload":
-                    let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
-                    let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
-                    var temp: @AnyResource? <- nil;
-                    payloadToRemove.rsc <-> temp;
-                    destroy(p);
-                    destroy(payloadToRemove);
-                    return <- temp;
                 case "configureMinterAllowance":
                     let allowance = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast allowance");
                     self.configureMinterAllowance(allowance: allowance);
@@ -618,13 +623,13 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
             self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
         }
-        
     }
 
-    /// The actual minter resource, the resourceId must be added to the minter restrictions lists
+    /// The actual minter resource, the resourceId must be added to the `minterAllowances` list
     /// for minter to successfully mint / burn within restrictions
     pub resource Minter: FiatTokenInterface.Minter, ResourceId, OnChainMultiSig.PublicSigner {
-
+        
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         pub fun UUID(): UInt64 {
@@ -684,6 +689,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
                     self.multiSigManager.removeKeys(pks: [pubKey]);
                 case "removePayload":
+                    // This helps to retrieve the Vault added to burn in case signers change their minds
                     let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
                     let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
                     var temp: @AnyResource? <- nil;
@@ -691,11 +697,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     destroy(p);
                     destroy(payloadToRemove);
                     return <- temp;
-                case "mint":
-                    let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
-                    destroy (p);
-                    return <- self.mint(amount: amount);
                 case "mintTo":
+                    // This replaces Mint because Mint does not enforced minted amount should deposit to 
+                    // certain account that multisig signers can be sure of
                     let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount");
                     let recvAddress = p.getArg(i: 1)! as? Address ?? panic ("cannot downcast address");
                     let recvAcct = getAccount(recvAddress);
@@ -736,6 +740,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
     }
 
+    /// Note: `PauseExecutor` and `BlocklistExeuctor` do not support multisig as they themselves do not do any transactions.
+    /// Once the capability has been shared to `Pauser` and `Blocklister` respectively, those resources calls 
+    /// for the state change transactions 
+    ///
     /// The blocklist execution resource, account with this resource must share / unlink its capability
     /// with Blocklister to managed permission for block
     pub resource BlocklistExecutor: FiatTokenInterface.Blocklister{
@@ -752,11 +760,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         };
     }
 
-    pub resource interface BlocklistCapReceiver {
-        // This is used to set the blocklist capability of a Blocklister
-        pub fun setBlocklistCap(blocklistCap: Capability<&BlocklistExecutor>) 
-    }
-
     /// Delegate blocklister for actually adding resources to blocklist
     //  Blocklisting is not paused in the event the contract is paused\
     // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#pausing
@@ -764,6 +767,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         // Optional value, initially nil until set by BlocklistExecutor
         access(self) var blocklistcap: Capability<&BlocklistExecutor>?;
         
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
 
         pub fun blocklist(resourceId: UInt64){
@@ -780,6 +784,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             self.blocklistcap!.borrow()!.unblocklist(resourceId: resourceId);
         };
         
+        // Called by the Account that owns BlocklistExecutor
+        // (since they are the only account that can create such Capability as input arg)
+        // This means the BlocklistExector account "grants" the right to call fn in BlocklistExecutor 
+        // 
+        // The Account that owns BlocklistExector will be set in init() of the contract and will be the Owner/Admin
         pub fun setBlocklistCap(blocklistCap: Capability<&BlocklistExecutor>){
             pre {
                 blocklistCap.borrow() != nil: "Invalid BlocklistCap capability"
@@ -858,26 +867,20 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
          }
     }
 
-    pub resource interface PauseCapReceiver {
-        // This is used by some account with the PauseExecutor resource
-        // to share it with a Pauser
-        pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) 
-    }
-
     /// Delegate pauser 
     pub resource Pauser: PauseCapReceiver, OnChainMultiSig.PublicSigner {
-        // This will be a Capability from the PauseExecutor created by the MasterMinter and linked privately.
-        // MasterMinter will call setPauseCapability to provide it.
+        // This will be a Capability from the PauseExecutor created by the Owner and linked privately.
+        // Owner will call setPauseCapability to provide it.
         access(self) var pauseCap:  Capability<&PauseExecutor>?;
         
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager;
         
         // Called by the Account that owns PauseExecutor
         // (since they are the only account that can create such Capability as input arg)
         // This means the PauseExector account "grants" the right to call fn in pauseExecutor
         // 
-        // The Account that owns PauseExecutor will be set in init() of the contract
-        // and will probably be the MasterMinter/Admin
+        // The Account that owns PauseExecutor will be set in init() of the contract and will be the Owner/Admin
         pub fun setPauseCap(pauseCap: Capability<&PauseExecutor>) {
             pre {
                 pauseCap.borrow() != nil: "Invalid PauseCap capability"
@@ -951,7 +954,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         }
     }
 
-    // ============ FiatToken METHODS: ==============
+    // ============ FiatToken Methods ==============
 
     /// createEmptyVault
     ///
@@ -1001,6 +1004,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return FiatToken.minterAllowances[resourceId]
     }
     
+    // ============ FiatToken Initializer ==============
     init(
         adminAccount: AuthAccount, 
         VaultStoragePath: StoragePath,
@@ -1038,7 +1042,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         ownerAccountPubKeys: [String],
         ownerAccountKeyWeights: [UFix64],
     ) {
-        
+
+        // These keys and weights are used to initialise the `MasterMinter` owned by the owner
         assert(ownerAccountPubKeys.length == ownerAccountKeyWeights.length, message: "pubkey length and weights length mismatched");
 
         self.name = tokenName;
@@ -1048,9 +1053,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.blocklist = {};
         self.minterAllowances = {};
         self.managedMinters = {};
-
-        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
-        // Saving the owner here means the admin and the owner is under management of the same account
 
         self.VaultStoragePath = VaultStoragePath;
         self.VaultBalancePubPath = VaultBalancePubPath;
@@ -1102,7 +1104,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(self.VaultAllowancePubPath, target: self.VaultStoragePath)
         adminAccount.link<&FiatToken.Vault{OnChainMultiSig.PublicSigner}>(self.VaultPubSigner, target: self.VaultStoragePath)
 
-
+        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
+        // Saving the owner here means the admin and the owner is under management of the same account
         let owner <- create Owner();
         adminAccount.save(<-owner, to: self.OwnerStoragePath);
         adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);

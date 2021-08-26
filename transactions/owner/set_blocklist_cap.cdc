@@ -1,5 +1,5 @@
-// The account with the PauseExecutor Resource can use this script to 
-// provide capability for a pauser to pause the contract
+// The account with the BlocklistExecutor Resource can use this script to 
+// provide capability for a blocklister to blocklist resources
 
 import FiatToken from 0x{{.FiatToken}}
 

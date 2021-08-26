@@ -3,7 +3,10 @@ import FungibleToken from "./FungibleToken.cdc"
 pub contract interface FiatTokenInterface {
 
     // ===== Token Info =====
+    /// The name of the Token
     pub let name: String;
+    /// The current version of this contract
+    pub let version: String;
 
     // ===== Contract Paths =====
     pub let VaultStoragePath: StoragePath;
@@ -11,18 +14,21 @@ pub contract interface FiatTokenInterface {
     pub let VaultUUIDPubPath: PublicPath;
     pub let VaultAllowancePubPath: PublicPath;
     pub let VaultReceiverPubPath: PublicPath;
+    pub let VaultPubSigner: PublicPath;
 
     pub let BlocklistExecutorStoragePath: StoragePath;
     pub let BlocklistExecutorPrivPath: PrivatePath;
     
     pub let BlocklisterStoragePath: StoragePath;
     pub let BlocklisterCapReceiverPubPath: PublicPath;
+    pub let BlocklisterPubSigner: PublicPath;
 
     pub let PauseExecutorStoragePath: StoragePath;
     pub let PauseExecutorPrivPath: PrivatePath;
 
     pub let PauserStoragePath: StoragePath;
     pub let PauserCapReceiverPubPath: PublicPath;
+    pub let PauserPubSigner: PublicPath;
 
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
@@ -30,13 +36,16 @@ pub contract interface FiatTokenInterface {
     pub let MasterMinterStoragePath: StoragePath;
     pub let MasterMinterPrivPath: PrivatePath;
     pub let MasterMinterPubSigner: PublicPath;
+    pub let MasterMinterUUIDPubPath: PublicPath;
 
     pub let MinterControllerStoragePath: StoragePath;
     pub let MinterControllerUUIDPubPath: PublicPath;
+    pub let MinterControllerPubSigner: PublicPath;
 
     pub let MinterStoragePath: StoragePath;
     pub let MinterUUIDPubPath: PublicPath;
-    
+    pub let MinterPubSigner: PublicPath;
+
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`
     /// All transactions must check this value
@@ -152,34 +161,67 @@ pub contract interface FiatTokenInterface {
         ///
         /// Function that updates existing minter restrictions
         pub fun configureMinterAllowance(allowance: UFix64);
+        /// increaseMinterAllowance
+        ///
+        /// Function that increases the existing minter allowance
         pub fun increaseMinterAllowance(increment: UFix64);
+        /// decreaseMinterAllowance
+        ///
+        /// Function that decreases the existing minter allowance
         pub fun decreaseMinterAllowance(decrement: UFix64);
+        /// removeMinter 
+        ///
+        /// Function that removes Minter from `minterAllowances`
+        /// MinterController can still manage the Minter
         pub fun removeMinter();
     }
 
     /// The minter is controlled by at least 1 minter controller
     pub resource interface Minter {
+        /// mint
+        ///
+        /// Function to mint supply, allowance must be set by a MinterController
         pub fun mint(amount: UFix64): @FungibleToken.Vault;
+        /// burn
+        ///
+        /// Fucntion to burn tokens from the input Vault
         pub fun burn(vault: @FungibleToken.Vault);
     }
 
     /// Interface required for blocklisting a resource 
     pub resource interface Blocklister {
+        /// blocklist
+        ///
+        /// Blocklister with provided capability use this function to blocklist a resource
         pub fun blocklist(resourceId: UInt64);
+        /// unblocklist
+        ///
+        /// Blocklister with provided capability use this function to unblocklist a resource
         pub fun unblocklist(resourceId: UInt64);
     }
 
     /// Interface required for pausing the contract
     pub resource interface Pauser {
-        // Note: this only sets the state of the pause of the contract
+        /// pause
+        ///
+        /// Pauser with provided capability use this function to pause a contract
         pub fun pause(); 
+        /// unpause
+        ///
+        /// Pauser with provided capability use this function to unpause a contract
         pub fun unpause();
     }
 
     /// Interface for another vault to receive an allowance
     /// Should be linked to the public domain
     pub resource interface Allowance {
+        /// allowance
+        ///
+        /// Find the allowance for a Vault in another Vault
         pub fun allowance(resourceId: UInt64): UFix64?;
+        /// withdrawAllowance
+        ///
+        /// Anyone can call this for a receiving Vault, succeeds if allowance is above amount
         pub fun withdrawAllowance(recvAddr: Address, amount: UFix64);
     }
 }
