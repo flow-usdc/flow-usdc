@@ -3,7 +3,6 @@
 ## calc_signable_data.cdc
  This script returns cadence conversion from different types to bytes 
  Currently AnyStruct is input arg is not allowed, hence wrapping it in optional
-
 ```cadence
 pub fun main(v: AnyStruct?): [UInt8] {
     let value = v!;
@@ -90,6 +89,7 @@ pub fun main(): Bool {
 
 ## get_resource_uuid.cdc
  This script uses the resources PubSigner Public path to use the UUID function for uuid
+
  Alternatively, if the resource owner do not want to link PubSigner path, they can simply
  link the ResourceId interfaces and this script should then use the <Resource>UUIDPubPath, i.e. VaultUUIDPubPath
 
@@ -153,22 +153,6 @@ pub fun main(): String {
 ```
 
 
-## get_balance.cdc
- This script reads the balance field of an account's FiatToken Balance
-
-
-```cadence
-pub fun main(account: Address): UFix64 {
-    let acct = getAccount(account)
-    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
-        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
-        ?? panic("Could not borrow Balance reference to the Vault")
-
-    return vaultRef.balance
-}
-```
-
-
 # onChainMultiSig
 ## get_key_weight.cdc
  This script gets the weight of a stored public key in a multiSigManager for a resource 
@@ -189,7 +173,6 @@ pub fun main(resourceAddr: Address, key: String, resourcePubSignerPath: PublicPa
 
 ## get_pubsigner_path.cdc
  This gets the pubsigner path for different resources
-
 
 ```cadence
 pub fun main(resourceName: String): PublicPath {
@@ -259,6 +242,22 @@ pub fun main(fromAcct: Address, toResourceId: UInt64): UFix64 {
         .borrow<&FiatToken.Vault{FiatTokenInterface.Allowance}>()
         ?? panic("Could not borrow Allowance reference to the Vault")
     return vaultRef.allowance(resourceId: toResourceId)!
+}
+```
+
+
+## get_balance.cdc
+ This script reads the balance field of an account's FiatToken Balance
+
+
+```cadence
+pub fun main(account: Address): UFix64 {
+    let acct = getAccount(account)
+    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
+        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
+        ?? panic("Could not borrow Balance reference to the Vault")
+
+    return vaultRef.balance
 }
 ```
 

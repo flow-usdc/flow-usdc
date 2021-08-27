@@ -1,5 +1,7 @@
 # Resource Interactions
 
+<!-- markdownlint-configure-file { "MD013": { "line_length": 200} } -->
+
 There are total of 9 resources in `FiatToken`:
 
 - `owner`: with functions to create `MasterMinter`, `PauseExecutor` and `BlocklistExecutor`
