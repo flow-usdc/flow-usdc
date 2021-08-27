@@ -14,5 +14,7 @@ There are total of 9 resources in `FiatToken`:
 
 There on 3 delegation processes from the owner, minting, pause, blocklist.
 The latter 2 are very similar and will be described in the same diagram below.
+
 ![mint](mint.png)
+
 ![pauser-blocklister](pauser-blocklister.png)
