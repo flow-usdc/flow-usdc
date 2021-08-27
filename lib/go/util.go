@@ -10,7 +10,7 @@ import (
 
 	"text/template"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go-sdk"
 	"github.com/onflow/flow-go-sdk/crypto"
@@ -25,6 +25,8 @@ const Acct500_1 = "w-500-1"
 const Acct500_2 = "w-500-2"
 const Acct250_1 = "w-250-1"
 const Acct250_2 = "w-250-2"
+const Config = "../../../flow.json"
+var FlowJSON []string = []string{Config}
 
 type Addresses struct {
 	FungibleToken      string
@@ -316,7 +318,7 @@ func multiSig_NewPayload(
 		StringArgument(signerPubKey[2:]).
 		AccountArgument(resourceAcct).
 		Argument(path).
-		Run()
+		RunE()
 	events = ParseTestEvents(e)
 	return
 }
@@ -365,7 +367,7 @@ func MultiSig_SignAndSubmitNewPayloadWithVault(
 		StringArgument(signerPubKey[2:]).
 		AccountArgument(resourceAcct).
 		Argument(path).
-		Run()
+		RunE()
 	events = ParseTestEvents(e)
 	return
 }
@@ -393,7 +395,7 @@ func multiSig_AddPayloadSignature(
 		StringArgument(signerPubKey[2:]).
 		AccountArgument(resourceAcct).
 		Argument(path).
-		Run()
+		RunE()
 	events = ParseTestEvents(e)
 	return
 }
@@ -418,7 +420,7 @@ func MultiSig_ExecuteTx(
 		UInt64Argument(index).
 		AccountArgument(resourceAcct).
 		Argument(path).
-		Run()
+		RunE()
 	events = ParseTestEvents(e)
 	return
 }

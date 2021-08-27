@@ -1,7 +1,7 @@
 package mint
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -20,7 +20,7 @@ func CreateMinter(
 		AccountArgument(account).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -43,7 +43,7 @@ func Mint(g *gwtf.GoWithTheFlow, minterAcct string, amount string, recvAcct stri
 		SignProposeAndPayAs(minterAcct).
 		UFix64Argument(amount).
 		AccountArgument(recvAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -54,7 +54,7 @@ func Burn(g *gwtf.GoWithTheFlow, minterAcct string, amount string) (events []*gw
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterAcct).
 		UFix64Argument(amount).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

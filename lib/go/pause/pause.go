@@ -1,7 +1,7 @@
 package pause
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -20,7 +20,7 @@ func CreatePauser(
 		AccountArgument(account).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -41,7 +41,7 @@ func PauseOrUnpauseContract(
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(pauserAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -18,7 +18,7 @@ func Approve(
 		SignProposeAndPayAs(fromAcct).
 		UInt64Argument(toResourceId).
 		UFix64Argument(amount).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -55,7 +55,7 @@ func WithdrawAllowance(
 		AccountArgument(fromAcct).
 		AccountArgument(toAcct).
 		UFix64Argument(amount).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -80,7 +80,7 @@ func IncreaseOrDecreaseAlowance(
 		SignProposeAndPayAs(fromAcct).
 		UInt64Argument(toResourceId).
 		UFix64Argument(absDelta).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

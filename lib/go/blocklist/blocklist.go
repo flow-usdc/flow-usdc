@@ -1,7 +1,7 @@
 package blocklist
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -20,7 +20,7 @@ func CreateBlocklister(
 		AccountArgument(account).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -42,7 +42,7 @@ func BlocklistOrUnblocklistRsc(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		UInt64Argument(rscToBlockOrUnBlock).
 		SignProposeAndPayAs(blocklisterAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

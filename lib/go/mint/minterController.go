@@ -3,7 +3,7 @@ package mint
 import (
 	"errors"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -22,7 +22,7 @@ func CreateMinterController(
 		AccountArgument(account).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -48,7 +48,7 @@ func ConfigureMinterAllowance(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(amount).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -61,7 +61,7 @@ func RemoveMinter(
 	txScript := util.ParseCadenceTemplate(txFilename)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -83,7 +83,7 @@ func IncreaseOrDecreaseMinterAllowance(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(minterControllerAcct).
 		UFix64Argument(absDelta).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
