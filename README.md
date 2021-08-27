@@ -23,25 +23,25 @@ states and events
   `MinterControllers` to control the allowance / removal of a `Minter`.
   Both `MinterController` and `Minter` resources are created by the users
   and the unique resource uuid is stored in the `managedMinter` and `minterAllowances` states.
-  Please see [delegation process] for details.
+  Please see [delegation process](./doc/resource-interactions.md) for details.
   * **Pausing and Unpausing: PauseExecutor and Pauser**: If a situation like a major bug discovery
   or a serious key compromise,
   a `Pauser` will be able to halt all transfers and approvals contract-wide,
   until a mitigation takes place.
   `Pauser` is granted the capability to pause / unpause a contract by the contract owner by
   sharing the `PauseExecutor` capability.
-  Please see [delegation process] for details.
+  Please see [delegation process](./doc/resource-interactions.md) for details.
   * **Blocklisting: BlocklistExecutor and Blocklister**: If a resource (`Vault`, `Minter`, etc)
   has been flagged and required to be blocked, the `Blocklister` will be able to such resource to
   the `blocklist`. The contract owner shares the `BlocklistExecutor` capabilities with the
   Blocklist to delegate such action.
   Blocklisted resources are prevented from minting, burning, transferring or approving token transfers.
-  Please see [delegation process] for details.
+  Please see [delegation process](./doc/resource-interactions.md) for details.
   * **Allowance: Vault**: In additiont to `FungibleToken` interfaces,
   the `Vault` is enhanced with with features such as `VaultUUID` and `Allowance`.
 
 All of the functionality above is equipped with [on-chain multi-signature support].
-[delegation process]: (doc/resource-interactions.md)
+
 [`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
 [`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
