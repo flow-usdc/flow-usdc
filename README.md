@@ -15,9 +15,8 @@ in the following contracts:
 
 * **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault (a.k.a Ownable) resource
 and interfaces for compatibility.
-* **[`FiatTokenInterface`]**, implemented in this codebase. This interface builds off of the above
-`FungibleToken` core contract, adding the following resource interfaces, as well as the related
-states and events
+* **[`FiatTokenInterface`]**, implemented in this codebase. It provides resource interfaces,
+as well as the related states and events for [`FiatToken`] to support the following functionalities:
   * **Delegated Minting: MasterMinter, MinterControllers and Minters**:
   `MasterMinter` can set states in `managedMinter` to  delegate
   `MinterControllers` to control the allowance / removal of a `Minter`.
@@ -37,15 +36,17 @@ states and events
   Blocklist to delegate such action.
   Blocklisted resources are prevented from minting, burning, transferring or approving token transfers.
   Please see [delegation process](./doc/resource-interactions.md) for details.
-  * **Allowance: Vault**: In additiont to `FungibleToken` interfaces,
-  the `Vault` is enhanced with with features such as `VaultUUID` and `Allowance`.
-
-All of the functionality above is equipped with [on-chain multi-signature support].
+  * **Allowance: Vault**: In addition to `FungibleToken` interfaces,
+  the `Vault` is enhanced with with the `Allowance` which allows the vault owner to set a withdrawal
+  limit for other vaults.
+* **[OnChainMultiSig]**, are implemented for `MasterMinter`, `MinterController`, `Minter`, `Pauser`,
+`Blocklister`, and `Vault` resources which allows for multiple signatures to authorise transactions
+without time restrictions.
 
 [`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
 [`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
-[on-chain multi-signature support]: https://github.com/flow-hydraulics/onchain-multisig
+[OnChainMultiSig]: https://github.com/flow-hydraulics/onchain-multisig
 
 ## Table of Contents
 
@@ -142,6 +143,11 @@ Once you have `flow` and `go` installed, then simply clone the repo to get start
 git clone https://github.com/flow-usdc/flow-usdc
 ```
 
+### Transactions
+
+Transaction scripts used to interact with [`FiatToken`] are documented in
+[TRANSACTIONS.md](./doc/TRANSACTIONS.md) and [SCRIPTS.md](./doc/SCRIPTS.md)
+
 ## Contributing
 
 Issues and PRs accepted. Over time more details will be added here.
@@ -160,7 +166,7 @@ Some documentation is auto-generated from comments and code.
 Run the command(s) below to update the docs:
 
 ```bash
-$ make -B doc/TRANSACTIONS.md
+make -B doc
 ```
 
 ## License
