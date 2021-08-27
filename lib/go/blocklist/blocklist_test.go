@@ -1,10 +1,11 @@
 package blocklist
 
-import (
+import :
+	"os"
 	"strconv"
 	"testing"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/flow-usdc/flow-usdc/vault"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestCreateBlocklister(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(["../../../flow.json"], os.Getenv("NETWORK"), false, 1)
 	events, err := CreateBlocklister(g, "blocklister")
 	assert.NoError(t, err)
 

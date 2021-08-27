@@ -1,7 +1,7 @@
 package vault
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 )
@@ -18,7 +18,7 @@ func AddVaultToAccount(
 		SignProposeAndPayAs(vaultAcct).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -36,7 +36,7 @@ func TransferTokens(
 		SignProposeAndPayAs(fromAcct).
 		UFix64Argument(amount).
 		AccountArgument(toAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -52,7 +52,7 @@ func MoveAndDeposit(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(fromAcct).
 		AccountArgument(toAcct).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

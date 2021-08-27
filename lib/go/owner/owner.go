@@ -1,7 +1,7 @@
 package owner
 
 import (
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 )
 
@@ -51,7 +51,7 @@ func ConfigureMinterController(
 		SignProposeAndPayAs(ownerAcct).
 		UInt64Argument(minter).
 		UInt64Argument(minterController).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }
@@ -68,7 +68,7 @@ func RemoveMinterController(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		UInt64Argument(minterController).
-		Run()
+		RunE()
 	events = util.ParseTestEvents(e)
 	return
 }

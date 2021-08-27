@@ -6,7 +6,7 @@ import (
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 )
 
 func DeployFiatTokenContract(
@@ -87,7 +87,7 @@ func DeployFiatTokenContract(
 		BooleanArgument(false).
 		Argument(cadence.NewArray(multiSigPubKeys)).
 		Argument(cadence.NewArray(multiSigKeyWeights)).
-		Run()
+		RunE()
 	gwtf.PrintEvents(e, map[string][]string{})
 	events = util.ParseTestEvents(e)
 

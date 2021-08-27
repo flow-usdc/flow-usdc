@@ -4,16 +4,18 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/flow-usdc/flow-usdc/vault"
 
 	"github.com/stretchr/testify/assert"
+    "os"
 )
 
 func TestCreatePauser(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
 
 	events, err := CreatePauser(g, "pauser")
 	assert.NoError(t, err)
@@ -23,13 +25,13 @@ func TestCreatePauser(t *testing.T) {
 }
 
 func TestSetPauserCapability(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	err := owner.SetPauserCapability(g, "pauser", "owner")
 	assert.NoError(t, err)
 }
 
 func TestPauserContractWithCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	events, err := PauseOrUnpauseContract(g, "pauser", 1)
 	assert.NoError(t, err)
@@ -51,7 +53,7 @@ func TestPauserContractWithCap(t *testing.T) {
 }
 
 func TestPauserContractWithoutCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	_, err := CreatePauser(g, "non-pauser")
 	assert.NoError(t, err)
 
@@ -61,7 +63,7 @@ func TestPauserContractWithoutCap(t *testing.T) {
 }
 
 func TestUnPauserContractWithCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	events, err := PauseOrUnpauseContract(g, "pauser", 0)
 	assert.NoError(t, err)
 
@@ -81,7 +83,7 @@ func TestUnPauserContractWithCap(t *testing.T) {
 }
 
 func TestMultiSig_Pause(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
@@ -130,7 +132,8 @@ func TestMultiSig_Pause(t *testing.T) {
 }
 
 func TestMultiSig_Unpause(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
@@ -158,7 +161,7 @@ func TestMultiSig_Unpause(t *testing.T) {
 }
 
 func TestMultiSig_PauserUnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
 	txIndex, err := util.GetTxIndex(g, "pauser", "Pauser")
@@ -175,8 +178,8 @@ func TestMultiSig_PauserUnknowMethodFails(t *testing.T) {
 }
 
 func TestMultiSig_PauserCanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
@@ -199,8 +202,9 @@ func TestMultiSig_PauserCanRemoveKey(t *testing.T) {
 }
 
 func TestMultiSig_PauserCanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+    g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 

@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	"github.com/flow-usdc/flow-usdc/deploy"
 )
 

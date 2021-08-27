@@ -3,7 +3,7 @@ package deploy
 import (
 	"testing"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/stretchr/testify/assert"
 )

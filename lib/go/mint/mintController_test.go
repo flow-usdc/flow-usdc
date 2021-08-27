@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bjartek/go-with-the-flow/gwtf"
+	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/onflow/cadence"
