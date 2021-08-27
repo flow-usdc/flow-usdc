@@ -9,5 +9,8 @@ endif
 test:
 	./lib/go/test.sh
 
-doc/TRANSACTIONS.md:
-	go run lib/go/scripts/generate-docs/generate-transactions-md.go > doc/TRANSACTIONS.md
+.PHONY: docs 
+
+docs:
+	go run lib/go/scripts/generate-docs/generate-transactions-md.go transactions > ./doc/TRANSACTIONS.md
+	go run lib/go/scripts/generate-docs/generate-transactions-md.go scripts > ./doc/SCRIPTS.md
