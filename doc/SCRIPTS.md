@@ -3,6 +3,8 @@
 ## calc_signable_data.cdc
  This script returns cadence conversion from different types to bytes 
  Currently AnyStruct is input arg is not allowed, hence wrapping it in optional
+
+```cadence
 pub fun main(v: AnyStruct?): [UInt8] {
     let value = v!;
     switch value.getType(){
@@ -33,6 +35,7 @@ pub fun main(v: AnyStruct?): [UInt8] {
  If it is not blocklisted, nil will return
 
 
+```cadence
 pub fun main(uuid: UInt64): UInt64? {
     return FiatToken.getBlocklist(resourceId: uuid)
 }
@@ -44,6 +47,7 @@ pub fun main(uuid: UInt64): UInt64? {
  If non is set by the MasterMinter, nil will return
 
 
+```cadence
 pub fun main(uuid: UInt64): UInt64? {
     return FiatToken.getManagedMinter(resourceId: uuid)
 }
@@ -55,6 +59,7 @@ pub fun main(uuid: UInt64): UInt64? {
  If non is set, this will return error
 
 
+```cadence
 pub fun main(uuid: UInt64): UFix64 {
     return FiatToken.getMinterAllowance(resourceId: uuid)!
 }
@@ -65,6 +70,7 @@ pub fun main(uuid: UInt64): UFix64 {
  Gets the Token Name
 
 
+```cadence
 pub fun main(): String{
     return FiatToken.name
 }
@@ -75,6 +81,7 @@ pub fun main(): String{
  Gets the pause state of the contract
 
 
+```cadence
 pub fun main(): Bool {
     return FiatToken.paused
 }
@@ -83,11 +90,11 @@ pub fun main(): Bool {
 
 ## get_resource_uuid.cdc
  This script uses the resources PubSigner Public path to use the UUID function for uuid
-
  Alternatively, if the resource owner do not want to link PubSigner path, they can simply
  link the ResourceId interfaces and this script should then use the <Resource>UUIDPubPath, i.e. VaultUUIDPubPath
 
 
+```cadence
 pub fun main(resourceAddr: Address, resourceName: String): UInt64 {
     let resourceAcct = getAccount(resourceAddr)
     var resourcePubPath: PublicPath = FiatToken.VaultPubSigner
@@ -123,6 +130,7 @@ pub fun main(resourceAddr: Address, resourceName: String): UInt64 {
  of the FiatToken smart contract
 
 
+```cadence
 pub fun main(): UFix64 {
 
     let supply = FiatToken.totalSupply
@@ -138,8 +146,25 @@ pub fun main(): UFix64 {
  This gets the current version of the contract
 
 
+```cadence
 pub fun main(): String {
     return FiatToken.version
+}
+```
+
+
+## get_balance.cdc
+ This script reads the balance field of an account's FiatToken Balance
+
+
+```cadence
+pub fun main(account: Address): UFix64 {
+    let acct = getAccount(account)
+    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
+        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
+        ?? panic("Could not borrow Balance reference to the Vault")
+
+    return vaultRef.balance
 }
 ```
 
@@ -149,6 +174,7 @@ pub fun main(): String {
  This script gets the weight of a stored public key in a multiSigManager for a resource 
 
 
+```cadence
 pub fun main(resourceAddr: Address, key: String, resourcePubSignerPath: PublicPath): UFix64 {
     let resourceAcct = getAccount(resourceAddr)
     let ref = resourceAcct.getCapability(resourcePubSignerPath)
@@ -164,6 +190,8 @@ pub fun main(resourceAddr: Address, key: String, resourcePubSignerPath: PublicPa
 ## get_pubsigner_path.cdc
  This gets the pubsigner path for different resources
 
+
+```cadence
 pub fun main(resourceName: String): PublicPath {
     switch resourceName {
         case "MasterMinter":
@@ -190,6 +218,7 @@ pub fun main(resourceName: String): PublicPath {
  This script gets all the  stored public keys in a multiSigManager for a resource 
 
 
+```cadence
 pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): [String] {
     let resourceAcct = getAccount(resourceAddr)
     let ref = resourceAcct.getCapability(resourcePubSignerPath)
@@ -206,6 +235,7 @@ pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): [String]
  The new payload must be this value + 1
 
 
+```cadence
 pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): UInt64{
     let resourcAcct = getAccount(resourceAddr)
     let ref = resourcAcct.getCapability(resourcePubSignerPath)
@@ -222,27 +252,13 @@ pub fun main(resourceAddr: Address, resourcePubSignerPath: PublicPath): UInt64{
  This script reads the allowance field set in a vault for another resource 
 
 
+```cadence
 pub fun main(fromAcct: Address, toResourceId: UInt64): UFix64 {
     let acct = getAccount(fromAcct)
     let vaultRef = acct.getCapability(FiatToken.VaultAllowancePubPath)
         .borrow<&FiatToken.Vault{FiatTokenInterface.Allowance}>()
         ?? panic("Could not borrow Allowance reference to the Vault")
     return vaultRef.allowance(resourceId: toResourceId)!
-}
-```
-
-
-## get_balance.cdc
- This script reads the balance field of an account's FiatToken Balance
-
-
-pub fun main(account: Address): UFix64 {
-    let acct = getAccount(account)
-    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
-        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
-        ?? panic("Could not borrow Balance reference to the Vault")
-
-    return vaultRef.balance
 }
 ```
 

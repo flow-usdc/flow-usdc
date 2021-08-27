@@ -88,7 +88,7 @@ func walkingScriptDir(path string, info fs.FileInfo, err error) error {
 	fmt.Printf("## %s\n", info.Name())
 	for i := 0; i < len(lines); i++ {
 		if len(lines[i]) == 0 {
-			fmt.Print("\n")
+			fmt.Printf("\n")
 			continue
 		}
 
@@ -113,7 +113,7 @@ func walkingScriptDir(path string, info fs.FileInfo, err error) error {
 		}
 
 		// Open code ticks
-		if len(lines[i]) > 10 && bytes.Equal(lines[i][0:11], []byte("pub func main")) {
+		if len(lines[i]) > 11 && bytes.Equal(lines[i][0:12], []byte("pub fun main")) {
 			fmt.Print("```cadence\n")
 			fmt.Print(string(lines[i]))
 			fmt.Print("\n")

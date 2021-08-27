@@ -166,7 +166,7 @@ Some documentation is auto-generated from comments and code.
 Run the command(s) below to update the docs:
 
 ```bash
-make -B doc
+make -B docs
 ```
 
 ## License
