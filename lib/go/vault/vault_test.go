@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func TestAddVaultToAccount(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	events, err := AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
@@ -25,14 +26,14 @@ func TestAddVaultToAccount(t *testing.T) {
 }
 
 func TestNonVaultedAccount(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := util.GetBalance(g, "non-vaulted-account")
 	assert.Error(t, err)
 }
 
 func TestTransferTokens(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	initialBalance, err := util.GetBalance(g, "owner")
 	assert.NoError(t, err)
@@ -86,7 +87,7 @@ func TestTransferTokens(t *testing.T) {
 }
 
 func TestTransferToNonVaulted(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	// Transfer 1 token from FT vaulted-account to Account B, which has no vault
 	rawEvents, err := TransferTokens(g, "1000.00000000", "owner", "non-vaulted-account")
 	assert.Error(t, err)
@@ -94,7 +95,7 @@ func TestTransferToNonVaulted(t *testing.T) {
 }
 
 func TestMultiSig_Transfer(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// make sure `vaulted-account` has Fiat Token
 	transferAmount := "100.00000000"
@@ -180,7 +181,7 @@ func TestMultiSig_Transfer(t *testing.T) {
 }
 
 func TestMultiSig_VaultUnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
@@ -198,8 +199,8 @@ func TestMultiSig_VaultUnknowMethodFails(t *testing.T) {
 }
 
 func TestMultiSig_VaultCanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "vaulted-account", "Vault", pk250_1[2:])
@@ -222,8 +223,8 @@ func TestMultiSig_VaultCanRemoveKey(t *testing.T) {
 }
 
 func TestMultiSig_VaultCanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 

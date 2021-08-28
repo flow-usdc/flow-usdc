@@ -26,6 +26,7 @@ const Acct500_2 = "w-500-2"
 const Acct250_1 = "w-250-1"
 const Acct250_2 = "w-250-2"
 const Config = "../../../flow.json"
+
 var FlowJSON []string = []string{Config}
 
 type Addresses struct {
@@ -99,9 +100,14 @@ func (te TestEvent) AssertEqual(t *testing.T, event *gwtf.FormatedEvent) {
 	}
 }
 
+// Gets the address in the format of a hex string from an account name
 func GetAccountAddr(g *gwtf.GoWithTheFlow, name string) string {
-	address := cadence.BytesToAddress(g.Accounts[name].Address.Bytes())
-	return address.String()
+	address := g.Account(name).Address().String()
+	zeroPrefix := "0"
+	if string(address[0]) == zeroPrefix {
+		address = address[1:]
+	}
+	return "0x" + address
 }
 
 func ReadCadenceCode(ContractPath string) []byte {
@@ -196,7 +202,7 @@ type Arg struct {
 
 // Signing payload offline
 func SignPayloadOffline(g *gwtf.GoWithTheFlow, message []byte, signingAcct string) (sig string, err error) {
-	s := g.Accounts[signingAcct]
+	s := g.Account(signingAcct).Key().ToConfig()
 	signer := crypto.NewInMemorySigner(s.PrivateKey, s.HashAlgo)
 	message = append(flow.UserDomainTag[:], message...)
 	sigbytes, err := signer.Sign(message)
@@ -250,7 +256,7 @@ func ConvertToCadenceValue(g *gwtf.GoWithTheFlow, args ...Arg) (a []cadence.Valu
 		case "UInt64":
 			b = cadence.UInt64(arg.V.(uint64))
 		case "Address":
-			b = cadence.BytesToAddress(g.Accounts[arg.V.(string)].Address.Bytes())
+			b = cadence.BytesToAddress(g.Account(arg.V.(string)).Address().Bytes())
 		default:
 			err = errors.New("Type not supported")
 		}
@@ -308,7 +314,7 @@ func multiSig_NewPayload(
 	if err != nil {
 		return
 	}
-	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	signerPubKey := g.Account(signerAcct).Key().ToConfig().PrivateKey.PublicKey().String()
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(signerAcct).
 		StringArgument(sig).
@@ -357,7 +363,7 @@ func MultiSig_SignAndSubmitNewPayloadWithVault(
 	if err != nil {
 		return
 	}
-	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	signerPubKey := g.Account(signerAcct).Key().ToConfig().PrivateKey.PublicKey().String()
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(signerAcct).
 		StringArgument(sig).
@@ -386,8 +392,7 @@ func multiSig_AddPayloadSignature(
 	if err != nil {
 		return
 	}
-
-	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()
+	signerPubKey := g.Account(signerAcct).Key().ToConfig().PrivateKey.PublicKey().String()
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(signerAcct).
 		StringArgument(sig).
@@ -443,7 +448,7 @@ func GetStoreKeys(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName strin
 func GetKeyWeight(g *gwtf.GoWithTheFlow, signerAcct string, resourceAcct string, resourceName string) (result cadence.UFix64, err error) {
 	filename := "../../../scripts/onChainMultiSig/get_key_weight.cdc"
 	script := ParseCadenceTemplate(filename)
-	signerPubKey := g.Accounts[signerAcct].PrivateKey.PublicKey().String()[2:]
+	signerPubKey := g.Account(signerAcct).Key().ToConfig().PrivateKey.PublicKey().String()[2:]
 	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
 	if err != nil {
 		return
@@ -495,11 +500,11 @@ func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string
 }
 
 func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, MultiSigKeyWeights []cadence.Value) {
-	pk1000 := g.Accounts[Acct1000].PrivateKey.PublicKey().String()
-	pk500_1 := g.Accounts[Acct500_1].PrivateKey.PublicKey().String()
-	pk500_2 := g.Accounts[Acct500_2].PrivateKey.PublicKey().String()
-	pk250_1 := g.Accounts[Acct250_1].PrivateKey.PublicKey().String()
-	pk250_2 := g.Accounts[Acct250_2].PrivateKey.PublicKey().String()
+	pk1000 := g.Account(Acct1000).Key().ToConfig().PrivateKey.PublicKey().String()
+	pk500_1 := g.Account(Acct500_1).Key().ToConfig().PrivateKey.PublicKey().String()
+	pk500_2 := g.Account(Acct500_2).Key().ToConfig().PrivateKey.PublicKey().String()
+	pk250_1 := g.Account(Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
+	pk250_2 := g.Account(Acct250_2).Key().ToConfig().PrivateKey.PublicKey().String()
 
 	w1000, _ := cadence.NewUFix64("1000.0")
 	w500, _ := cadence.NewUFix64("500.0")

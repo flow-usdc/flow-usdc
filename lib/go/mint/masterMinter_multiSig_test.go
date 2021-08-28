@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func TestMasterMinterMultiSig_ConfigureMC(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
@@ -64,7 +65,7 @@ func TestMasterMinterMultiSig_ConfigureMC(t *testing.T) {
 }
 
 func TestMasterMinterMultiSig_RemoveMC(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "owner", "MasterMinter")
@@ -100,7 +101,7 @@ func TestMasterMinterMultiSig_RemoveMC(t *testing.T) {
 }
 
 func TestMasterMinterMultiSig_UnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
@@ -118,8 +119,8 @@ func TestMasterMinterMultiSig_UnknowMethodFails(t *testing.T) {
 }
 
 func TestMasterMinterMultiSig_CanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "owner", "MasterMinter", pk250_1[2:])
@@ -142,8 +143,9 @@ func TestMasterMinterMultiSig_CanRemoveKey(t *testing.T) {
 }
 
 func TestMasterMinterMultiSig_CanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
+
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 

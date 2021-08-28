@@ -7,10 +7,25 @@
   },
   "deployments": {
     "emulator": {
-      "owner": ["FiatTokenInterface", "OnChainMultiSig"]
-    },
-    "testnet": {
-      "owner": ["FiatTokenInterface"]
+      "emulator-owner": ["FiatTokenInterface", "OnChainMultiSig"],
+      "emulator-allowance": [],
+      "emulator-blocklister": [],
+      "emulator-minter": [],
+      "emulator-minterController1": [],
+      "emulator-minterController2": [],
+      "emulator-non-allowance" : [],
+      "emulator-non-blocklister":[],
+      "emulator-non-minter": [],
+      "emulator-non-multisig-account": [],
+      "emulator-non-pauser": [],
+      "emulator-non-vaulted-account": [],
+      "emulator-pauser": [],
+      "emulator-vaulted-account": [],
+      "emulator-w-1000": [],
+      "emulator-w-500-1": [],
+      "emulator-w-500-2": [],
+      "emulator-w-250-1": [],
+      "emulator-w-250-2": []
     }
   },
   "contracts": {
@@ -33,83 +48,83 @@
   "accounts": {
     "emulator-account": {
       "address": "f8d6e0586b0a20c7",
-      "keys" : "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
+      "key" : "758abfd76ad82071cbeeb309f251eeefbe9bb8442557de745769a6ff0a912636"
     },
-    "owner": {
+    "emulator-owner": {
       "address": "01cf0e2f2f715450",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "vaulted-account" : {
+    "emulator-allowance" : {
 	  "address": "179b6b1cb6755e31",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-vaulted-account" : {
+    "emulator-blocklister" : {
 	  "address": "f3fcd2c1a78f5eee",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "pauser" : {
+    "emulator-minter" : {
 	  "address": "e03daebed8ca0615",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-pauser" : {
+    "emulator-minterController1" : {
 	  "address": "045a1763c93006ca",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "blocklister" : {
+    "emulator-minterController2" : {
 	  "address": "120e725050340cab",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-blocklister" : {
+    "emulator-non-allowance" : {
 	  "address": "f669cb8d41ce0c74",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "allowance" : {
+    "emulator-non-blocklister" : {
 	  "address": "192440c99cb17282",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-allowance" : {
+    "emulator-non-minter" : {
 	  "address": "fd43f9148d4b725d",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "minter" : {
+    "emulator-non-multisig-account" : {
 	  "address": "eb179c27144f783c",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-minter" : {
+    "emulator-non-pauser" : {
 	  "address": "f7025fa05b578e3",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "minterController1" : {
+    "emulator-non-vaulted-account" : {
 	  "address": "e2f72218abeec2b9",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "minterController2" : {
+    "emulator-pauser" : {
 	  "address": "6909bc5ba14c266",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "w-1000" : {
+    "emulator-vaulted-account" : {
     "address": "10c4fef62310c807",
-      "keys" : "c7b5941fa9dc429f752057ef1f5b4d393470256f20ad0853d4343dde84a70946"
+      "key" : "c7b5941fa9dc429f752057ef1f5b4d393470256f20ad0853d4343dde84a70946"
     },
-    "w-500-1" : {
+    "emulator-w-1000" : {
     "address": "f4a3472b32eac8d8",
-      "keys" : "3548f83a45e04050033112b81722f29c6d853fd00eb79a08101025900ca4c543"
+      "key" : "3548f83a45e04050033112b81722f29c6d853fd00eb79a08101025900ca4c543"
     },
-    "w-500-2" : {
+    "emulator-w-250-1" : {
     "address": "1beecc6fef95b62e",
-      "keys" : "8da7a03dbcdd9d84d4e5e9875744accf7810d41fc60dd2522e5fa3f1441eff1d"
+      "key" : "8da7a03dbcdd9d84d4e5e9875744accf7810d41fc60dd2522e5fa3f1441eff1d"
     },
-    "w-250-1" : {
+    "emulator-w-250-2" : {
     "address": "ff8975b2fe6fb6f1",
-      "keys" : "2e20dc54149cd114e265ef09b6dd09e222ce1979257b359fb6db53b64f260c6e"
+      "key" : "2e20dc54149cd114e265ef09b6dd09e222ce1979257b359fb6db53b64f260c6e"
     },
-    "w-250-2" : {
+    "emulator-w-500-1" : {
     "address": "e9dd1081676bbc90",
-      "keys" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
+      "key" : "9c687961e7a1abe1e445830e7ec118ffd1e2a0449cf705f5476b3f100e94dc29"
     },
-    "non-multisig-account" : {
+    "emulator-w-500-2" : {
     "address": "dbaa95c7691bc4f",
-      "keys" : "bf242a7c12e299d90e4621d99501d1e27ccdc4d511cdf1f0fbba37a47e83bd24"
+      "key" : "bf242a7c12e299d90e4621d99501d1e27ccdc4d511cdf1f0fbba37a47e83bd24"
     }
   }
 }
