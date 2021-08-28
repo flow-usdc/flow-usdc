@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func TestController_Create(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	events, err := CreateMinterController(g, "minterController1")
 	assert.NoError(t, err)
 
@@ -24,7 +25,7 @@ func TestController_Create(t *testing.T) {
 }
 
 func TestController_MasterMinterConfigureMinterController(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := CreateMinter(g, "minter")
 	assert.NoError(t, err)
@@ -50,7 +51,7 @@ func TestController_MasterMinterConfigureMinterController(t *testing.T) {
 }
 
 func TestController_ConfigureMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -76,7 +77,7 @@ func TestController_ConfigureMinterAllowance(t *testing.T) {
 }
 
 func TestController_IncreaseMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -106,7 +107,7 @@ func TestController_IncreaseMinterAllowance(t *testing.T) {
 }
 
 func TestController_DecreaseMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -136,7 +137,7 @@ func TestController_DecreaseMinterAllowance(t *testing.T) {
 }
 
 func TestController_RemoveMinter(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -158,7 +159,7 @@ func TestController_RemoveMinter(t *testing.T) {
 }
 
 func TestController_WithoutConfigFailToSetMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// minterController2 is without being configured by MasterMinter
 	_, err := CreateMinterController(g, "minterController2")
@@ -172,7 +173,7 @@ func TestController_WithoutConfigFailToSetMinterAllowance(t *testing.T) {
 }
 
 func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// all minterController has been configured by masterMinter
 	minterController1, err := util.GetUUID(g, "minterController1", "MinterController")
@@ -208,7 +209,7 @@ func TestController_MultipleControllerCanConfigureOneMinter(t *testing.T) {
 }
 
 func TestController_MasterMinterRemoveController(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	minterController2, err := util.GetUUID(g, "minterController2", "MinterController")
 	assert.NoError(t, err)
 
@@ -225,7 +226,7 @@ func TestController_MasterMinterRemoveController(t *testing.T) {
 }
 
 func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
@@ -247,7 +248,7 @@ func TestController_RemovedControllerFailToConfigureMinterAllowance(t *testing.T
 }
 
 func TestControllerMultiSig_removeMinter(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -281,7 +282,7 @@ func TestControllerMultiSig_removeMinter(t *testing.T) {
 }
 
 func TestControllerMultiSig_configureMinter(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -337,7 +338,7 @@ func TestControllerMultiSig_configureMinter(t *testing.T) {
 }
 
 func TestControllerMultiSig_incrementMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -380,7 +381,7 @@ func TestControllerMultiSig_incrementMinterAllowance(t *testing.T) {
 }
 
 func TestControllerMultiSig_decrementMinterAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minterController, err := util.GetUUID(g, "minterController1", "MinterController")
 	assert.NoError(t, err)
@@ -423,7 +424,7 @@ func TestControllerMultiSig_decrementMinterAllowance(t *testing.T) {
 }
 
 func TestControllerMultiSig_UnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
@@ -441,8 +442,9 @@ func TestControllerMultiSig_UnknowMethodFails(t *testing.T) {
 }
 
 func TestControllerMultiSig_CanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
+
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "minterController1", "MinterController", pk250_1[2:])
@@ -465,8 +467,8 @@ func TestControllerMultiSig_CanRemoveKey(t *testing.T) {
 }
 
 func TestControllerMultiSig_CanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 

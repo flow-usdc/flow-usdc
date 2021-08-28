@@ -1,6 +1,6 @@
 package blocklist
 
-import :
+import (
 	"os"
 	"strconv"
 	"testing"
@@ -13,7 +13,7 @@ import :
 )
 
 func TestCreateBlocklister(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow(["../../../flow.json"], os.Getenv("NETWORK"), false, 1)
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	events, err := CreateBlocklister(g, "blocklister")
 	assert.NoError(t, err)
 
@@ -25,13 +25,13 @@ func TestCreateBlocklister(t *testing.T) {
 }
 
 func TestSetBlocklistCapability(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	err := owner.SetBlocklistCapability(g, "blocklister", "owner")
 	assert.NoError(t, err)
 }
 
 func TestBlocklistWithCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := vault.AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
@@ -82,7 +82,7 @@ func TestBlocklistWithCap(t *testing.T) {
 }
 
 func TestUnblocklistWithCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
@@ -110,7 +110,7 @@ func TestUnblocklistWithCap(t *testing.T) {
 }
 
 func TestBlocklistWithoutCap(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "vaulted-account", "Vault")
 	assert.NoError(t, err)
@@ -121,7 +121,7 @@ func TestBlocklistWithoutCap(t *testing.T) {
 }
 
 func TestMultiSig_Blocklist(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "blocklister", "Blocklister")
@@ -173,7 +173,7 @@ func TestMultiSig_Blocklist(t *testing.T) {
 }
 
 func TestMultiSig_Unblocklist(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "blocklister", "Blocklister")
@@ -204,7 +204,8 @@ func TestMultiSig_Unblocklist(t *testing.T) {
 }
 
 func TestMultiSig_BlocklisterUnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
 	txIndex, err := util.GetTxIndex(g, "blocklister", "Blocklister")
@@ -221,8 +222,9 @@ func TestMultiSig_BlocklisterUnknowMethodFails(t *testing.T) {
 }
 
 func TestMultiSig_BlocklisterCanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "blocklister", "Blocklister", pk250_1[2:])
@@ -245,8 +247,9 @@ func TestMultiSig_BlocklisterCanRemoveKey(t *testing.T) {
 }
 
 func TestMultiSig_BlocklisterCanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 

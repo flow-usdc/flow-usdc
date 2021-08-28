@@ -2,9 +2,9 @@ module github.com/flow-usdc/flow-usdc
 
 go 1.16
 
-// replace github.com/bjartek/go-with-the-flow/v2 => github.com/flow-usdc/go-with-the-flow v1.18.2-0.20210705041746-37f6357fc263
+replace github.com/bjartek/go-with-the-flow/v2 => github.com/flow-hydraulics/go-with-the-flow/v2 v2.0.0-20210828075816-542f0f58e499
 
-replace github.com/bjartek/go-with-the-flow/v2 => ../../../gwtf-usdc-fork
+//replace github.com/bjartek/go-with-the-flow/v2 => ../../../gwtf-usdc-fork
 
 require (
 	github.com/bjartek/go-with-the-flow/v2 v2.1.4

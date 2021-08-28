@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func TestMintBurn_MintWithoutConfig(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	createEvents, err := CreateMinter(g, "non-minter")
 	assert.NoError(t, err)
@@ -28,7 +29,7 @@ func TestMintBurn_MintWithoutConfig(t *testing.T) {
 }
 
 func TestMintBurn_MintBelowAllowace(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Params
 	_, err := vault.AddVaultToAccount(g, "minter")
@@ -85,7 +86,7 @@ func TestMintBurn_MintBelowAllowace(t *testing.T) {
 }
 
 func TestMintBurn_Burn(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
@@ -139,7 +140,7 @@ func TestMintBurn_Burn(t *testing.T) {
 }
 
 func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Params
 	minter, err := util.GetUUID(g, "minter", "Minter")
@@ -174,7 +175,7 @@ func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
 }
 
 func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Pause contract
 	_, err := pause.PauseOrUnpauseContract(g, "pauser", 1)
@@ -207,7 +208,7 @@ func TestMintBurn_FailToMintOrBurnWhenPause(t *testing.T) {
 }
 
 func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
@@ -241,7 +242,7 @@ func TestMintBurn_FailToMintOrBurnWhenBlocklisted(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_MintTo(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	_, err := vault.AddVaultToAccount(g, util.Acct1000)
 	assert.NoError(t, err)
 	_, err = vault.AddVaultToAccount(g, util.Acct500_1)
@@ -305,7 +306,7 @@ func TestMintBurnMultiSig_MintTo(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_Burn(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "minter", "Minter")
@@ -349,7 +350,7 @@ func TestMintBurnMultiSig_Burn(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_RemovePayload(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Add New Payload that burns some token
 	// This will be removed in the second step
@@ -386,7 +387,7 @@ func TestMintBurnMultiSig_RemovePayload(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_MinterUnknowMethodFails(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 	m := util.Arg{V: uint64(111), T: "UInt64"}
 
@@ -404,8 +405,8 @@ func TestMintBurnMultiSig_MinterUnknowMethodFails(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_MinterCanRemoveKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 
 	hasKey, err := util.ContainsKey(g, "minter", "Minter", pk250_1[2:])
@@ -428,8 +429,9 @@ func TestMintBurnMultiSig_MinterCanRemoveKey(t *testing.T) {
 }
 
 func TestMintBurnMultiSig_MinterCanAddKey(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
-	pk250_1 := g.Accounts[util.Acct250_1].PrivateKey.PublicKey().String()
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
+
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
 
@@ -457,7 +459,7 @@ func TestMintBurnMultiSig_MinterCanAddKey(t *testing.T) {
 }
 
 func TestMintBurn_FailedToMintOrBurnAfterRemoved(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Ensure all amounts would be valid in valid case
 	minter, err := util.GetUUID(g, "minter", "Minter")

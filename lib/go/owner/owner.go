@@ -14,10 +14,10 @@ func SetPauserCapability(
 	txFilename := "../../../transactions/owner/set_pause_cap.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	err = g.TransactionFromFile(txFilename, txScript).
+	_, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		AccountArgument(pauserAcct).
-		RunPrintEventsFull()
+		RunE()
 	return
 }
 
@@ -30,10 +30,10 @@ func SetBlocklistCapability(
 	txFilename := "../../../transactions/owner/set_blocklist_cap.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	err = g.TransactionFromFile(txFilename, txScript).
+	_, err = g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(ownerAcct).
 		AccountArgument(blocklisterAcct).
-		RunPrintEventsFull()
+		RunE()
 	return
 }
 

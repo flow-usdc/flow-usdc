@@ -17,26 +17,7 @@ func DeployFiatTokenContract(
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
 
-	g.CreateAccountPrintEvents(
-		"vaulted-account",
-		"non-vaulted-account",
-		"pauser",
-		"non-pauser",
-		"blocklister",
-		"non-blocklister",
-		"allowance",
-		"non-allowance",
-		"minter",
-		"non-minter",
-		"minterController1",
-		"minterController2",
-		"w-1000",
-		"w-500-1",
-		"w-500-2",
-		"w-250-1",
-		"w-250-2",
-		"non-multisig-account",
-	)
+	g.CreateAccounts("emulator-account")
 
 	multiSigPubKeys, multiSigKeyWeights := util.GetMultiSigKeys(g)
 

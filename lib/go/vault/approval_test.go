@@ -8,10 +8,11 @@ import (
 	util "github.com/flow-usdc/flow-usdc"
 	"github.com/onflow/cadence"
 	"github.com/stretchr/testify/assert"
+	"os"
 )
 
 func TestApproval(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := AddVaultToAccount(g, "allowance")
 	assert.NoError(t, err)
@@ -39,7 +40,7 @@ func TestApproval(t *testing.T) {
 }
 
 func TestWithdrawAllowanceValidReq(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -97,7 +98,7 @@ func TestWithdrawAllowanceValidReq(t *testing.T) {
 }
 
 func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := AddVaultToAccount(g, "non-allowance")
 	assert.NoError(t, err)
@@ -126,7 +127,7 @@ func TestWithdrawAllowanceWithoutAllowance(t *testing.T) {
 }
 
 func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -150,7 +151,7 @@ func TestWithdrawAllowanceAboveAllowance(t *testing.T) {
 }
 
 func TestSetZeroApprovalRemoves(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -163,7 +164,7 @@ func TestSetZeroApprovalRemoves(t *testing.T) {
 }
 
 func TestIncreaseAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -196,7 +197,7 @@ func TestIncreaseAllowance(t *testing.T) {
 }
 
 func TestDecreaseAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	uuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -229,7 +230,7 @@ func TestDecreaseAllowance(t *testing.T) {
 }
 
 func TestMultiSig_Apporval(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	_, err := AddVaultToAccount(g, "vaulted-account")
 	assert.NoError(t, err)
@@ -272,7 +273,7 @@ func TestMultiSig_Apporval(t *testing.T) {
 }
 
 func TestMultiSig_IncreaseAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	toUuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
@@ -316,7 +317,7 @@ func TestMultiSig_IncreaseAllowance(t *testing.T) {
 }
 
 func TestMultiSig_DecreaseAllowance(t *testing.T) {
-	g := gwtf.NewGoWithTheFlow("../../../flow.json")
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	toUuid, err := util.GetUUID(g, "allowance", "Vault")
 	assert.NoError(t, err)
