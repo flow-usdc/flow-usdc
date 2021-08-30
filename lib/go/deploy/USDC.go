@@ -17,7 +17,9 @@ func DeployFiatTokenContract(
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
 
-	g.CreateAccounts("emulator-account")
+    if  g.Network == "emulator" {
+        g.CreateAccounts("emulator-account")
+    }
 
 	multiSigPubKeys, multiSigKeyWeights := util.GetMultiSigKeys(g)
 
@@ -64,7 +66,7 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterPublicSigner"}).
 		StringArgument(tokenName).
 		StringArgument(version).
-		UFix64Argument("10000.00000000").
+		UFix64Argument("1000000000.00000000").
 		BooleanArgument(false).
 		Argument(cadence.NewArray(multiSigPubKeys)).
 		Argument(cadence.NewArray(multiSigKeyWeights)).
