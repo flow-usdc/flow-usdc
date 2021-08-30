@@ -63,38 +63,53 @@ without time restrictions.
 
 ## Usage
 
-The USDC Flow token is continuously deployed to testnet. It is also available to developers
-for local use and testing.
+The `FiatToken`, `FiatTokenInterface`, and `OnChainMultiSig` contracts are currently deployed to
+the Flow Testnet account [`0x1ab3c177460e1e4a`].
 
-### On Testnet
+### Transactions and Scripts
 
-The (work in progress) USDC Token contract is currently deployed to the account
-[`0x1ab3c177460e1e4a`](https://flow-view-source.com/testnet/account/0x8aef704f5bca27a1/) on the
-Flow testnet.
+You can interact with the `FiatToken` contract using **transactions** and **scripts**. Examples
+of each can be found in the `doc/` folder:
 
-<!-- TODO: Examples -->
+* [Transactions](./doc/TRANSACTIONS.md)
+* [Scripts](./doc/SCRIPTS.md)
+
+### Beyond Usage
+
+If you're developing an app using the `FiatToken` contract, you should only need to reference the
+Cadence code in this repo. However, if you're looking to try it out locally or run the tests,
+you will a couple other tools.
+
+## Install
+
+### Prerequisites
+
+To run and test the code in this repo, it's required that you install:
+
+* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
+* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
+
+### Installing `flow-usdc`
+
+Once you have `flow` and `go` installed, then simply clone the repo to get started:
+
+```bash
+git clone https://github.com/flow-usdc/flow-usdc
+```
+
+[`0x1ab3c177460e1e4a`]: https://flow-view-source.com/testnet/account/0x1ab3c177460e1e4a/
 
 ### Environment Variables
 
-A typical configuration file will look something like the following:
+For local testing via the Flow emulator, a typical configuration file will look something like:
 
 ```shell
-TOKEN_ACCOUNT_KEYS= [ 64 byte private key ]
-TOKEN_ACCOUNT_PK= [128 byte public key with same seed as TOKEN_ACCOUNT_KEYS]
-
 # Emulator settings
 # --------
-# NETWORK=emulator
-# RPC_ADDRESS=localhost:3569
-# TOKEN_ACCOUNT_ADDRESS=[ emulator account generated from TOKEN_ACCOUNT_PK ]
-# FUNGIBLE_TOKEN_ADDRESS=ee82856bf20e2aa6
-
-# Testnet
-# -------
-NETWORK=testnet
-RPC_ADDRESS=access.devnet.nodes.onflow.org:9000
-TOKEN_ACCOUNT_ADDRESS= [ testnet account generated from TOKEN_ACCOUNT_PK ]
-FUNGIBLE_TOKEN_ADDRESS=9a0766d93b6608b7
+NETWORK=emulator
+RPC_ADDRESS=localhost:3569
+TOKEN_ACCOUNT_ADDRESS=[ emulator account generated from TOKEN_ACCOUNT_PK ]
+FUNGIBLE_TOKEN_ADDRESS=ee82856bf20e2aa6
 ```
 
 To generate the necessary values, choose a 32 byte seed (can use a random hex string), and
@@ -109,7 +124,7 @@ TOKEN_ACCOUNT_ADDRESS=$(flow accounts create --key="$TOKEN_ACCOUNT_PK" -o inline
 
 You can see this in action in our testing script, described in the next section.
 
-### Deploy for the first time
+### Deploying to Testnet for the first time
 
 1. Once account private / public key pair has been generated and they are saved in .env,
 `make testnet-create-accounts` will create all the accounts and signed by `testnet-owner`
@@ -129,32 +144,7 @@ root.
 ./test/test.sh
 ```
 
-## Install
-
-Theoretically, you should only need the Cadence code in this repo, but if you're looking to
-try it out locally or test, you will a couple other tools. If you're looking to simply
-interact with the contract on Testnet, you can skip ahead to the ["on testnet"](#on-testnet)
-section.
-
-### Prerequisites
-
-To run and test the code in this repo, it's required that you install:
-
-* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
-* The [Go](https://golang.org/doc/install) programming language, to run the automated tests
-
-### Installing `flow-usdc`
-
-Once you have `flow` and `go` installed, then simply clone the repo to get started:
-
-```bash
-git clone https://github.com/flow-usdc/flow-usdc
-```
-
-### Transactions
-
-Transaction scripts used to interact with [`FiatToken`] are documented in
-[TRANSACTIONS.md](./doc/TRANSACTIONS.md) and [SCRIPTS.md](./doc/SCRIPTS.md)
+Additional testing information can be found in [`doc/tests.md`](./doc/tests.md)
 
 ## Contributing
 
@@ -163,19 +153,12 @@ Issues and PRs accepted. Over time more details will be added here.
 ### Repo Layout
 
 * `contracts` - contains all of the contracts and the scripts required to interact with them
+* `doc` - contains manual and auto-generated documentation for contracts, scripts, and transactions
+* `lib/go` - Test code in Golang.
+* `scripts` - contains examples of scripts used to interact with the contract
+* `transactions` - contains examples of transactions one can perform with the contract
 * `env.example` - example file to be populated with values and copied to `./test/.env`
 * `flow.json` - configuration file for the `flow` CLI tool.
-* `test` - Test code in Golang.
-* `transactions` - contains examples of transactions one can perform with the contract
-
-#### Documentation
-
-Some documentation is auto-generated from comments and code.
-Run the command(s) below to update the docs:
-
-```bash
-make -B docs
-```
 
 ## License
 
