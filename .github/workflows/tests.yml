@@ -49,7 +49,7 @@ jobs:
         run: make test
 
   testnet:
-    if: false
+    if: true
     runs-on: ubuntu-latest
     needs: emulator
     timeout-minutes: 30
