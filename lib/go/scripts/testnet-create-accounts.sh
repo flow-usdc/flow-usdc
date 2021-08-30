@@ -1,38 +1,27 @@
 #!/bin/bash
-
 source .env
 
-# Check to see if it's running in the right directory
-if [ ! -f "./flow.json" ]; then
-  echo "IMPORTANT: This script must be run from the 'flow-usdc' root folder, not a subdirectory"
-  exit 1
-fi
-
-PROJECT_ROOT=$(pwd)
-EXEC_PATH=/usr/local/bin/flow
-
-shopt -s expand_aliases
-alias flow='$EXEC_PATH -f $PROJECT_ROOT/flow.json'
-
+# using go scripts due to https://github.com/onflow/flow-cli/issues/373
+# this issue is now fixed
 cd lib/go
-go run scripts/testnet/create_accounts.go allowance
-go run scripts/testnet/create_accounts.go blocklister
-go run scripts/testnet/create_accounts.go minter 
-go run scripts/testnet/create_accounts.go minterController1 
-go run scripts/testnet/create_accounts.go minterController2
-go run scripts/testnet/create_accounts.go non-allowance
-go run scripts/testnet/create_accounts.go non-blocklister
-go run scripts/testnet/create_accounts.go non-minter
-go run scripts/testnet/create_accounts.go non-multisig-account
-go run scripts/testnet/create_accounts.go non-pauser
-go run scripts/testnet/create_accounts.go non-vaulted-account
-go run scripts/testnet/create_accounts.go pauser
-go run scripts/testnet/create_accounts.go vaulted-account
-go run scripts/testnet/create_accounts.go w-1000
-go run scripts/testnet/create_accounts.go w-250-1
-go run scripts/testnet/create_accounts.go w-250-2
-go run scripts/testnet/create_accounts.go w-500-1
-go run scripts/testnet/create_accounts.go w-500-2
+go run ./testnet-create-accounts/create_accounts.go allowance
+go run ./testnet-create-accounts/create_accounts.go blocklister
+go run ./testnet-create-accounts/create_accounts.go minter 
+go run ./testnet-create-accounts/create_accounts.go minterController1 
+go run ./testnet-create-accounts/create_accounts.go minterController2
+go run ./testnet-create-accounts/create_accounts.go non-allowance
+go run ./testnet-create-accounts/create_accounts.go non-blocklister
+go run ./testnet-create-accounts/create_accounts.go non-minter
+go run ./testnet-create-accounts/create_accounts.go non-multisig-account
+go run ./testnet-create-accounts/create_accounts.go non-pauser
+go run ./testnet-create-accounts/create_accounts.go non-vaulted-account
+go run ./testnet-create-accounts/create_accounts.go pauser
+go run ./testnet-create-accounts/create_accounts.go vaulted-account
+go run ./testnet-create-accounts/create_accounts.go w-1000
+go run ./testnet-create-accounts/create_accounts.go w-250-1
+go run ./testnet-create-accounts/create_accounts.go w-250-2
+go run ./testnet-create-accounts/create_accounts.go w-500-1
+go run ./testnet-create-accounts/create_accounts.go w-500-2
 
 # Transaction rec
 # 2021/08/30 11:11:02 getting key:  allowance
