@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
-    "os"
 
 	"text/template"
 
