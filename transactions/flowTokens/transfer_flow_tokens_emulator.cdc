@@ -28,6 +28,8 @@ transaction(amount: UFix64, to: Address) {
     }
 
     execute {
+    log("transferring")
+    log(to)
 
         // Get a reference to the recipient's Receiver
         let receiverRef =  getAccount(to)
