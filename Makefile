@@ -14,3 +14,13 @@ test:
 docs:
 	go run lib/go/scripts/generate-docs/generate-transactions-md.go transactions > ./doc/TRANSACTIONS.md
 	go run lib/go/scripts/generate-docs/generate-transactions-md.go scripts > ./doc/SCRIPTS.md
+
+.PHONY: local-deploy
+
+local-deploy:
+	./.local.sh
+
+.PHONY: testnet 
+
+create-accounts:
+	./.local.sh
