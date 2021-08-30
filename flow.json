@@ -26,6 +26,27 @@
       "emulator-w-500-2": [],
       "emulator-w-250-1": [],
       "emulator-w-250-2": []
+    },
+    "testnet": {
+      "testnet-owner": ["FiatTokenInterface", "OnChainMultiSig"],
+      "testnet-allowance": [],
+      "testnet-blocklister": [],
+      "testnet-minter": [],
+      "testnet-minterController1": [],
+      "testnet-minterController2": [],
+      "testnet-non-allowance" : [],
+      "testnet-non-blocklister":[],
+      "testnet-non-minter": [],
+      "testnet-non-multisig-account": [],
+      "testnet-non-pauser": [],
+      "testnet-non-vaulted-account": [],
+      "testnet-pauser": [],
+      "testnet-vaulted-account": [],
+      "testnet-w-1000": [],
+      "testnet-w-500-1": [],
+      "testnet-w-500-2": [],
+      "testnet-w-250-1": [],
+      "testnet-w-250-2": []
     }
   },
   "contracts": {
