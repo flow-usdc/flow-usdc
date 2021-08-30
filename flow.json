@@ -148,7 +148,7 @@
       "key" : "bf242a7c12e299d90e4621d99501d1e27ccdc4d511cdf1f0fbba37a47e83bd24"
     },
     "testnet-owner" : {
-    "address": "${OWNER_ADDRESS}",
+    "address": "1ab3c177460e1e4a",
       "key" : "${TESTNET_OWNER}"
     },
     "testnet-allowance" : {
