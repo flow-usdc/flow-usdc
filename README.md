@@ -109,6 +109,14 @@ TOKEN_ACCOUNT_ADDRESS=$(flow accounts create --key="$TOKEN_ACCOUNT_PK" -o inline
 
 You can see this in action in our testing script, described in the next section.
 
+### Deploy for the first time
+
+1. Once account private / public key pair has been generated and they are saved in .env,
+`make testnet-create-accounts` will create all the accounts and signed by `testnet-owner`
+2. When new accounts have been created, add those new addresses to `flow.json`.
+3. Transfer some flow tokens to the created account via `make testnet-transfer-flow-tokens`
+4. You can now run make test
+
 ### Testing Script
 
 In order to mitigate skew between emulator testing and testnet testing, this repo provides a

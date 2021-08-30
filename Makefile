@@ -20,7 +20,12 @@ docs:
 local-deploy:
 	./.local.sh
 
-.PHONY: testnet 
+.PHONY: testnet-create-accounts
 
-testnet:
-	./testnet-create-accounts.sh
+testnet-create-accounts:
+	./lib/go/scripts/testnet-create-accounts.sh
+
+.PHONY: testnet-transfer-flow-to-accounts
+
+testnet-transfer-flow-tokens:
+	./lib/go/scripts/testnet-transfer-flow-tokens.sh
