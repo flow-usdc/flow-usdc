@@ -22,5 +22,5 @@ local-deploy:
 
 .PHONY: testnet 
 
-create-accounts:
-	./.local.sh
+testnet:
+	./testnet-create-accounts.sh
