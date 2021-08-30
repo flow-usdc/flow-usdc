@@ -17,12 +17,12 @@ func TestFiatTokenTotalSupplyInOwnerVault(t *testing.T) {
 	balance, err := util.GetBalance(g, "owner")
 	assert.NoError(t, err)
 
-    // This assertion can only  happen on the first deploy on testnet as upgrades will not
-    // reset values
-    if g.Network == "emulator" {
-        assert.Equal(t, "1000000000.00000000", supply.String())
-        assert.Equal(t, "1000000000.00000000", balance.String())
-    }
+	// This assertion can only  happen on the first deploy on testnet as upgrades will not
+	// reset values
+	if g.Network == "emulator" {
+		assert.Equal(t, "1000000000.00000000", supply.String())
+		assert.Equal(t, "1000000000.00000000", balance.String())
+	}
 }
 
 func TestFiatTokenName(t *testing.T) {

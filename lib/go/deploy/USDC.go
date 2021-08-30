@@ -17,9 +17,9 @@ func DeployFiatTokenContract(
 	code := util.ParseCadenceTemplate(txFilename)
 	encodedStr := hex.EncodeToString(contractCode)
 
-    if  g.Network == "emulator" {
-        g.CreateAccounts("emulator-account")
-    }
+	if g.Network == "emulator" {
+		g.CreateAccounts("emulator-account")
+	}
 
 	multiSigPubKeys, multiSigKeyWeights := util.GetMultiSigKeys(g)
 
