@@ -32,6 +32,25 @@ jobs:
           OWNER_ADDRESS: ${{ secrets.EMULATOR_OWNER_ADDRESS }}
           OWNER_SK: ${{ secrets.EMULATOR_OWNER_SK }}
           OWNER_PK: ${{ secrets.EMULATOR_OWNER_PK }}
+          TESTNET_OWNER: ${{ secrets.TESTNET_OWNER}}
+          TESTNET_ALLOWANCE: ${{ secrets.TESTNET_ALLOWANCE}}
+          TESTNET_BLOCKLISTER: ${{ secrets.TESTNET_BLOCKLISTER}}
+          TESTNET_MINTER: ${{ secrets.TESTNET_MINTER}}
+          TESTNET_MINTERCONTROLLER1: ${{ secrets.TESTNET_MINTERCONTROLLER1}}
+          TESTNET_MINTERCONTROLLER2: ${{ secrets.TESTNET_MINTERCONTROLLER2}}
+          TESTNET_NON_ALLOWANCE: ${{ secrets.TESTNET_NON_ALLOWANCE}}
+          TESTNET_NON_BLOCKLISTER: ${{ secrets.TESTNET_NON_BLOCKLISTER}}
+          TESTNET_NON_MINTER: ${{ secrets.TESTNET_NON_MINTER}}
+          TESTNET_NON_MULTISIG_ACCOUNT: ${{ secrets.TESTNET_NON_MULTISIG_ACCOUNT}}
+          TESTNET_NON_PAUSER: ${{ secrets.TESTNET_NON_PAUSER}}
+          TESTNET_NON_VAULTED_ACCOUNT: ${{ secrets.TESTNET_NON_VAULTED_ACCOUNT}}
+          TESTNET_PAUSER: ${{ secrets.TESTNET_PAUSER}}
+          TESTNET_VAULTED_ACCOUNT: ${{ secrets.TESTNET_VAULTED_ACCOUNT}}
+          TESTNET_W_1000: ${{ secrets.TESTNET_W_1000}}
+          TESTNET_W_500_1: ${{ secrets.TESTNET_W_500_1}}
+          TESTNET_W_500_2: ${{ secrets.TESTNET_W_500_2}}
+          TESTNET_W_250_1: ${{ secrets.TESTNET_W_250_1}}
+          TESTNET_W_250_2: ${{ secrets.TESTNET_W_250_2}}
         run: make test
 
   testnet:
