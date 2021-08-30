@@ -48,19 +48,6 @@ without time restrictions.
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
 [OnChainMultiSig]: https://github.com/flow-hydraulics/onchain-multisig
 
-## Table of Contents
-
-* [Usage](#usage)
-  * [On Testnet](#on-testnet)
-  * [Environment Variables](#environment-variables)
-  * [Testing Script](#testing-script)
-* [Install](#install)
-  * [Prerequisites](#prerequisites)
-  * [Installing `flow-usdc`](#installing-flow-usdc)
-* [Contributing](#contributing)
-  * [Repo Layout](#repo-layout)
-* [License](#license)
-
 ## Usage
 
 The `FiatToken`, `FiatTokenInterface`, and `OnChainMultiSig` contracts are currently deployed to
