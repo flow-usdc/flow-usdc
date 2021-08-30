@@ -69,7 +69,7 @@ for local use and testing.
 ### On Testnet
 
 The (work in progress) USDC Token contract is currently deployed to the account
-[`0x8aef704f5bca27a1`](https://flow-view-source.com/testnet/account/0x8aef704f5bca27a1/) on the
+[`0x1ab3c177460e1e4a`](https://flow-view-source.com/testnet/account/0x8aef704f5bca27a1/) on the
 Flow testnet.
 
 <!-- TODO: Examples -->

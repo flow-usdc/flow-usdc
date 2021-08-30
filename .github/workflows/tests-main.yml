@@ -29,6 +29,7 @@ jobs:
           NETWORK: emulator
           RPC_ADDRESS: localhost:3569
           FUNGIBLE_TOKEN_ADDRESS: ee82856bf20e2aa6
+          OWNER_ADDRESS: 01cf0e2f2f715450
           TESTNET_OWNER: ${{ secrets.TESTNET_OWNER}}
           TESTNET_ALLOWANCE: ${{ secrets.TESTNET_ALLOWANCE}}
           TESTNET_BLOCKLISTER: ${{ secrets.TESTNET_BLOCKLISTER}}
@@ -67,6 +68,7 @@ jobs:
           NETWORK: testnet
           RPC_ADDRESS: access.devnet.nodes.onflow.org:9000
           FUNGIBLE_TOKEN_ADDRESS: 9a0766d93b6608b7
+          OWNER_ADDRESS: 1ab3c177460e1e4a
           TESTNET_OWNER: ${{ secrets.TESTNET_OWNER}}
           TESTNET_ALLOWANCE: ${{ secrets.TESTNET_ALLOWANCE}}
           TESTNET_BLOCKLISTER: ${{ secrets.TESTNET_BLOCKLISTER}}
