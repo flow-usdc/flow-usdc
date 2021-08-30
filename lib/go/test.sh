@@ -32,6 +32,7 @@ if [ "${NETWORK}" == "emulator" ]; then
   SIGNER=emulator-account
   # we create the first account and transfer flow tokens to it
   # the first account is the FiatToken owner
+  flow version
   flow accounts create --network="$NETWORK" --key="$OWNER_PK" --signer="$SIGNER"
   flow transactions send ./transactions/flowTokens/transfer_flow_tokens_emulator.cdc \
     --arg=UFix64:100.0 \
@@ -39,18 +40,8 @@ if [ "${NETWORK}" == "emulator" ]; then
     --signer="$SIGNER" \
     --network="$NETWORK"
 fi
-if [ "${NETWORK}" == "testnet" ]; then
-  SIGNER=owner
-#   flow transactions send ./transactions/flowTokens/transfer_flow_tokens_testnet.cdc \
-#     -f "$FLOW_CONFIG_PATH" \
-#     --arg=UFix64:0.001 \
-#     --arg=Address:0x"$NEW_VAULTED_ACCOUNT_ADDRESS" \
-#     --signer=owner \
-#     --network=testnet
-fi
 
-
-flow project deploy --network="$NETWORK" --update
+flow project deploy --network="$NETWORK" --update=true
 
 
 # NOW we switch to the go folder, where commands _can_ be run in place.

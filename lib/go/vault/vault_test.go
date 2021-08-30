@@ -19,8 +19,9 @@ func TestAddVaultToAccount(t *testing.T) {
 	_, err = util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
 
-	// Test event
-	if len(events) != 0 {
+	// Test event, the first events on testnet will be withdrawing for fees
+	// regardless if a new vault is created therefore we only test on emulator
+	if len(events) != 0 && g.Network == "emulator" {
 		util.NewExpectedEvent("FiatToken", "NewVault").AssertHasKey(t, events[0], "resourceId")
 	}
 }
