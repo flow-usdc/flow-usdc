@@ -191,6 +191,30 @@ transaction(
 
 
 # flowTokens
+## create_account_testnet.cdc
+ This creates an account and adds the public key with the weight
+
+```cadence
+transaction(publicKey: String, weight: UFix64) {
+    prepare(signer: AuthAccount) {
+        let key = PublicKey(
+            publicKey: publicKey.decodeHex(),
+            signatureAlgorithm: SignatureAlgorithm.ECDSA_P256
+        )
+
+        let account = AuthAccount(payer: signer)
+
+        account.keys.add(
+            publicKey: key,
+            hashAlgorithm: HashAlgorithm.SHA3_256,
+            weight: weight
+        )
+    }
+}
+```
+
+
+
 ## transfer_flow_tokens_emulator.cdc
  This transaction is a template for a transaction that
  could be used by anyone to send tokens to another account
@@ -221,6 +245,8 @@ transaction(amount: UFix64, to: Address) {
     }
 
     execute {
+    log("transferring")
+    log(to)
 
         // Get a reference to the recipient's Receiver
         let receiverRef =  getAccount(to)
