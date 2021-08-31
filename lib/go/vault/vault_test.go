@@ -78,7 +78,7 @@ func TestTransferTokens(t *testing.T) {
 
 	util.NewExpectedEvent("FiatToken", "DestroyVault").AssertHasKey(t, events[4], "resourceId")
 
-	// Transfer the 100 token back from account A to FT vaulted-account
+	// Transfer the 100 token back from vaulted-account to owner
 	_, err = TransferTokens(g, "100.00000000", "vaulted-account", "owner")
 	assert.NoError(t, err)
 
@@ -172,6 +172,54 @@ func TestMultiSig_Transfer(t *testing.T) {
 		AddField("amount", transferAmount).
 		AddField("to", toAddr).
 		AssertEqual(t, events[3])
+
+	postBalance, err := util.GetBalance(g, "vaulted-account")
+	assert.NoError(t, err)
+	recvPostBalance, err := util.GetBalance(g, "owner")
+	assert.NoError(t, err)
+	assert.Equal(t, transferAmount, (initBalance - postBalance).String())
+	assert.Equal(t, transferAmount, (recvPostBalance - recvInitBalance).String())
+}
+
+func TestMultiSig_TransferSingleTx(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+
+	// make sure `vaulted-account` has Fiat Token
+	transferAmount := "100.00000000"
+	_, err := TransferTokens(g, transferAmount, "owner", "vaulted-account")
+	assert.NoError(t, err)
+
+	initBalance, err := util.GetBalance(g, "vaulted-account")
+	assert.NoError(t, err)
+
+	recvInitBalance, err := util.GetBalance(g, "owner")
+	assert.NoError(t, err)
+
+	// Perform all required signature signing and submit in a single tx
+	// transfer the `transferAmount` from vaulted-account to the owner
+	amount := util.Arg{V: transferAmount, T: "UFix64"}
+	to := util.Arg{V: "owner", T: "Address"}
+
+	txIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	expectedNewIndex := txIndex + 1
+
+	var signers = []string{util.Acct500_1, util.Acct250_1, util.Acct250_2}
+	var signatures []string
+	var sig string
+
+	for i := 0; i < len(signers); i++ {
+		sig, err = util.MultiSig_Sign(g, expectedNewIndex, signers[i], "vaulted-account", "Vault", "transfer", amount, to)
+		assert.NoError(t, err)
+		signatures = append(signatures, sig)
+	}
+
+	_, err = util.MultiSig_SubmitMultiAndExecute(g, signatures, expectedNewIndex, signers, "vaulted-account", "Vault", "owner", "transfer", amount, to)
+	assert.NoError(t, err)
+
+	newTxIndex, err := util.GetTxIndex(g, "vaulted-account", "Vault")
+	assert.NoError(t, err)
+	assert.Equal(t, expectedNewIndex, newTxIndex)
 
 	postBalance, err := util.GetBalance(g, "vaulted-account")
 	assert.NoError(t, err)
