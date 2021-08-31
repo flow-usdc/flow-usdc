@@ -267,6 +267,30 @@ func ConvertToCadenceValue(g *gwtf.GoWithTheFlow, args ...Arg) (a []cadence.Valu
 	return
 }
 
+func MultiSig_Sign(
+	g *gwtf.GoWithTheFlow,
+	txIndex uint64,
+	signerAcct string,
+	resourceAcct string,
+	resourceName string,
+	method string,
+	args ...Arg,
+) (sig string, err error) {
+
+	cadenceArgs, err := ConvertToCadenceValue(g, args...)
+	if err != nil {
+		return
+	}
+
+	signable, err := GetSignableDataFromScript(g, txIndex, method, cadenceArgs...)
+	if err != nil {
+		return
+	}
+
+	sig, err = SignPayloadOffline(g, signable, signerAcct)
+	return
+}
+
 func MultiSig_SignAndSubmit(
 	g *gwtf.GoWithTheFlow,
 	newPayload bool,
@@ -425,6 +449,56 @@ func MultiSig_ExecuteTx(
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(payerAcct).
 		UInt64Argument(index).
+		AccountArgument(resourceAcct).
+		Argument(path).
+		RunE()
+	events = ParseTestEvents(e)
+	return
+}
+
+func MultiSig_SubmitMultiAndExecute(
+	g *gwtf.GoWithTheFlow,
+	sigs []string,
+	txIndex uint64,
+	signerAccts []string,
+	resourceAcct string,
+	resourceName string,
+	payerAcct string,
+	method string,
+	args ...Arg,
+) (events []*gwtf.FormatedEvent, err error) {
+	txFilename := "../../../transactions/onChainMultiSig/add_and_execute.cdc"
+	txScript := ParseCadenceTemplate(txFilename)
+
+	cadenceArgs, err := ConvertToCadenceValue(g, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
+	if err != nil {
+		return
+	}
+
+	var signerPubKeys []cadence.Value
+	var signatures []cadence.Value
+	var pk string
+
+	for i := 0; i < len(sigs); i++ {
+		pk = g.Account(signerAccts[i]).Key().ToConfig().PrivateKey.PublicKey().String()
+		signerPubKeys = append(signerPubKeys, cadence.NewString(pk[2:]))
+		signatures = append(signatures, cadence.NewString(sigs[i]))
+	}
+
+	sigs_array := cadence.NewArray(signatures)
+	pubkey_array := cadence.NewArray(signerPubKeys)
+	e, err := g.TransactionFromFile(txFilename, txScript).
+		SignProposeAndPayAs(payerAcct).
+		Argument(sigs_array).
+		UInt64Argument(txIndex).
+		StringArgument(method).
+		Argument(cadence.NewArray(cadenceArgs)).
+		Argument(pubkey_array).
 		AccountArgument(resourceAcct).
 		Argument(path).
 		RunE()
