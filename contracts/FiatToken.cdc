@@ -133,6 +133,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     pub let PauserCapReceiverPubPath: PublicPath;
     pub let PauserPubSigner: PublicPath;
 
+    pub let AdminStoragePath: StoragePath;
+    pub let AdminPubSigner: PublicPath;
+
     pub let OwnerStoragePath: StoragePath;
     pub let OwnerPrivPath: PrivatePath;
 
@@ -153,7 +156,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     // ===== FiatToken States / Variables =====
 
     pub let name: String;
-    pub let version: String;
+    pub var version: String;
+
     /// paused 
     ///
     /// Contract is paused if `paused` is `true`
@@ -424,6 +428,76 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         
     }
     
+    /// The admin is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
+    ///
+    /// Admin resource is stored at the deployers storage 
+    pub resource Admin: OnChainMultiSig.PublicSigner {
+
+        // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
+        access(self) let multiSigManager: @OnChainMultiSig.Manager;
+
+        // Update contract is experimental - https://docs.onflow.org/cadence/language/contracts/#updating-a-deployed-contract
+        pub fun upgradeContract(name: String, code: [UInt8], version: String) {
+            FiatToken.upgradeContract(name: name, code: code, version: version)
+        }
+        
+        // ===== OnChainMultiSig.PublicSigner interfaces
+        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig);
+        }
+
+        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
+            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig);
+       }
+        pub fun executeTx(txIndex: UInt64): @AnyResource? {
+            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no transactable payload at given txIndex")
+            switch p.method {
+                case "configureKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight");
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight]);
+                case "removeKey":
+                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key");
+                    self.multiSigManager.removeKeys(pks: [pubKey]);
+                case "removePayload":
+                    // This removes the contract code if no longer needed 
+                    let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex");
+                    let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex);
+                    destroy(payloadToRemove);
+                case "upgradeContract":
+                    let name = p.getArg(i: 0)! as? String ?? panic ("cannot downcast contract name");
+                    let code = p.getArg(i: 1)! as? String ?? panic ("cannot downcast contrace code");
+                    let version = p.getArg(i: 2)! as? String ?? panic ("cannot downcast contrace code");
+                    self.upgradeContract(name: name, code: code.decodeHex(), version: version)
+                default:
+                    panic("Unknown transaction method")
+            }
+            destroy (p)
+            return nil;
+        }
+
+        pub fun UUID(): UInt64 {
+            return self.uuid;
+        }; 
+
+        pub fun getTxIndex(): UInt64 {
+            return self.multiSigManager.txIndex
+        }
+
+        pub fun getSignerKeys(): [String] {
+            return self.multiSigManager.getSignerKeys()
+        }
+        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
+            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+        }
+        destroy() {
+            destroy self.multiSigManager
+        }
+
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
+            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+        }
+    }
     
 
     /// The owner is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
@@ -1004,6 +1078,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return FiatToken.minterAllowances[resourceId]
     }
     
+    access(self) fun upgradeContract( name: String, code: [UInt8], version: String,) {
+        self.account.contracts.update__experimental(name: name, code: code)
+        self.version = version
+    }
+    
     // ============ FiatToken Initializer ==============
     init(
         adminAccount: AuthAccount, 
@@ -1023,6 +1102,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         PauserStoragePath: StoragePath,
         PauserCapReceiverPubPath: PublicPath,
         PauserPubSigner: PublicPath,
+        AdminStoragePath: StoragePath,
+        AdminPubSigner: PublicPath,
         OwnerStoragePath: StoragePath,
         OwnerPrivPath: PrivatePath,
         MasterMinterStoragePath: StoragePath,
@@ -1075,6 +1156,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.PauserCapReceiverPubPath = PauserCapReceiverPubPath;
         self.PauserPubSigner = PauserPubSigner;
 
+        self.AdminStoragePath = AdminStoragePath;
+        self.AdminPubSigner = AdminPubSigner;
+
         self.OwnerStoragePath = OwnerStoragePath;
         self.OwnerPrivPath = OwnerPrivPath;
 
@@ -1104,8 +1188,6 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         adminAccount.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(self.VaultAllowancePubPath, target: self.VaultStoragePath)
         adminAccount.link<&FiatToken.Vault{OnChainMultiSig.PublicSigner}>(self.VaultPubSigner, target: self.VaultStoragePath)
 
-        // Note: the account deploying this contract can upgrade the contract, aka the admin role in the token design doc
-        // Saving the owner here means the admin and the owner is under management of the same account
         let owner <- create Owner();
         adminAccount.save(<-owner, to: self.OwnerStoragePath);
         adminAccount.link<&Owner>(self.OwnerPrivPath, target: self.OwnerStoragePath);
@@ -1121,6 +1203,10 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             pubKeyAttrs.append(pka);
             i = i + 1;
         }
+        
+        let admin <- create Admin(pk: ownerAccountPubKeys, pka: pubKeyAttrs);
+        adminAccount.save(<-admin, to: self.AdminStoragePath);
+        adminAccount.link<&Admin{OnChainMultiSig.PublicSigner}>(self.AdminPubSigner, target: self.AdminStoragePath);
         
         adminAccount.save(<-ownerCap.borrow()!.createNewPauseExecutor(), to: self.PauseExecutorStoragePath);
         adminAccount.save(<-ownerCap.borrow()!.createNewBlocklistExecutor(), to: self.BlocklistExecutorStoragePath);

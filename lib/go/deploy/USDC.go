@@ -48,6 +48,9 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauser"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserCapReceiver"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserPublicSigner"}).
+		//Admine
+		Argument(cadence.Path{Domain: "storage", Identifier: "USDCAdmin"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCAdminPublicSigner"}).
 		// Owner
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCOwner"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCOwnerCap"}).
@@ -70,6 +73,26 @@ func DeployFiatTokenContract(
 		BooleanArgument(false).
 		Argument(cadence.NewArray(multiSigPubKeys)).
 		Argument(cadence.NewArray(multiSigKeyWeights)).
+		RunE()
+	gwtf.PrintEvents(e, map[string][]string{})
+	events = util.ParseTestEvents(e)
+
+	return
+}
+
+func UpgradeFiatTokenContract(
+	g *gwtf.GoWithTheFlow,
+	ownerAcct string, version string) (events []*gwtf.FormatedEvent, err error) {
+	contractCode := util.ParseCadenceTemplate("../../../contracts/FiatToken.cdc")
+	txFilename := "../../../transactions/deploy/upgrade_contract.cdc"
+	code := util.ParseCadenceTemplate(txFilename)
+	encodedStr := hex.EncodeToString(contractCode)
+
+	e, err := g.TransactionFromFile(txFilename, code).
+		SignProposeAndPayAs(ownerAcct).
+		StringArgument("FiatToken").
+		StringArgument(encodedStr).
+		StringArgument(version).
 		RunE()
 	gwtf.PrintEvents(e, map[string][]string{})
 	events = util.ParseTestEvents(e)

@@ -48,11 +48,12 @@ cd lib/go
 go clean -testcache
 
 go run scripts/deploy/deploy.go
-go test ./deploy -v
+go test ./deploy -run FiatToken -v
 go test ./vault -v
 go test ./pause -v
 go test ./blocklist -v
 go test ./mint -run Controller -v
+go test ./deploy -run Upgrade -v
 go test ./mint -run MintBurn -v
 go test ./mint -run MasterMinterMultiSig -v
 
