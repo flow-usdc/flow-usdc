@@ -32,7 +32,6 @@ var FlowJSON []string = []string{Config}
 
 type Addresses struct {
 	FungibleToken      string
-	ExampleToken       string
 	FiatTokenInterface string
 	FiatToken          string
 	OnChainMultiSig    string
@@ -58,7 +57,7 @@ func ParseCadenceTemplate(templatePath string) []byte {
 
 	// Addresss for emulator are
 	// addresses = Addresses{"ee82856bf20e2aa6", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450", "01cf0e2f2f715450"}
-	addresses = Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("OWNER_ADDRESS"), os.Getenv("OWNER_ADDRESS"), os.Getenv("OWNER_ADDRESS"), os.Getenv("OWNER_ADDRESS")}
+	addresses = Addresses{os.Getenv("FUNGIBLE_TOKEN_ADDRESS"), os.Getenv("OWNER_ADDRESS"), os.Getenv("OWNER_ADDRESS"), os.Getenv("OWNER_ADDRESS")}
 
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, addresses)

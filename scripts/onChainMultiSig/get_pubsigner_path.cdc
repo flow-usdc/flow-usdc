@@ -15,6 +15,8 @@ pub fun main(resourceName: String): PublicPath {
             return FiatToken.PauserPubSigner
         case "Blocklister":
             return FiatToken.BlocklisterPubSigner
+        case "Admin":
+            return FiatToken.AdminPubSigner
         default:
             panic("Resource not supported")
     }

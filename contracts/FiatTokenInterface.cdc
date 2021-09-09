@@ -6,7 +6,7 @@ pub contract interface FiatTokenInterface {
     /// The name of the Token
     pub let name: String;
     /// The current version of this contract
-    pub let version: String;
+    pub var version: String;
 
     // ===== Contract Paths =====
     pub let VaultStoragePath: StoragePath;

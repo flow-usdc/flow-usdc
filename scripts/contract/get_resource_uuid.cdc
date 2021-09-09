@@ -23,6 +23,8 @@ pub fun main(resourceAddr: Address, resourceName: String): UInt64 {
             resourcePubPath = FiatToken.PauserPubSigner
         case "Blocklister":
             resourcePubPath = FiatToken.BlocklisterPubSigner
+        case "Admin":
+            resourcePubPath = FiatToken.AdminPubSigner
         default:
             panic ("Resource not supported")
     }
