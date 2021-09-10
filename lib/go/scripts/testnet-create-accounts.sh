@@ -3,7 +3,7 @@ source .env
 
 # using go scripts due to https://github.com/onflow/flow-cli/issues/373
 # this issue is now fixed
-cd lib/go
+cd lib/go/scripts
 go run ./testnet-create-accounts/create_accounts.go allowance
 go run ./testnet-create-accounts/create_accounts.go blocklister
 go run ./testnet-create-accounts/create_accounts.go minter 
