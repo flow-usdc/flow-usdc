@@ -4,7 +4,7 @@ source .env
 
 # using go scripts due to https://github.com/onflow/flow-cli/issues/373
 # this issue is now fixed
-cd lib/g/scripts
+cd lib/go/scripts
 go run ./testnet-send-flow-tokens/send-flow-tokens.go allowance
 go run ./testnet-send-flow-tokens/send-flow-tokens.go blocklister
 go run ./testnet-send-flow-tokens/send-flow-tokens.go minter 

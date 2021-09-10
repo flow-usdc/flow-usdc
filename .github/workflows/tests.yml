@@ -63,7 +63,7 @@ jobs:
           NETWORK: testnet
           RPC_ADDRESS: access.devnet.nodes.onflow.org:9000
           FUNGIBLE_TOKEN_ADDRESS: 9a0766d93b6608b7
-          OWNER_ADDRESS: e722d9815821c8ba
+          OWNER_ADDRESS: e722d9815821c8b3
           TESTNET_OWNER: ${{ secrets.TESTNET_OWNER}}
           TESTNET_ALLOWANCE: ${{ secrets.TESTNET_ALLOWANCE}}
           TESTNET_BLOCKLISTER: ${{ secrets.TESTNET_BLOCKLISTER}}
