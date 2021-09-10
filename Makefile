@@ -29,3 +29,6 @@ testnet-create-accounts:
 
 testnet-transfer-flow-tokens:
 	./lib/go/scripts/testnet-transfer-flow-tokens.sh
+
+testnet-remove-contract:
+	./lib/go/scripts/testnet-remove-contract.sh
