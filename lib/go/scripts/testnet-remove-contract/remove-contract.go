@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-
 	"os"
 
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
@@ -15,23 +14,12 @@ func main() {
 	var flowJSON []string = []string{jsonPath}
 	g := gwtf.NewGoWithTheFlow(flowJSON, os.Getenv("NETWORK"), false, 3)
 
-	// name of the account
-	account := os.Args[1]
-
-	log.Println("---------")
-	log.Println("")
-	log.Println("")
-	log.Println("account: ", account)
-
-	txFilename := "../../../transactions/flowTokens/create_account_testnet.cdc"
+	txFilename := "../../../transactions/owner/remove_contract.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
-
-	pubkey := g.Account(account).Key().ToConfig().PrivateKey.PublicKey().String()
 
 	e, err := g.TransactionFromFile(txFilename, code).
 		SignProposeAndPayAs("owner").
-		StringArgument(pubkey[2:]).
-		UFix64Argument("1000.0").
+		StringArgument("FiatToken").
 		RunE()
 	if err != nil {
 		log.Println(err)

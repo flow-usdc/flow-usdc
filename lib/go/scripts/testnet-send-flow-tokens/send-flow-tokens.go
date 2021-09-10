@@ -3,14 +3,15 @@ package main
 import (
 	"log"
 
+	"os"
+
 	"github.com/bjartek/go-with-the-flow/v2/gwtf"
 	util "github.com/flow-usdc/flow-usdc"
-	"os"
 )
 
 func main() {
 	// This relative path to flow.json is  different in tests as it is the main package
-	jsonPath := "../../flow.json"
+	jsonPath := "../../../flow.json"
 	var flowJSON []string = []string{jsonPath}
 	g := gwtf.NewGoWithTheFlow(flowJSON, os.Getenv("NETWORK"), false, 3)
 
@@ -22,7 +23,7 @@ func main() {
 	log.Println("")
 	log.Println("account: ", account)
 
-	txFilename := "../../transactions/flowTokens/transfer_flow_tokens_testnet.cdc"
+	txFilename := "../../../transactions/flowTokens/transfer_flow_tokens_testnet.cdc"
 	code := util.ParseCadenceTemplate(txFilename)
 
 	e, err := g.TransactionFromFile(txFilename, code).
