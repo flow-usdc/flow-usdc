@@ -8,7 +8,8 @@
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64]) {
+transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
+
     prepare (minterController: AuthAccount) {
         
         // Check and return if they already have a minter controller resource
@@ -22,7 +23,7 @@ transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: 
         var i = 0;
         let pka: [OnChainMultiSig.PubKeyAttr] = []
         while i < pubKeyWeights.length {
-            let a = OnChainMultiSig.PubKeyAttr(sa: 1, w: pubKeyWeights[i])
+            let a = OnChainMultiSig.PubKeyAttr(sa: multiSigAlgos[i], w: pubKeyWeights[i])
             pka.append(a)
             i = i + 1;
         }

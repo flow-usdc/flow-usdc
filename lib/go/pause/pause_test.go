@@ -9,8 +9,9 @@ import (
 	"github.com/flow-usdc/flow-usdc/owner"
 	"github.com/flow-usdc/flow-usdc/vault"
 
-	"github.com/stretchr/testify/assert"
 	"os"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreatePauser(t *testing.T) {
@@ -205,6 +206,7 @@ func TestMultiSig_PauserCanAddKey(t *testing.T) {
 	pk250_1 := g.Account(util.Acct250_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
+	sa := util.Arg{V: uint8(1), T: "UInt8"}
 
 	hasKey, err := util.ContainsKey(g, "pauser", "Pauser", pk250_1[2:])
 	assert.NoError(t, err)
@@ -214,7 +216,7 @@ func TestMultiSig_PauserCanAddKey(t *testing.T) {
 	newTxIndex := txIndex + 1
 	assert.NoError(t, err)
 
-	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "pauser", "Pauser", "configureKey", k, w)
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "pauser", "Pauser", "configureKey", k, w, sa)
 	assert.NoError(t, err)
 
 	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "pauser", "Pauser")

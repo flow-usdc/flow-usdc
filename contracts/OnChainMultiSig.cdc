@@ -44,7 +44,7 @@ pub contract OnChainMultiSig {
     ///
     /// Optional interfaces for owner of the vault to add / remove keys in @Manager. 
     pub resource interface KeyManager {
-        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]);
+        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlgos: [UInt8]);
         pub fun removeKeys( multiSigPubKeys: [String]);
     }
     
@@ -58,7 +58,7 @@ pub contract OnChainMultiSig {
         pub fun addNewPayload (resourceId: UInt64, payload: @PayloadDetails, publicKey: String, sig: [UInt8]);
         pub fun addPayloadSignature (resourceId: UInt64, txIndex: UInt64, publicKey: String, sig: [UInt8]);
         pub fun readyForExecution(txIndex: UInt64): @PayloadDetails?;
-        pub fun configureKeys (pks: [String], kws: [UFix64]);
+        pub fun configureKeys (pks: [String], kws: [UFix64], sa: [UInt8]);
         pub fun removeKeys (pks: [String]);
     }
     
@@ -126,6 +126,9 @@ pub contract OnChainMultiSig {
                     case Type<UFix64>():
                         let temp = a as? UFix64;
                         b = temp!.toBigEndianBytes(); 
+                    case Type<UInt8>():
+                        let temp = a as? UInt8;
+                        b = temp!.toBigEndianBytes();
                     case Type<Address>():
                         let temp = a as? Address;
                         b = temp!.toBytes(); 
@@ -270,10 +273,10 @@ pub contract OnChainMultiSig {
         
         /// Add / replace stored public keys and respected attributes
         /// from `keyList`
-        pub fun configureKeys (pks: [String], kws: [UFix64]) {
+        pub fun configureKeys (pks: [String], kws: [UFix64], sa: [UInt8]) {
             var i: Int =  0;
             while (i < pks.length) {
-                let a = PubKeyAttr(sa: 1, w: kws[i])
+                let a = PubKeyAttr(sa: sa[i], w: kws[i])
                 self.keyList.insert(key: pks[i], a)
                 i = i + 1;
             }

@@ -41,6 +41,7 @@ transaction(
     initPaused: Bool,
     ownerAccountPubKeys: [String],
     ownerAccountKeyWeights: [UFix64],
+    ownerAccountKeyAlgos : [UInt8],
 ) {
     prepare(owner: AuthAccount) {
         let existingContract = owner.contracts.get(name: contractName)
@@ -86,6 +87,7 @@ transaction(
                 initPaused: initPaused, 
                 ownerAccountPubKeys: ownerAccountPubKeys,
                 ownerAccountKeyWeights: ownerAccountKeyWeights,
+                ownerAccountKeyAlgos: ownerAccountKeyAlgos,
             )
         } else {
             owner.contracts.update__experimental(name: contractName, code: code.decodeHex())

@@ -15,14 +15,16 @@ func CreateMinterController(
 	txFilename := "../../../transactions/minterControl/create_new_minter_controller.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+	MultiSigPubKeys, MultiSigKeyWeights, MultiSigAlgos := util.GetMultiSigKeys(g)
 
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(account).
 		AccountArgument(account).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
+		Argument(cadence.NewArray(MultiSigAlgos)).
 		RunE()
+
 	events = util.ParseTestEvents(e)
 	return
 }
