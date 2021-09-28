@@ -21,7 +21,7 @@ func DeployFiatTokenContract(
 		g.CreateAccounts("emulator-account")
 	}
 
-	multiSigPubKeys, multiSigKeyWeights := util.GetMultiSigKeys(g)
+	multiSigPubKeys, multiSigKeyWeights, multiSigAlgos := util.GetMultiSigKeys(g)
 
 	e, err := g.TransactionFromFile(txFilename, code).
 		SignProposeAndPayAs(ownerAcct).
@@ -73,6 +73,7 @@ func DeployFiatTokenContract(
 		BooleanArgument(false).
 		Argument(cadence.NewArray(multiSigPubKeys)).
 		Argument(cadence.NewArray(multiSigKeyWeights)).
+		Argument(cadence.NewArray(multiSigAlgos)).
 		RunE()
 	gwtf.PrintEvents(e, map[string][]string{})
 	events = util.ParseTestEvents(e)

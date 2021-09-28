@@ -434,6 +434,7 @@ func TestMintBurnMultiSig_MinterCanAddKey(t *testing.T) {
 
 	k := util.Arg{V: pk250_1[2:], T: "String"}
 	w := util.Arg{V: "250.00000000", T: "UFix64"}
+	sa := util.Arg{V: uint8(1), T: "UInt8"}
 
 	hasKey, err := util.ContainsKey(g, "minter", "Minter", pk250_1[2:])
 	assert.NoError(t, err)
@@ -443,7 +444,7 @@ func TestMintBurnMultiSig_MinterCanAddKey(t *testing.T) {
 	newTxIndex := txIndex + 1
 	assert.NoError(t, err)
 
-	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "minter", "Minter", "configureKey", k, w)
+	_, err = util.MultiSig_SignAndSubmit(g, true, newTxIndex, util.Acct1000, "minter", "Minter", "configureKey", k, w, sa)
 	assert.NoError(t, err)
 
 	_, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "minter", "Minter")

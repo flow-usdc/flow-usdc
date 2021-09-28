@@ -359,7 +359,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -406,8 +407,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         
         // ======== OnChainMultiSig.KeyManager interfaces
         // Private (if linked) interfaces to set the keys for the OnChainMultiSig.Manager
-        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
-            self.multiSigManager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights)
+        pub fun addKeys( multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
+            self.multiSigManager.configureKeys(pks: multiSigPubKeys, kws: multiSigKeyWeights, sa: multiSigAlgos)
         }
         pub fun removeKeys( multiSigPubKeys: [String]) {
             self.multiSigManager.removeKeys(pks: multiSigPubKeys)
@@ -454,7 +455,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -555,7 +557,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -656,7 +659,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -757,7 +761,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -884,7 +889,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -987,7 +993,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 case "configureKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight])
+                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
+                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
                 case "removeKey":
                     let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
                     self.multiSigManager.removeKeys(pks: [pubKey])
@@ -1121,6 +1128,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         initPaused: Bool, 
         ownerAccountPubKeys: [String],
         ownerAccountKeyWeights: [UFix64],
+        ownerAccountKeyAlgos: [UInt8],
     ) {
 
         // These keys and weights are used to initialise the `MasterMinter` owned by the owner
@@ -1198,7 +1206,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         let pubKeyAttrs: [OnChainMultiSig.PubKeyAttr] = []
         var i = 0
         while i < ownerAccountPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: 1, w:  ownerAccountKeyWeights[i])
+            let pka = OnChainMultiSig.PubKeyAttr(sa: ownerAccountKeyAlgos[i], w:  ownerAccountKeyWeights[i])
             pubKeyAttrs.append(pka)
             i = i + 1
         }

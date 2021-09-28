@@ -6,6 +6,9 @@ pub fun main(v: AnyStruct?): [UInt8] {
         case Type<String>():
             let temp = value as? String;
             return temp!.utf8;
+        case Type<UInt8>():
+            let temp = value as? UInt8;
+            return temp!.toBigEndianBytes();
         case Type<UInt64>():
             let temp = value as? UInt64;
             return temp!.toBigEndianBytes();

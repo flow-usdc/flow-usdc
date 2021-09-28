@@ -14,7 +14,7 @@ import FiatToken from 0x{{.FiatToken}}
 import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
+transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
 
     prepare(signer: AuthAccount) {
 
@@ -68,6 +68,7 @@ transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64]) {
 
         // The transaction that creates the vault can also add required multiSig public keys to the multiSigManager
         let s = signer.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath) ?? panic ("cannot borrow own resource")
-        s.addKeys(multiSigPubKeys: multiSigPubKeys, multiSigKeyWeights: multiSigKeyWeights)
+        s.addKeys(multiSigPubKeys: multiSigPubKeys, multiSigKeyWeights: multiSigKeyWeights, multiSigAlgos: multiSigAlgos )
+
     }
 }

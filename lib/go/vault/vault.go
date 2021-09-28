@@ -13,11 +13,12 @@ func AddVaultToAccount(
 	txFilename := "../../../transactions/vault/create_vault.cdc"
 	txScript := util.ParseCadenceTemplate(txFilename)
 
-	MultiSigPubKeys, MultiSigKeyWeights := util.GetMultiSigKeys(g)
+	MultiSigPubKeys, MultiSigKeyWeights, MultiSigAlgos := util.GetMultiSigKeys(g)
 	e, err := g.TransactionFromFile(txFilename, txScript).
 		SignProposeAndPayAs(vaultAcct).
 		Argument(cadence.NewArray(MultiSigPubKeys)).
 		Argument(cadence.NewArray(MultiSigKeyWeights)).
+		Argument(cadence.NewArray(MultiSigAlgos)).
 		RunE()
 	events = util.ParseTestEvents(e)
 	return

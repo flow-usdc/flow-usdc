@@ -254,6 +254,8 @@ func ConvertToCadenceValue(g *gwtf.GoWithTheFlow, args ...Arg) (a []cadence.Valu
 			b = cadence.String(arg.V.(string))
 		case "UFix64":
 			b, err = cadence.NewUFix64(arg.V.(string))
+		case "UInt8":
+			b = cadence.NewUInt8(arg.V.(uint8))
 		case "UInt64":
 			b = cadence.UInt64(arg.V.(uint64))
 		case "Address":
@@ -574,7 +576,7 @@ func ContainsKey(g *gwtf.GoWithTheFlow, resourceAcct string, resourceName string
 	return
 }
 
-func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, MultiSigKeyWeights []cadence.Value) {
+func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, MultiSigKeyWeights []cadence.Value, MultiSigAlgos []cadence.Value) {
 	pk1000 := g.Account(Acct1000).Key().ToConfig().PrivateKey.PublicKey().String()
 	pk500_1 := g.Account(Acct500_1).Key().ToConfig().PrivateKey.PublicKey().String()
 	pk500_2 := g.Account(Acct500_2).Key().ToConfig().PrivateKey.PublicKey().String()
@@ -591,6 +593,14 @@ func GetMultiSigKeys(g *gwtf.GoWithTheFlow) (MultiSigPubKeys []cadence.Value, Mu
 		cadence.String(pk500_2[2:]),
 		cadence.String(pk250_1[2:]),
 		cadence.String(pk250_2[2:]),
+	}
+
+	MultiSigAlgos = []cadence.Value{
+		cadence.NewUInt8(1),
+		cadence.NewUInt8(1),
+		cadence.NewUInt8(1),
+		cadence.NewUInt8(1),
+		cadence.NewUInt8(1),
 	}
 	MultiSigKeyWeights = []cadence.Value{w1000, w500, w500, w250, w250}
 	return

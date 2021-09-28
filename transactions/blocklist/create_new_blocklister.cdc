@@ -8,7 +8,7 @@
 import FiatToken from 0x{{.FiatToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
-transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64]) {
+transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
     prepare (blocklister: AuthAccount) {
         
         // Check if they already have a blocklister resource, if so, destroy it
@@ -22,7 +22,7 @@ transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix
         var i = 0;
         let pka: [OnChainMultiSig.PubKeyAttr] = []
         while i < pubKeyWeights.length {
-            let a = OnChainMultiSig.PubKeyAttr(sa: 1, w: pubKeyWeights[i])
+            let a = OnChainMultiSig.PubKeyAttr(sa: multiSigAlgos[i], w: pubKeyWeights[i])
             pka.append(a)
             i = i + 1;
         }
