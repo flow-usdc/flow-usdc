@@ -114,9 +114,14 @@ pub contract OnChainMultiSig {
         pub fun getSignableData(): [UInt8] {
             var s = self.txIndex.toBigEndianBytes();
             s = s.concat(self.method.utf8);
-            for a in self.args {
+            // Iterate by index so we can use the index value below
+            var i: Int = 0;
+            while i < self.args.length {
+                let a = self.args[i];
                 var b: [UInt8] = [];
-                switch a.getType() {
+                // Fetch the type so that we can use it below
+                let t = a.getType();
+                switch t {
                     case Type<String>():
                         let temp = a as? String;
                         b = temp!.utf8; 
@@ -131,11 +136,20 @@ pub contract OnChainMultiSig {
                         b = temp!.toBigEndianBytes();
                     case Type<Address>():
                         let temp = a as? Address;
-                        b = temp!.toBytes(); 
+                        b = temp!.toBytes();
+                    case Type<Path>():
+                        b = "Path:".concat(i.toString()).utf8;
+                    case Type<StoragePath>():
+                        b = "StoragePath:".concat(i.toString()).utf8;
+                    case Type<PrivatePath>():
+                        b = "PrivatePath:".concat(i.toString()).utf8;
+                    case Type<PublicPath>():
+                        b = "PublicPath:".concat(i.toString()).utf8;
                     default:
                         panic ("Payload arg type not supported")
                 }
                 s = s.concat(b);
+                i = i + 1
             }
             return s; 
         }
