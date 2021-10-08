@@ -414,8 +414,24 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             self.multiSigManager.removeKeys(pks: multiSigPubKeys)
         }
 
-        destroy() {
+        // ======== Resource lifecycle functions
+        //
+        // Empty the Vault and remove its value from the total supply,
+        // but do not destroy the now empty Vault itself (as we cannot do so here)
+        // or emit the Burn event (as we need the minter uuid for that)
+        access(contract) fun burn() {
+            pre {
+                self.balance > 0.0: "Cannot burn USDC Vault with zero balance"
+            }
             FiatToken.totalSupply = FiatToken.totalSupply - self.balance
+            self.balance = 0.0
+        }
+
+        // Destroy the Vault, as long as it contains no value
+        destroy() {
+            pre {
+                self.balance == 0.0: "Cannot destroy USDC Vault with non-zero balance"
+            }
             destroy(self.multiSigManager)
             emit DestroyVault(resourceId: self.uuid)
         }
@@ -738,12 +754,15 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                 FiatToken.blocklist[self.uuid] == nil: "Minter Blocklisted"
                 FiatToken.minterAllowances.containsKey(self.uuid): "minter is not configured"
             }
-            let amount = vault.balance
+            let toBurn <- vault as! @FiatToken.Vault
+            let amount = toBurn.balance
             assert(FiatToken.totalSupply >= amount, message: "burning more than total supply")
 
-            // destroy vault method handles updates to the total supply
-            destroy vault
-
+            // This updates FiatToken.totalSupply and sets the Vault's value to 0.0
+            toBurn.burn()
+            // This destroys the now empty Vault
+            destroy toBurn
+            // Do this here so we have access to the minter uuid
             emit Burn(minter: self.uuid, amount: amount)
         }
 
