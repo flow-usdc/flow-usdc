@@ -56,4 +56,3 @@ go test ./mint -run Controller -v
 go test ./deploy -run Upgrade -v
 go test ./mint -run MintBurn -v
 go test ./mint -run MasterMinterMultiSig -v
-

@@ -28,7 +28,7 @@ func TestMintBurn_MintWithoutConfig(t *testing.T) {
 	util.NewExpectedEvent("FiatToken", "MinterCreated").AssertHasKey(t, createEvents[0], "resourceId")
 }
 
-func TestMintBurn_MintBelowAllowace(t *testing.T) {
+func TestMintBurn_MintBelowAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Params
@@ -125,6 +125,8 @@ func TestMintBurn_Burn(t *testing.T) {
 		AssertEqual(t, events[0])
 
 	toAddr := util.GetAccountAddr(g, "minter")
+
+	// Check the events in order: [withdraw (Fiat)], withdraw (FT), vault destroyed, burn
 	util.NewExpectedEvent("FiatToken", "TokensWithdrawn").
 		AddField("amount", burnAmount.String()).
 		AddField("from", toAddr).
@@ -139,7 +141,7 @@ func TestMintBurn_Burn(t *testing.T) {
 		AssertEqual(t, events[3])
 }
 
-func TestMintBurn_FailToMintAboveAllowace(t *testing.T) {
+func TestMintBurn_FailToMintAboveAllowance(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
 	// Params
@@ -308,6 +310,11 @@ func TestMintBurnMultiSig_MintTo(t *testing.T) {
 func TestMintBurnMultiSig_Burn(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 
+	// Transfer FiatTokens into the minter account to burn
+	burnAmount := "100.00000000"
+	_, err := vault.TransferTokens(g, burnAmount, "owner", "minter")
+	assert.NoError(t, err)
+
 	// Add New Payload
 	currentIndex, err := util.GetTxIndex(g, "minter", "Minter")
 	assert.NoError(t, err)
@@ -316,37 +323,45 @@ func TestMintBurnMultiSig_Burn(t *testing.T) {
 	// Params
 	minter, err := util.GetUUID(g, "minter", "Minter")
 	assert.NoError(t, err)
-	initBalance, err := util.GetBalance(g, util.Acct1000)
+	toAddr := util.GetAccountAddr(g, "minter")
+	initBalance, err := util.GetBalance(g, "minter")
 	assert.NoError(t, err)
-	burnAmount := initBalance / 2
-	m := util.Arg{V: burnAmount.String(), T: "UFix64"}
+	m := util.Arg{V: burnAmount, T: "UFix64"}
 	// `true` for new payload
 	// signed by account with full weight
-	events, err := util.MultiSig_SignAndSubmitNewPayloadWithVault(g, expectedNewIndex, util.Acct1000, "minter", "Minter", "burn", m)
+	events, err := util.MultiSig_SignAndSubmitNewPayload(g, expectedNewIndex, util.Acct1000, "minter", "Minter", "burn", m)
 	assert.NoError(t, err)
 
 	newTxIndex, err := util.GetTxIndex(g, "minter", "Minter")
 	assert.NoError(t, err)
 	assert.Equal(t, expectedNewIndex, newTxIndex)
 
-	// The first 2 events will be the vault withdraw events (FiatToken and FungibleToken Withdraw)
 	util.NewExpectedEvent("OnChainMultiSig", "NewPayloadAdded").
 		AddField("resourceId", strconv.Itoa(int(minter))).
 		AddField("txIndex", strconv.Itoa(int(newTxIndex))).
-		AssertEqual(t, events[2])
+		AssertEqual(t, events[0])
 
-		// Try to Execute Tx after second signature
+	// Try to Execute Tx after second signature
 	events, err = util.MultiSig_ExecuteTx(g, newTxIndex, "owner", "minter", "Minter")
 	assert.NoError(t, err)
 
-	// The first event will be the vault being destroyed
+	// Check the events in order: [withdraw (Fiat)], withdraw (FT), vault destroyed, burn
+	util.NewExpectedEvent("FiatToken", "TokensWithdrawn").
+		AddField("amount", burnAmount).
+		AddField("from", toAddr).
+		AssertEqual(t, events[1])
+
+	util.NewExpectedEvent("FiatToken", "DestroyVault").
+		AssertHasKey(t, events[2], "resourceId")
+
 	util.NewExpectedEvent("FiatToken", "Burn").
 		AddField("minter", strconv.Itoa(int(minter))).
-		AddField("amount", burnAmount.String()).
-		AssertEqual(t, events[1])
-	postBalance, err := util.GetBalance(g, util.Acct1000)
+		AddField("amount", burnAmount).
+		AssertEqual(t, events[3])
+
+	postBalance, err := util.GetBalance(g, "minter")
 	assert.NoError(t, err)
-	assert.Equal(t, burnAmount.String(), (initBalance - postBalance).String())
+	assert.Equal(t, burnAmount, (initBalance - postBalance).String())
 }
 
 func TestMintBurnMultiSig_RemovePayload(t *testing.T) {
@@ -362,7 +377,7 @@ func TestMintBurnMultiSig_RemovePayload(t *testing.T) {
 	assert.NoError(t, err)
 	m := util.Arg{V: burnAmount.String(), T: "UFix64"}
 	// `true` for new payload
-	_, err = util.MultiSig_SignAndSubmitNewPayloadWithVault(g, expectedNewIndex, util.Acct500_1, "minter", "Minter", "burn", m)
+	_, err = util.MultiSig_SignAndSubmitNewPayload(g, expectedNewIndex, util.Acct500_1, "minter", "Minter", "burn", m)
 	assert.NoError(t, err)
 	postBalance, err := util.GetBalance(g, util.Acct500_1)
 	assert.NoError(t, err)
