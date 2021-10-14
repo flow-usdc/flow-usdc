@@ -29,6 +29,7 @@ func DeployFiatTokenContract(
 		StringArgument(encodedStr).
 		// Vault
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCVault-2"}).
+		Argument(cadence.Path{Domain: "private", Identifier: "USDCVaultProvider-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultBalance-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultUUID-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultAllowance-2"}).

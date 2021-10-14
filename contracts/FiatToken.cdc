@@ -113,6 +113,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     // ===== FiatToken Paths =====
 
     pub let VaultStoragePath: StoragePath
+    pub let VaultProviderPrivPath: PrivatePath
     pub let VaultBalancePubPath: PublicPath
     pub let VaultUUIDPubPath: PublicPath
     pub let VaultAllowancePubPath: PublicPath
@@ -721,6 +722,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     /// The actual minter resource, the resourceId must be added to the `minterAllowances` list
     /// for minter to successfully mint / burn within restrictions
     pub resource Minter: FiatTokenInterface.Minter, ResourceId, OnChainMultiSig.PublicSigner {
+
+        // FiatToken.Vault Provider Capability to allow withdrawing tokens from our account to burn
+        access(self) let vaultCapability: Capability<&FiatToken.Vault{FungibleToken.Provider}>
         
         // OnChainMultiSig Manager for storing publickeys, pending payloads, signatures, etc
         access(self) let multiSigManager: @OnChainMultiSig.Manager
@@ -806,10 +810,11 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
                     let v <- self.mint(amount: amount)
                     recv.deposit(from: <-v)
                 case "burn":
-                    var temp: @AnyResource? <- nil
-                    p.rsc <-> temp
-                    let vault <- temp! as! @FungibleToken.Vault
-                    self.burn(vault: <- vault)
+                    let amount = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast amount")
+                    let minterVault = self.vaultCapability.borrow()
+                        ?? panic("Unable to borrow vault reference for minter")
+                    let burnVault <- minterVault.withdraw(amount: amount) as! @FungibleToken.Vault
+                    self.burn(vault: <- burnVault)
                 default:
                     panic("Unknown transaction method")
             }
@@ -832,8 +837,9 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
             destroy self.multiSigManager
         }
 
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
+        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr], vaultCapability: Capability<&FiatToken.Vault{FungibleToken.Provider}>) {
             self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+            self.vaultCapability = vaultCapability
         }
     }
 
@@ -1080,8 +1086,8 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         return <- minterController
     }
 
-    pub fun createNewMinter(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Minter{
-        let minter <- create Minter(pk: publicKeys, pka: pubKeyAttrs)
+    pub fun createNewMinter(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr], vaultCapability: Capability<&FiatToken.Vault{FungibleToken.Provider}>): @Minter{
+        let minter <- create Minter(pk: publicKeys, pka: pubKeyAttrs, vaultCapability: vaultCapability)
         emit MinterCreated(resourceId: minter.uuid)
         return <- minter
     }
@@ -1112,6 +1118,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
     init(
         adminAccount: AuthAccount, 
         VaultStoragePath: StoragePath,
+        VaultProviderPrivPath: PrivatePath,
         VaultBalancePubPath: PublicPath,
         VaultUUIDPubPath: PublicPath,
         VaultAllowancePubPath: PublicPath,
@@ -1162,6 +1169,7 @@ pub contract FiatToken: FiatTokenInterface, FungibleToken {
         self.managedMinters = {}
 
         self.VaultStoragePath = VaultStoragePath
+        self.VaultProviderPrivPath = VaultProviderPrivPath
         self.VaultBalancePubPath = VaultBalancePubPath
         self.VaultUUIDPubPath = VaultUUIDPubPath
         self.VaultAllowancePubPath = VaultAllowancePubPath
