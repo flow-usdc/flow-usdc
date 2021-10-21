@@ -2,7 +2,6 @@
 // A Minter must have been configured and under such control
 
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction () {
     prepare(minterController: AuthAccount) {

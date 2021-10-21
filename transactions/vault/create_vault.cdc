@@ -11,7 +11,6 @@
 // distribution as it does for the Vault.
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
 transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
@@ -39,7 +38,7 @@ transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlg
         // Create a public capability to the Vault that only exposes
         // the withdrawAllowace function through the WithdrawAllowance interface
         // Anyone can all this method but only those with allowance set will succeed
-        signer.link<&FiatToken.Vault{FiatTokenInterface.Allowance}>(
+        signer.link<&FiatToken.Vault{FiatToken.Allowance}>(
             FiatToken.VaultAllowancePubPath,
             target: FiatToken.VaultStoragePath
         )
