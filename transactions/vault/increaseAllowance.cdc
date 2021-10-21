@@ -1,7 +1,6 @@
 // Vault owner increases allowance for another Vault
 
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction(toResourceId: UInt64, delta: UFix64) {
 

@@ -5,7 +5,6 @@
 // 
 
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 import FungibleToken from 0x{{.FungibleToken}}
 

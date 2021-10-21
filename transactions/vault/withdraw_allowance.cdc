@@ -3,7 +3,6 @@
 
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction(fromAddr: Address, toAddr: Address, amount: UFix64) {
     prepare(signer: AuthAccount) {
@@ -15,7 +14,7 @@ transaction(fromAddr: Address, toAddr: Address, amount: UFix64) {
 
         // Get a allowance reference to the fromAcct's vault 
         let allowanceRef = fromAcct.getCapability(FiatToken.VaultAllowancePubPath)
-            .borrow<&{FiatTokenInterface.Allowance}>()
+            .borrow<&{FiatToken.Allowance}>()
             ?? panic("Could not borrow allowance reference")
 
         allowanceRef.withdrawAllowance(recvAddr: toAddr, amount: amount)
