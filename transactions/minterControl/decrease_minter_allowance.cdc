@@ -3,7 +3,6 @@
 // and that the Minter previously has been configured and have allowance
 
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction (amount: UFix64) {
     prepare(minterController: AuthAccount) {

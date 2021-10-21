@@ -10,7 +10,7 @@ transaction (pauser: Address) {
             panic ("cannot borrow such capability") 
         } else {
             let setCapRef = getAccount(pauser).getCapability<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath).borrow() ?? panic("Cannot get pauseCapReceiver");
-            setCapRef.setPauseCap(pauseCap: cap);
+            setCapRef.setPauseCap(cap: cap);
         }
     }
 

@@ -140,6 +140,17 @@ pub contract interface FiatTokenInterface {
     /// The event that is emitted when master minter has removed the mint controller 
     pub event ControllerRemoved(controller: UInt64)
 
+    pub interface resource Admin {
+
+        // Update contract is experimental - https://docs.onflow.org/cadence/language/contracts/#updating-a-deployed-contract
+        pub fun upgradeContract(name: String, code: [UInt8], version: String)
+
+        // Updates the admin role to a new address.
+        // May only be called by the admin role.
+        // https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md#admin
+        pub fun changeAdmin(to: Address, newPath: PrivatePath)
+
+    }
 
     /// The master minter is defined in https://github.com/centrehq/centre-tokens/blob/master/doc/tokendesign.md
     ///
