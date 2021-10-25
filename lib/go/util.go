@@ -356,9 +356,7 @@ func multiSig_NewPayload(
 	return
 }
 
-// The first argument must be the amount of the vault to be
-// stored as the vault resource in the `@Manager`
-func MultiSig_SignAndSubmitNewPayloadWithVault(
+func MultiSig_SignAndSubmitNewPayload(
 	g *gwtf.GoWithTheFlow,
 	txIndex uint64,
 	signerAcct string,
@@ -383,7 +381,7 @@ func MultiSig_SignAndSubmitNewPayloadWithVault(
 		return
 	}
 
-	txFilename := "../../../transactions/onChainMultiSig/add_new_payload_with_vault.cdc"
+	txFilename := "../../../transactions/onChainMultiSig/add_new_payload.cdc"
 	txScript := ParseCadenceTemplate(txFilename)
 
 	path, err := GetPubSignerPath(g, resourceAcct, resourceName)
