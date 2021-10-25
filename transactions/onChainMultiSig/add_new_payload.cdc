@@ -3,7 +3,6 @@
 // `txIndex` must be the current resource index incremented by 1
 
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
 transaction (sig: String, txIndex: UInt64, method: String, args: [AnyStruct], publicKey: String, resourceAddr: Address, resourcePubSignerPath: PublicPath) {

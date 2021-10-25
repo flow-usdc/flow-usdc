@@ -3,7 +3,6 @@
 
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}
-import FiatTokenInterface from 0x{{.FiatTokenInterface}}
 
 transaction(amount: UFix64) {
 
