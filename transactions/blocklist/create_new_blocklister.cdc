@@ -29,16 +29,19 @@ transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix
 
         blocklister.save(<- FiatToken.createNewBlocklister(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.BlocklisterStoragePath);
         
-        blocklister.link<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath, target: FiatToken.BlocklisterStoragePath)
-        ??  panic("Could not link BlocklistCapReceiver");
+        blocklister.link<&FiatToken.Blocklister{FiatToken.BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath, target: FiatToken.BlocklisterStoragePath)
+        ??  panic("Could not link BlocklisterCapReceiver");
+        
+        blocklister.link<&FiatToken.Blocklister{FiatToken.ResourceId}>(FiatToken.BlocklisterUUIDPubPath, target: FiatToken.BlocklisterStoragePath)
+        ??  panic("Could not link Blocklister UUID");
 
         blocklister.link<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner, target: FiatToken.BlocklisterStoragePath)
         ??  panic("Could not link pauser pub signer");
     } 
 
     post {
-        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{FiatToken.BlocklistCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
-        "BlocklistCapReceiver link not set"
+        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{FiatToken.BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
+        "BlocklisterCapReceiver link not set"
 
         getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner).check() :
         "BlocklistPubSigner link not set"

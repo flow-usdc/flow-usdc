@@ -34,6 +34,9 @@ transaction(pauserAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
         pauser.link<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath, target: FiatToken.PauserStoragePath)
         ??  panic("Could not link PauserCapReceiver");
 
+        pauser.link<&FiatToken.Pauser{FiatToken.ResourceId}>(FiatToken.PauserUUIDPubPath, target: FiatToken.PauserStoragePath)
+        ??  panic("Could not link Pauser ResourceId");
+
         pauser.link<&FiatToken.Pauser{OnChainMultiSig.PublicSigner}>(FiatToken.PauserPubSigner, target: FiatToken.PauserStoragePath)
         ??  panic("Could not link pauser pub signer");
     } 

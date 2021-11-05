@@ -17,18 +17,10 @@ transaction(minterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
         // DANGER: Remove existing minter if present
         if minter.borrow<&FiatToken.Minter>(from: FiatToken.MinterStoragePath) != nil {
             minter.unlink(FiatToken.MinterUUIDPubPath)
-            minter.unlink(FiatToken.MinterPubSigner)
             let m <- minter.load<@FiatToken.Minter>(from: FiatToken.MinterStoragePath) 
             destroy m
         }
-
-        // Ensure that there is a Provider private capability for the account
-        // Ideally the user would do this in a separate step, but it is hgere for convenience
-        if ! minter.getCapability<&FiatToken.Vault{FungibleToken.Provider}>(FiatToken.VaultProviderPrivPath).check() {
-            minter.link<&FiatToken.Vault{FungibleToken.Provider}>(FiatToken.VaultProviderPrivPath, target: FiatToken.VaultStoragePath)
-        }
-        let vaultProvider =  minter.getCapability<&FiatToken.Vault{FungibleToken.Provider}>(FiatToken.VaultProviderPrivPath)
-
+        
         var i = 0;
         let pka: [OnChainMultiSig.PubKeyAttr] = []
         while i < pubKeyWeights.length {
@@ -37,20 +29,15 @@ transaction(minterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
             i = i + 1;
         }
 
-        minter.save(<- FiatToken.createNewMinter(publicKeys: publicKeys, pubKeyAttrs: pka, vaultCapability: vaultProvider), to: FiatToken.MinterStoragePath);
+        minter.save(<- FiatToken.createNewMinter(), to: FiatToken.MinterStoragePath);
 
         minter.link<&FiatToken.Minter{FiatToken.ResourceId}>(FiatToken.MinterUUIDPubPath, target: FiatToken.MinterStoragePath)
         ??  panic("Could not link minter uuid");
 
-        minter.link<&FiatToken.Minter{OnChainMultiSig.PublicSigner}>(FiatToken.MinterPubSigner, target: FiatToken.MinterStoragePath)
-        ??  panic("Could not link minter pub signer");
     } 
 
     post {
         getAccount(minterAddr).getCapability<&{FiatToken.ResourceId}>(FiatToken.MinterUUIDPubPath).check() :
         "MinterUUID link not set"
-
-        getAccount(minterAddr).getCapability<&{OnChainMultiSig.PublicSigner}>(FiatToken.MinterPubSigner).check() :
-        "MinterPubSigner link not set"
     }
 }

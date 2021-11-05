@@ -8,29 +8,31 @@ import OnChainMultiSig from 0x{{.OnChainMultiSig}}
 
 pub fun main(resourceAddr: Address, resourceName: String): UInt64 {
     let resourceAcct = getAccount(resourceAddr)
-    var resourcePubPath: PublicPath = FiatToken.VaultPubSigner
+    var resourcePubPath: PublicPath = FiatToken.VaultUUIDPubPath
 
     switch resourceName {
         case "Vault":
-            resourcePubPath = FiatToken.VaultPubSigner
+            resourcePubPath = FiatToken.VaultUUIDPubPath
         case "Minter":
-            resourcePubPath = FiatToken.MinterPubSigner
+            resourcePubPath = FiatToken.MinterUUIDPubPath
         case "MinterController":
-            resourcePubPath = FiatToken.MinterControllerPubSigner
+            resourcePubPath = FiatToken.MinterControllerUUIDPubPath
         case "MasterMinter":
-            resourcePubPath = FiatToken.MasterMinterPubSigner
+            resourcePubPath = FiatToken.MasterMinterUUIDPubPath
         case "Pauser":
-            resourcePubPath = FiatToken.PauserPubSigner
+            resourcePubPath = FiatToken.PauserUUIDPubPath
         case "Blocklister":
-            resourcePubPath = FiatToken.BlocklisterPubSigner
+            resourcePubPath = FiatToken.BlocklisterUUIDPubPath
         case "Admin":
-            resourcePubPath = FiatToken.AdminPubSigner
+            resourcePubPath = FiatToken.AdminUUIDPubPath
+        case "Owner":
+            resourcePubPath = FiatToken.OwnerUUIDPubPath
         default:
             panic ("Resource not supported")
     }
 
     let ref = resourceAcct.getCapability(resourcePubPath)
-        .borrow<&{OnChainMultiSig.PublicSigner}>()
+        .borrow<&{FiatToken.ResourceId}>()
         ?? panic("Could not borrow Get UUID reference to the Resource")
 
     return ref.UUID()

@@ -32,20 +32,21 @@ func DeployFiatTokenContract(
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCVaultProvider-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultBalance-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultUUID-2"}).
-		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultAllowance-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultReceiver-2"}).
-		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultPublicSigner-2"}).
+
 		// Blocklist executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklistExe-2"}).
 		// Blocklister
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCBlocklister-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterCapReceiver-2"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterUUID-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCBlocklisterPublicSigner-2"}).
 		// Pause executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauseExe-2"}).
 		// Pauser
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCPauser-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserCapReceiver-2"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserUUID-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCPauserPublicSigner-2"}).
 		// Admin executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCAdminExe-2"}).
@@ -59,6 +60,7 @@ func DeployFiatTokenContract(
 		// Owner
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCOwner-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCOwnerCapReceiver-2"}).
+		Argument(cadence.Path{Domain: "public", Identifier: "USDCOwnerUUID-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCOwnerPubSigner-2"}).
 		// Master Minter Executor
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMasterMinterExe-2"}).
@@ -74,7 +76,6 @@ func DeployFiatTokenContract(
 		// Minter
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCMinter-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterUUID-2"}).
-		Argument(cadence.Path{Domain: "public", Identifier: "USDCMinterPublicSigner-2"}).
 		// Initial resource capabilities
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCAdminCap-2"}).
 		Argument(cadence.Path{Domain: "private", Identifier: "USDCOwnerCap-2"}).
