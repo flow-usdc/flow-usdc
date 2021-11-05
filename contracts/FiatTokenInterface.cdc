@@ -12,9 +12,7 @@ pub contract interface FiatTokenInterface {
     pub let VaultStoragePath: StoragePath
     pub let VaultBalancePubPath: PublicPath
     pub let VaultUUIDPubPath: PublicPath
-    pub let VaultAllowancePubPath: PublicPath
     pub let VaultReceiverPubPath: PublicPath
-    pub let VaultPubSigner: PublicPath
 
     pub let BlocklistExecutorStoragePath: StoragePath
     pub let BlocklistExecutorPrivPath: PrivatePath
@@ -24,7 +22,6 @@ pub contract interface FiatTokenInterface {
     pub let BlocklisterPubSigner: PublicPath
 
     pub let PauseExecutorStoragePath: StoragePath
-    pub let PauseExecutorPrivPath: PrivatePath
 
     pub let PauserStoragePath: StoragePath
     pub let PauserCapReceiverPubPath: PublicPath
@@ -44,7 +41,6 @@ pub contract interface FiatTokenInterface {
 
     pub let MinterStoragePath: StoragePath
     pub let MinterUUIDPubPath: PublicPath
-    pub let MinterPubSigner: PublicPath
 
     // ===== Pause state and events =====
     /// Contract is paused if `paused` is `true`

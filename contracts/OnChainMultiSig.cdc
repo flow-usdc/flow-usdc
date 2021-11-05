@@ -160,7 +160,7 @@ pub contract OnChainMultiSig {
         pub fun verifySigners (pks: [String], sigs: [[UInt8]], currentKeyList: {String: PubKeyAttr}): UFix64? {
             assert(pks.length == sigs.length, message: "Cannot verify signatures without corresponding public keys");
             
-            var totalAuthorisedWeight: UFix64 = 0.0;
+            var totalAuthorizedWeight: UFix64 = 0.0;
             var keyList = Crypto.KeyList();
             let keyListSignatures: [Crypto.KeyListSignature] = []
             // get the message of the signature
@@ -194,7 +194,7 @@ pub contract OnChainMultiSig {
                     hashAlgorithm: HashAlgorithm.SHA3_256,
                     weight: currentKeyList[pks[i]]!.weight
                 )
-                totalAuthorisedWeight = totalAuthorisedWeight + currentKeyList[pks[i]]!.weight
+                totalAuthorizedWeight = totalAuthorizedWeight + currentKeyList[pks[i]]!.weight
                 i = i + 1;
                 keyIndex = keyIndex + 1;
             }
@@ -204,8 +204,7 @@ pub contract OnChainMultiSig {
                 signedData: payloadInBytes,
             )
             if (isValid) {
-                log(totalAuthorisedWeight)
-                return totalAuthorisedWeight
+                return totalAuthorizedWeight
             } else {
                 return nil
             }
@@ -388,12 +387,8 @@ pub contract OnChainMultiSig {
             let p <- self.payloads.remove(key: txIndex)!;
             let approvalWeight = p.verifySigners( pks: p.pubKeys, sigs: p.signatures, currentKeyList: self.keyList)
             if (approvalWeight! >= 1000.0) {
-                log("approval weight: ")
-                log(approvalWeight)
                 return <- p
             } else {
-                log("Failed approval weight: ")
-                log(approvalWeight)
                 self.payloads[txIndex] <-! p;
                 return nil
             }

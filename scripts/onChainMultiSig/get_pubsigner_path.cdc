@@ -5,20 +5,18 @@ pub fun main(resourceName: String): PublicPath {
     switch resourceName {
         case "MasterMinter":
             return FiatToken.MasterMinterPubSigner
-        case "Minter":
-            return FiatToken.MinterPubSigner
         case "MinterController":
             return FiatToken.MinterControllerPubSigner
-        case "Vault":
-            return FiatToken.VaultPubSigner
         case "Pauser":
             return FiatToken.PauserPubSigner
         case "Blocklister":
             return FiatToken.BlocklisterPubSigner
         case "Admin":
             return FiatToken.AdminPubSigner
+        case "Owner":
+            return FiatToken.OwnerPubSigner    
         default:
             panic("Resource not supported")
     }
-    return FiatToken.VaultPubSigner
+    return FiatToken.OwnerPubSigner
 }
