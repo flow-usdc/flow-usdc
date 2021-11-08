@@ -26,27 +26,6 @@
       "emulator-w-500-2": [],
       "emulator-w-250-1": [],
       "emulator-w-250-2": []
-    },
-    "testnet": {
-      "testnet-owner": ["FiatTokenInterface", "OnChainMultiSig"],
-      "testnet-allowance": [],
-      "testnet-blocklister": [],
-      "testnet-minter": [],
-      "testnet-minterController1": [],
-      "testnet-minterController2": [],
-      "testnet-non-allowance" : [],
-      "testnet-non-blocklister":[],
-      "testnet-non-minter": [],
-      "testnet-non-multisig-account": [],
-      "testnet-non-pauser": [],
-      "testnet-non-vaulted-account": [],
-      "testnet-pauser": [],
-      "testnet-vaulted-account": [],
-      "testnet-w-1000": [],
-      "testnet-w-500-1": [],
-      "testnet-w-500-2": [],
-      "testnet-w-250-1": [],
-      "testnet-w-250-2": []
     }
   },
   "contracts": {
@@ -146,82 +125,6 @@
     "emulator-w-500-2" : {
     "address": "dbaa95c7691bc4f",
       "key" : "bf242a7c12e299d90e4621d99501d1e27ccdc4d511cdf1f0fbba37a47e83bd24"
-    },
-    "testnet-owner" : {
-    "address": "e722d9815821c8b3",
-      "key" : "${TESTNET_OWNER}"
-    },
-    "testnet-allowance" : {
-    "address": "acee4965eada64ba",
-      "key" : "${TESTNET_ALLOWANCE}"
-    },
-    "testnet-blocklister" : {
-    "address": "43a3c22137a51a4c",
-      "key" : "${TESTNET_BLOCKLISTER}"
-    },
-    "testnet-minter" : {
-    "address": "a7c47bfc265f1a93",
-      "key" : "${TESTNET_MINTER}"
-    },
-    "testnet-minterController1" : {
-    "address": "b1901ecfbf5b10f2",
-      "key" : "${TESTNET_MINTERCONTROLLER1}"
-    },
-    "testnet-minterController2" : {
-    "address": "55f7a712aea1102d",
-      "key" : "${TESTNET_MINTERCONTROLLER2}"
-    },
-    "testnet-non-allowance" : {
-    "address": "4636db6dd1e448d6",
-      "key" : "${TESTNET_NON_ALLOWANCE}"
-    },
-    "testnet-non-blocklister" : {
-    "address": "a25162b0c01e4809",
-      "key" : "${TESTNET_NON_BLOCKLISTER}"
-    },
-    "testnet-non-minter" : {
-    "address": "b4050783591a4268",
-      "key" : "${TESTNET_NON_MINTER}"
-    },
-    "testnet-non-multisig-account" : {
-    "address": "5062be5e48e042b7",
-      "key" : "${TESTNET_NON_MULTISIG_ACCOUNT}"
-    },
-    "testnet-non-pauser" : {
-    "address": "bf2f351a959f3c41",
-      "key" : "${TESTNET_NON_PAUSER}"
-    },
-    "testnet-non-vaulted-account" : {
-    "address": "5b488cc784653c9e",
-      "key" : "${TESTNET_NON_VAULTED_ACCOUNT}"
-    },
-    "testnet-pauser" : {
-    "address": "4d1ce9f41d6136ff",
-      "key" : "${TESTNET_PAUSER}"
-    },
-    "testnet-vaulted-account" : {
-    "address": "a97b50290c9b3620",
-      "key" : "${TESTNET_VAULTED_ACCOUNT}"
-    },
-    "testnet-w-1000" : {
-    "address": "44fc57cba2c08c7a",
-      "key" : "${TESTNET_W_1000}"
-    },
-    "testnet-w-250-1" : {
-    "address": "a09bee16b33a8ca5",
-      "key" : "${TESTNET_W_250_1}"
-    },
-    "testnet-w-250-2" : {
-    "address": "b6cf8b252a3e86c4",
-      "key" : "${TESTNET_W_250_2}"
-    },
-    "testnet-w-500-1" : {
-    "address": "52a832f83bc4861b",
-      "key" : "${TESTNET_W_500_1}"
-    },
-    "testnet-w-500-2" : {
-    "address": "bde5b9bce6bbf8ed",
-      "key" : "${TESTNET_W_500_2}"
     }
   }
 }
