@@ -1232,7 +1232,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        blocklisterAccount.save(<- self.createNewBlocklister(publicKeys: masterMinterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.BlocklisterStoragePath)
+        blocklisterAccount.save(<- self.createNewBlocklister(publicKeys: blocklisterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{OnChainMultiSig.PublicSigner}>(self.BlocklisterPubSigner, target: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{ResourceId}>(self.BlocklisterUUIDPubPath, target: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{BlocklisterCapReceiver}>(self.BlocklisterCapReceiverPubPath, target: self.BlocklisterStoragePath)
