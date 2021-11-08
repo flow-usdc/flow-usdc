@@ -284,7 +284,7 @@ pub contract FiatToken: FungibleToken {
             self.adminExecutorCapability = cap
         }
 
-        // ===== OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
@@ -459,7 +459,7 @@ pub contract FiatToken: FungibleToken {
             self.ownerExecutorCapability = cap
         }
 
-        // ------- OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
@@ -562,7 +562,7 @@ pub contract FiatToken: FungibleToken {
             self.masterMinterExecutorCapability = cap
         }
 
-        // ------- OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
@@ -659,7 +659,7 @@ pub contract FiatToken: FungibleToken {
             emit MinterRemoved(controller: self.uuid, minter: managedMinter)
         }
 
-        // ------- OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
@@ -801,7 +801,7 @@ pub contract FiatToken: FungibleToken {
             self.blocklistCap = cap
         }
 
-        // ====== OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig)
@@ -896,7 +896,7 @@ pub contract FiatToken: FungibleToken {
             cap.unpause()
         }
 
-        // ====== OnChainMultiSig.PublicSigner interfaces
+        // ------- OnChainMultiSig.PublicSigner interfaces -------
 
         pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
             self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig)
