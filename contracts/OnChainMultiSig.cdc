@@ -186,7 +186,7 @@ pub contract OnChainMultiSig {
         pub var txIndex: UInt64;
         // Map of {publicKey: PubKeyAttr}
         access(self) let keyList: {String: PubKeyAttr};
-        // Map of {txIndex:PayloadDetails}
+        // Map of {txIndex: PayloadDetails}
         access(self) let payloads: @{UInt64: PayloadDetails}
 
         pub fun getSignerKeys(): [String] {
