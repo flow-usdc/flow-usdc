@@ -6,7 +6,6 @@ transaction(
     contractName: String, 
     code: String,
     VaultStoragePath: StoragePath,
-    VaultProviderPrivPath: PrivatePath,
     VaultBalancePubPath: PublicPath,
     VaultUUIDPubPath: PublicPath,
     VaultReceiverPubPath: PublicPath,
@@ -49,20 +48,31 @@ transaction(
     version: String,
     initTotalSupply: UFix64,
     initPaused: Bool,
+    adminAccountPubKeys: [String],
+    adminAccountKeyWeights: [UFix64],
+    adminAccountKeyAlgos: [UInt8],
     ownerAccountPubKeys: [String],
     ownerAccountKeyWeights: [UFix64],
-    ownerAccountKeyAlgos : [UInt8],
+    ownerAccountKeyAlgos: [UInt8],
+    masterMinterAccountPubKeys: [String],
+    masterMinterAccountKeyWeights: [UFix64],
+    masterMinterAccountKeyAlgos: [UInt8],
+    blocklisterAccountPubKeys: [String],
+    blocklisterAccountKeyWeights: [UFix64],
+    blocklisterAccountKeyAlgos: [UInt8],
+    pauserAccountPubKeys: [String],
+    pauserAccountKeyWeights: [UFix64],
+    pauserAccountKeyAlgos: [UInt8],
 ) {
-    prepare(owner: AuthAccount) {
-        let existingContract = owner.contracts.get(name: contractName)
+    prepare(contractAccount: AuthAccount) {
+        let existingContract = contractAccount.contracts.get(name: contractName)
 
         if (existingContract == nil) {
-            owner.contracts.add(
+            contractAccount.contracts.add(
                 name: contractName, 
                 code: code.decodeHex(), 
-                owner,
+                contractAccount,
                 VaultStoragePath: VaultStoragePath,
-                VaultProviderPrivPath: VaultProviderPrivPath,
                 VaultBalancePubPath: VaultBalancePubPath,
                 VaultUUIDPubPath: VaultUUIDPubPath,
                 VaultReceiverPubPath: VaultReceiverPubPath,
@@ -104,13 +114,25 @@ transaction(
                 tokenName: tokenName,
                 version: version,
                 initTotalSupply: initTotalSupply,
-                initPaused: initPaused, 
+                initPaused: initPaused,
+                adminAccountPubKeys: adminAccountPubKeys,
+                adminAccountKeyWeights: adminAccountKeyWeights,
+                adminAccountKeyAlgos: adminAccountKeyAlgos,
                 ownerAccountPubKeys: ownerAccountPubKeys,
                 ownerAccountKeyWeights: ownerAccountKeyWeights,
                 ownerAccountKeyAlgos: ownerAccountKeyAlgos,
+                masterMinterAccountPubKeys: masterMinterAccountPubKeys,
+                masterMinterAccountKeyWeights: masterMinterAccountKeyWeights,
+                masterMinterAccountKeyAlgos: masterMinterAccountKeyAlgos,
+                blocklisterAccountPubKeys: blocklisterAccountPubKeys,
+                blocklisterAccountKeyWeights: blocklisterAccountKeyWeights,
+                blocklisterAccountKeyAlgos: blocklisterAccountKeyAlgos,
+                pauserAccountPubKeys: pauserAccountPubKeys,
+                pauserAccountKeyWeights: pauserAccountKeyWeights,
+                pauserAccountKeyAlgos: pauserAccountKeyAlgos,
             )
         } else {
-            owner.contracts.update__experimental(name: contractName, code: code.decodeHex())
+            contractAccount.contracts.update__experimental(name: contractName, code: code.decodeHex())
         }
     }
 }

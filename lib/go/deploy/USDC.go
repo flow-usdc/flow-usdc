@@ -29,7 +29,6 @@ func DeployFiatTokenContract(
 		StringArgument(encodedStr).
 		// Vault
 		Argument(cadence.Path{Domain: "storage", Identifier: "USDCVault-2"}).
-		Argument(cadence.Path{Domain: "private", Identifier: "USDCVaultProvider-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultBalance-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultUUID-2"}).
 		Argument(cadence.Path{Domain: "public", Identifier: "USDCVaultReceiver-2"}).
@@ -86,6 +85,18 @@ func DeployFiatTokenContract(
 		StringArgument(version).
 		UFix64Argument("1000000000.00000000").
 		BooleanArgument(false).
+		Argument(cadence.NewArray(multiSigPubKeys)).
+		Argument(cadence.NewArray(multiSigKeyWeights)).
+		Argument(cadence.NewArray(multiSigAlgos)).
+		Argument(cadence.NewArray(multiSigPubKeys)).
+		Argument(cadence.NewArray(multiSigKeyWeights)).
+		Argument(cadence.NewArray(multiSigAlgos)).
+		Argument(cadence.NewArray(multiSigPubKeys)).
+		Argument(cadence.NewArray(multiSigKeyWeights)).
+		Argument(cadence.NewArray(multiSigAlgos)).
+		Argument(cadence.NewArray(multiSigPubKeys)).
+		Argument(cadence.NewArray(multiSigKeyWeights)).
+		Argument(cadence.NewArray(multiSigAlgos)).
 		Argument(cadence.NewArray(multiSigPubKeys)).
 		Argument(cadence.NewArray(multiSigKeyWeights)).
 		Argument(cadence.NewArray(multiSigAlgos)).

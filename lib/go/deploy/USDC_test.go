@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFiatTokenTotalSupplyInOwnerVault(t *testing.T) {
+func TestFiatTokenTotalSupplyInContractOwnerVault(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	supply, err := util.GetTotalSupply(g)
 	assert.NoError(t, err)
@@ -33,6 +33,13 @@ func TestFiatTokenName(t *testing.T) {
 	name, err := util.GetName(g)
 	assert.NoError(t, err)
 	assert.Equal(t, "USDC", name)
+}
+
+func TestFiatTokenVersion(t *testing.T) {
+	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
+	version, err := util.GetVersion(g)
+	assert.NoError(t, err)
+	assert.Equal(t, "0.1.0", version)
 }
 
 func TestUpgradeContract(t *testing.T) {
@@ -148,7 +155,7 @@ func TestMultiSig_UpgradeContractRemovePayload(t *testing.T) {
 	assert.Equal(t, currentVersion, postVersion)
 }
 
-func TestMultiSig_UpgradeContractUnknowMethodFails(t *testing.T) {
+func TestMultiSig_UpgradeContractUnknownMethodFails(t *testing.T) {
 	g := gwtf.NewGoWithTheFlow(util.FlowJSON, os.Getenv("NETWORK"), false, 1)
 	mc := util.Arg{V: uint64(222), T: "UInt64"}
 
