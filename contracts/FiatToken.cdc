@@ -361,18 +361,6 @@ pub contract FiatToken: FungibleToken {
         access(self) var blocklisterCapPath: PrivatePath?
         access(self) var pauserCapPath: PrivatePath?
 
-        pub fun createNewPauseExecutor(): @PauseExecutor {
-            return <-create PauseExecutor()
-        }
-
-        pub fun createNewBlocklistExecutor(): @BlocklistExecutor {
-            return <-create BlocklistExecutor()
-        }
-
-        pub fun createNewMasterMinter(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]): @MasterMinter {
-            return <-create MasterMinter(pk: pk, pka: pka)
-        }
-
         pub fun reassignOwner(to: Address, newPath: PrivatePath) {
             let newCap = FiatToken.linkOwnerExec(newPath)
             let receiver = getAccount(to)
@@ -1178,7 +1166,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        adminAccount.save(<- create Admin(pk: adminPubKeys, pka: pubKeyAttrs), to: self.AdminStoragePath)
+        adminAccount.save(<- self.createNewAdmin(publicKeys: adminPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.AdminStoragePath)
         adminAccount.link<&Admin{OnChainMultiSig.PublicSigner}>(self.AdminPubSigner, target: self.AdminStoragePath)
         adminAccount.link<&Admin{ResourceId}>(self.AdminUUIDPubPath, target: self.AdminStoragePath)
         adminAccount.link<&Admin{AdminCapReceiver}>(self.AdminCapReceiverPubPath, target: self.AdminStoragePath)
@@ -1200,7 +1188,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        ownerAccount.save(<- create Owner(pk: ownerPubKeys, pka: pubKeyAttrs), to: self.OwnerStoragePath)
+        ownerAccount.save(<- self.createNewOwner(publicKeys: ownerPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.OwnerStoragePath)
         ownerAccount.link<&Owner{OnChainMultiSig.PublicSigner}>(self.OwnerPubSigner, target: self.OwnerStoragePath)
         ownerAccount.link<&Owner{ResourceId}>(self.OwnerUUIDPubPath, target: self.OwnerStoragePath)
         ownerAccount.link<&Owner{OwnerCapReceiver}>(self.OwnerCapReceiverPubPath, target: self.OwnerStoragePath)
@@ -1222,7 +1210,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        masterMinterAccount.save(<- create MasterMinter(pk: masterMinterPubKeys, pka: pubKeyAttrs), to: self.MasterMinterStoragePath)
+        masterMinterAccount.save(<- self.createNewMasterMinter(publicKeys: masterMinterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.MasterMinterStoragePath)
         masterMinterAccount.link<&MasterMinter{OnChainMultiSig.PublicSigner}>(self.MasterMinterPubSigner, target: self.MasterMinterStoragePath)
         masterMinterAccount.link<&MasterMinter{ResourceId}>(self.MasterMinterUUIDPubPath, target: self.MasterMinterStoragePath)
         masterMinterAccount.link<&MasterMinter{MasterMinterCapReceiver}>(self.MasterMinterCapReceiverPubPath, target: self.MasterMinterStoragePath)
@@ -1244,7 +1232,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        blocklisterAccount.save(<- create Blocklister(pk: masterMinterPubKeys, pka: pubKeyAttrs), to: self.BlocklisterStoragePath)
+        blocklisterAccount.save(<- self.createNewBlocklister(publicKeys: masterMinterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{OnChainMultiSig.PublicSigner}>(self.BlocklisterPubSigner, target: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{ResourceId}>(self.BlocklisterUUIDPubPath, target: self.BlocklisterStoragePath)
         blocklisterAccount.link<&Blocklister{BlocklisterCapReceiver}>(self.BlocklisterCapReceiverPubPath, target: self.BlocklisterStoragePath)
@@ -1266,7 +1254,7 @@ pub contract FiatToken: FungibleToken {
             )
             i = i + 1
         }
-        pauserAccount.save(<- create Pauser(pk: pauserPubKeys, pka: pubKeyAttrs), to: self.PauserStoragePath)
+        pauserAccount.save(<- self.createNewPauser(publicKeys: pauserPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.PauserStoragePath)
         pauserAccount.link<&Pauser{OnChainMultiSig.PublicSigner}>(self.PauserPubSigner, target: self.PauserStoragePath)
         pauserAccount.link<&Pauser{ResourceId}>(self.PauserUUIDPubPath, target: self.PauserStoragePath)
         pauserAccount.link<&Pauser{PauseCapReceiver}>(self.PauserCapReceiverPubPath, target: self.PauserStoragePath)
