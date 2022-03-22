@@ -51,7 +51,7 @@ without time restrictions.
 ## Usage
 
 The `FiatToken`, `FiatTokenInterface`, and `OnChainMultiSig` contracts are currently deployed to
-the Flow Testnet account [`0x1ab3c177460e1e4a`].
+the Flow Testnet account [`0xa983fecbed621163`].
 
 ### Transactions and Scripts
 
@@ -84,7 +84,7 @@ Once you have `flow` and `go` installed, then simply clone the repo to get start
 git clone https://github.com/flow-usdc/flow-usdc
 ```
 
-[`0x1ab3c177460e1e4a`]: https://flow-view-source.com/testnet/account/0x1ab3c177460e1e4a/
+[`0xa983fecbed621163`]: https://flow-view-source.com/testnet/account/0xa983fecbed621163/
 
 ### Environment Variables
 
