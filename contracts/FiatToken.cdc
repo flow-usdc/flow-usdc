@@ -1,6 +1,7 @@
 import Crypto
 import FungibleToken from 0x{{.FungibleToken}}
 import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import MigrationContractStaging from 0x{{.Migration}}
 
 pub contract FiatToken: FungibleToken {
 
@@ -249,6 +250,17 @@ pub contract FiatToken: FungibleToken {
             FiatToken.upgradeContract(name: name, code: code, version: version)
         }
 
+        /// Stages the Cadence 1.0 version of the FiatToken contract
+        pub fun stageContract(name: String, code: String) {
+            FiatToken.account.save(<-MigrationContractStaging.createHost(), to: MigrationContractStaging.HostStoragePath)
+
+            let host = self.account.borrow<&MigrationContractStaging.Host>(from: MigrationContractStaging.HostStoragePath)!
+
+            // Call staging contract, storing the contract code that will update during Cadence 1.0 migration
+            // If code is already staged for the given contract, it will be overwritten.
+            MigrationContractStaging.stageContract(host: host, name: name, code: code)
+        }
+
         pub fun changeAdmin(to: Address, newPath: PrivatePath) {
             let newCap = FiatToken.linkAdminExec(newPath)
             let receiver = getAccount(to)
@@ -320,6 +332,11 @@ pub contract FiatToken: FungibleToken {
                     let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
                     let executor = self.adminExecutorCapability!.borrow() ?? panic("cannot borrow AdminExecutor capability")
                     executor.changeAdmin(to: to, newPath: path)
+                case "stageContract":
+                    let name = p.getArg(i: 0)! as? String ?? panic ("cannot downcast contract name")
+                    let code = p.getArg(i: 1)! as? String ?? panic ("cannot downcast contract code")
+                    let executor = self.adminExecutorCapability!.borrow() ?? panic("cannot borrow AdminExecutor capability")
+                    executor.stageContract(name: name, code: code.decodeHex(), version: version)
                 default:
                     panic("Unknown transaction method")
             }
