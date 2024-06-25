@@ -5,18 +5,18 @@
 // MinterController are assigned Minter by the UUID.
 // If a new one is created, the UUID will be different and will not have the same Minter to control.
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
 
-    prepare (minterController: AuthAccount) {
+    prepare (minterController: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
         
         // Check and return if they already have a minter controller resource
-        if minterController.borrow<&FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) != nil {
+        if minterController.storage.borrow<&FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) != nil {
             minterController.unlink(FiatToken.MinterControllerUUIDPubPath)
             minterController.unlink(FiatToken.MinterControllerPubSigner)
-            let m <- minterController.load<@FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) 
+            let m <- minterController.storage.load<@FiatToken.MinterController>(from: FiatToken.MinterControllerStoragePath) 
             destroy m
         }
 
@@ -28,7 +28,7 @@ transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: 
             i = i + 1;
         }
         
-        minterController.save(<- FiatToken.createNewMinterController(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.MinterControllerStoragePath);
+        minterController.storage.save(<- FiatToken.createNewMinterController(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.MinterControllerStoragePath);
         
         minterController.link<&FiatToken.MinterController{FiatToken.ResourceId}>(FiatToken.MinterControllerUUIDPubPath, target: FiatToken.MinterControllerStoragePath)
         ??  panic("Could not link minter controller uuid");
@@ -38,10 +38,10 @@ transaction(minterControllerAddr: Address, publicKeys: [String], pubKeyWeights: 
     } 
 
     post {
-        getAccount(minterControllerAddr).getCapability<&{FiatToken.ResourceId}>(FiatToken.MinterControllerUUIDPubPath).check() :
+        getAccount(minterControllerAddr).capabilities.get<&{FiatToken.ResourceId}>(FiatToken.MinterControllerUUIDPubPath).check() :
         "MinterControllerUUID link not set"
 
-        getAccount(minterControllerAddr).getCapability<&{OnChainMultiSig.PublicSigner}>(FiatToken.MinterControllerPubSigner).check() :
+        getAccount(minterControllerAddr).capabilities.get<&{OnChainMultiSig.PublicSigner}>(FiatToken.MinterControllerPubSigner).check() :
         "MinterControllerPubSigner link not set"
     }
 }

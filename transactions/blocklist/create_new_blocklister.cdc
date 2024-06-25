@@ -5,17 +5,17 @@
 // Blocklister does not have capability to blocklist until granted by owner of BlocklistExecutor.
 // If a new one is created, the capability will be lost
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
-    prepare (blocklister: AuthAccount) {
+    prepare (blocklister: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
         
         // Check if they already have a blocklister resource, if so, destroy it
-        if blocklister.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) != nil {
+        if blocklister.storage.borrow<&FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) != nil {
             blocklister.unlink(FiatToken.BlocklisterCapReceiverPubPath)
             blocklister.unlink(FiatToken.BlocklisterPubSigner)
-            let b <- blocklister.load<@FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) 
+            let b <- blocklister.storage.load<@FiatToken.Blocklister>(from: FiatToken.BlocklisterStoragePath) 
             destroy b
         }
         
@@ -27,7 +27,7 @@ transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix
             i = i + 1;
         }
 
-        blocklister.save(<- FiatToken.createNewBlocklister(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.BlocklisterStoragePath);
+        blocklister.storage.save(<- FiatToken.createNewBlocklister(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.BlocklisterStoragePath);
         
         blocklister.link<&FiatToken.Blocklister{FiatToken.BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath, target: FiatToken.BlocklisterStoragePath)
         ??  panic("Could not link BlocklisterCapReceiver");
@@ -40,10 +40,10 @@ transaction(blocklisterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix
     } 
 
     post {
-        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{FiatToken.BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
+        getAccount(blocklisterAddr).capabilities.get<&FiatToken.Blocklister{FiatToken.BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath).check() :
         "BlocklisterCapReceiver link not set"
 
-        getAccount(blocklisterAddr).getCapability<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner).check() :
+        getAccount(blocklisterAddr).capabilities.get<&FiatToken.Blocklister{OnChainMultiSig.PublicSigner}>(FiatToken.BlocklisterPubSigner).check() :
         "BlocklistPubSigner link not set"
     }
 }

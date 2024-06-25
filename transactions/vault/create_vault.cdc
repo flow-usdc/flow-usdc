@@ -9,45 +9,30 @@
 // 
 // Therefore if multisig is required for the vault, the account itself should have the same key weight
 // distribution as it does for the Vault.
-import FungibleToken from 0x{{.FungibleToken}}
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FungibleToken"
+import "FiatToken"
+import "OnChainMultiSig"
 
-transaction(multiSigPubKeys: [String], multiSigKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
+transaction {
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
 
         // Return early if the account already stores a FiatToken Vault
-        if signer.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath) != nil {
+        if signer.storage.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath) != nil {
             return
         }
 
-        // Create a new ExampleToken Vault and put it in storage
-        signer.save(
-            <-FiatToken.createEmptyVault(),
-            to: FiatToken.VaultStoragePath
-        )
+        let vault <- FiatToken.createEmptyVault(vaultType: Type<@FiatToken.Vault>())
 
-        // Create a public capability to the Vault that only exposes
-        // the deposit function through the Receiver interface
-        signer.link<&FiatToken.Vault{FungibleToken.Receiver}>(
-            FiatToken.VaultReceiverPubPath,
-            target: FiatToken.VaultStoragePath
-        )
+        // Create a new FiatToken Vault and put it in storage
+        signer.storage.save(<-vault, to: FiatToken.VaultStoragePath)
 
-        // Create a public capability to the Vault that only exposes
-        // the UUID() function through the VaultUUID interface
-        signer.link<&FiatToken.Vault{FiatToken.ResourceId}>(
-            FiatToken.VaultUUIDPubPath,
-            target: FiatToken.VaultStoragePath
+        // Create a public capability to the Vault that exposes the Vault interfaces
+        let vaultCap = signer.capabilities.storage.issue<&FiatToken.Vault>(
+            FiatToken.VaultStoragePath
         )
-
-        // Create a public capability to the Vault that only exposes
-        // the balance field through the Balance interface
-        signer.link<&FiatToken.Vault{FungibleToken.Balance}>(
-            FiatToken.VaultBalancePubPath,
-            target: FiatToken.VaultStoragePath
-        )
-
+        signer.capabilities.publish(vaultCap, at: FiatToken.VaultUUIDPubPath)
+        signer.capabilities.publish(vaultCap, at: FiatToken.VaultReceiverPubPath)
+        signer.capabilities.publish(vaultCap, at: FiatToken.VaultBalancePubPath)
     }
 }

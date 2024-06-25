@@ -1,1060 +1,916 @@
 import Crypto
-import FungibleToken from 0x{{.FungibleToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FungibleToken"
+import "FungibleTokenMetadataViews"
+import "MetadataViews"
+import "OnChainMultiSig"
+import "IBridgePermissions"
 
-pub contract FiatToken: FungibleToken {
+access(all) contract FiatToken: FungibleToken {
+	
+	// ------- FiatToken Events -------
+	
+	// Admin events	
+	access(all) event AdminCreated(resourceId: UInt64)
+	access(all) event AdminChanged(address: Address, resourceId: UInt64)
+	
+	// Owner events
+	access(all) event OwnerCreated(resourceId: UInt64)
+	access(all) event OwnerChanged(address: Address, resourceId: UInt64)
+	
+	// MasterMinter events
+	access(all) event MasterMinterCreated(resourceId: UInt64)
+	access(all) event MasterMinterChanged(address: Address, resourceId: UInt64)
+	
+	// Pauser events
+	access(all) event Paused()
+	access(all) event Unpaused()
+	access(all) event PauserCreated(resourceId: UInt64)
+	access(all) event PauserChanged(address: Address, resourceId: UInt64)
+	
+	// Blocklister events
+	access(all) event Blocklisted(resourceId: UInt64)
+	access(all) event Unblocklisted(resourceId: UInt64)
+	access(all) event BlocklisterCreated(resourceId: UInt64)
+	access(all) event BlocklisterChanged(address: Address, resourceId: UInt64)
+	
+	// FiatToken.Vault events
+	access(all) event NewVault(resourceId: UInt64)
+	access(all) event DestroyVault(resourceId: UInt64)
+	access(all) event FiatTokenWithdrawn(amount: UFix64, from: UInt64)
+	access(all) event FiatTokenDeposited(amount: UFix64, to: UInt64)
+	
+	// Minting events
+	access(all) event MinterCreated(resourceId: UInt64)
+	access(all) event MinterControllerCreated(resourceId: UInt64)
+	access(all) event Mint(minter: UInt64, amount: UFix64)
+	access(all) event Burn(minter: UInt64, amount: UFix64)
+	access(all) event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64)
+	access(all)	event MinterRemoved(controller: UInt64, minter: UInt64)
+	
+	access(all)	event ControllerConfigured(controller: UInt64, minter: UInt64)
+	access(all)	event ControllerRemoved(controller: UInt64)
 
-    // ------- FiatToken Events -------
-
-    // Admin events    
-    pub event AdminCreated(resourceId: UInt64)
-    pub event AdminChanged(address: Address, resourceId: UInt64)
-
-    // Owner events
-    pub event OwnerCreated(resourceId: UInt64)
-    pub event OwnerChanged(address: Address, resourceId: UInt64)
-
-    // MasterMinter events
-    pub event MasterMinterCreated(resourceId: UInt64)
-    pub event MasterMinterChanged(address: Address, resourceId: UInt64)
-    
-    // Pauser events
-    pub event Paused()
-    pub event Unpaused()
-    pub event PauserCreated(resourceId: UInt64)
-    pub event PauserChanged(address: Address, resourceId: UInt64)
-    
-    // Blocklister events
-    pub event Blocklisted(resourceId: UInt64)
-    pub event Unblocklisted(resourceId: UInt64)
-    pub event BlocklisterCreated(resourceId: UInt64)
-    pub event BlocklisterChanged(address: Address, resourceId: UInt64)
-    
-    // FiatToken.Vault events
-    pub event NewVault(resourceId: UInt64)
-    pub event DestroyVault(resourceId: UInt64)
-    pub event FiatTokenWithdrawn(amount: UFix64, from: UInt64)
-    pub event FiatTokenDeposited(amount: UFix64, to: UInt64)
-
-    // Minting events
-    pub event MinterCreated(resourceId: UInt64)
-    pub event MinterControllerCreated(resourceId: UInt64)
-    pub event Mint(minter: UInt64, amount: UFix64)
-    pub event Burn(minter: UInt64, amount: UFix64)
-    pub event MinterConfigured(controller: UInt64, minter: UInt64, allowance: UFix64)
-    pub event MinterRemoved(controller: UInt64, minter: UInt64)
-    pub event ControllerConfigured(controller: UInt64, minter: UInt64)
-    pub event ControllerRemoved(controller: UInt64)
-
-
-    // ------- FungibleToken Events -------
-
-    pub event TokensInitialized(initialSupply: UFix64)
-    pub event TokensWithdrawn(amount: UFix64, from: Address?)
-    pub event TokensDeposited(amount: UFix64, to: Address?)
-
-
-    // ------- FiatToken Paths -------
-
-    pub let VaultStoragePath: StoragePath
-    pub let VaultBalancePubPath: PublicPath
-    pub let VaultUUIDPubPath: PublicPath
-    pub let VaultReceiverPubPath: PublicPath
-
-    pub let BlocklistExecutorStoragePath: StoragePath
-
-    pub let BlocklisterStoragePath: StoragePath
-    pub let BlocklisterCapReceiverPubPath: PublicPath
-    pub let BlocklisterUUIDPubPath: PublicPath
-    pub let BlocklisterPubSigner: PublicPath
-
-    pub let PauseExecutorStoragePath: StoragePath
-
-    pub let PauserStoragePath: StoragePath
-    pub let PauserCapReceiverPubPath: PublicPath
-    pub let PauserUUIDPubPath: PublicPath
-    pub let PauserPubSigner: PublicPath
-
-    pub let AdminExecutorStoragePath: StoragePath
-
-    pub let AdminStoragePath: StoragePath
-    pub let AdminCapReceiverPubPath: PublicPath
-    pub let AdminUUIDPubPath: PublicPath
-    pub let AdminPubSigner: PublicPath
-
-    pub let OwnerExecutorStoragePath: StoragePath
-
-    pub let OwnerStoragePath: StoragePath
-    pub let OwnerCapReceiverPubPath: PublicPath
-    pub let OwnerUUIDPubPath: PublicPath
-    pub let OwnerPubSigner: PublicPath
-
-    pub let MasterMinterExecutorStoragePath: StoragePath
-
-    pub let MasterMinterStoragePath: StoragePath
-    pub let MasterMinterCapReceiverPubPath: PublicPath
-    pub let MasterMinterUUIDPubPath: PublicPath
-    pub let MasterMinterPubSigner: PublicPath
-
-    pub let MinterControllerStoragePath: StoragePath
-    pub let MinterControllerUUIDPubPath: PublicPath
-    pub let MinterControllerPubSigner: PublicPath
-
-    pub let MinterStoragePath: StoragePath
-    pub let MinterUUIDPubPath: PublicPath
-
-
-    // ------- FiatToken States / Variables -------
-
-    pub let name: String
-    pub var version: String
-    // Set to true if the contract is paused
-    pub var paused: Bool
-    // The token total supply
-    pub var totalSupply: UFix64
-    // Blocked resources dictionary {resourceId: Block Height}
-    access(contract) let blocklist: {UInt64: UInt64}
-    // Managed minters dictionary {MinterController: Minter}
-    access(contract) let managedMinters: {UInt64: UInt64}
-    // Minter allowance dictionary {Minter: Allowance}
-    access(contract) let minterAllowances: { UInt64: UFix64}
-    
-
-    // ------- FiatToken Interfaces  -------
-
-    pub resource interface ResourceId {
-        pub fun UUID(): UInt64
-    }
-
-    pub resource interface AdminCapReceiver {
-        pub fun setAdminCap(cap: Capability<&AdminExecutor>)
-    }
-
-    pub resource interface OwnerCapReceiver {
-        pub fun setOwnerCap(cap: Capability<&OwnerExecutor>)
-    }
-
-    pub resource interface MasterMinterCapReceiver {
-        pub fun setMasterMinterCap(cap: Capability<&MasterMinterExecutor>)
-    }
-
-    pub resource interface BlocklisterCapReceiver {
-        pub fun setBlocklistCap(cap: Capability<&BlocklistExecutor>)
-    }
-
-    pub resource interface PauseCapReceiver {
-        pub fun setPauseCap(cap: Capability<&PauseExecutor>)
-    }
-
-    
-    // ------- Path linking -------
-
-    access(contract) fun linkAdminExec(_ newPrivPath: PrivatePath): Capability<&AdminExecutor>  {
-        return self.account.link<&AdminExecutor>(newPrivPath, target: FiatToken.AdminExecutorStoragePath)
-            ?? panic("could not create new AdminExecutor capability link")
-    }
-
-    access(contract) fun linkOwnerExec(_ newPrivPath: PrivatePath): Capability<&OwnerExecutor>  {
-        return self.account.link<&OwnerExecutor>(newPrivPath, target: FiatToken.OwnerExecutorStoragePath)
-            ?? panic("could not create new OwnerExecutor capability link")
-    }
-
-    access(contract) fun linkMasterMinterExec(_ newPrivPath: PrivatePath): Capability<&MasterMinterExecutor>  {
-        return self.account.link<&MasterMinterExecutor>(newPrivPath, target: FiatToken.MasterMinterExecutorStoragePath)
-            ?? panic("could not create new MasterMinterExecutor capability link")
-    }
-
-    access(contract) fun linkBlocklistExec(_ newPrivPath: PrivatePath): Capability<&FiatToken.BlocklistExecutor>  {
-        return self.account.link<&BlocklistExecutor>(newPrivPath, target: FiatToken.BlocklistExecutorStoragePath)
-            ?? panic("could not create new BlocklistExecutor capability link")
-    }
-
-    access(contract) fun linkPauserExec(_ newPrivPath: PrivatePath): Capability<&FiatToken.PauseExecutor>  {
-        return self.account.link<&FiatToken.PauseExecutor>(newPrivPath, target: FiatToken.PauseExecutorStoragePath)
-            ?? panic("could not create new PauseExecutor capability link")
-    }
-
-    // ------- Path unlinking -------
-
-    access(contract) fun unlinkPriv(_ privPath: PrivatePath) {
-        self.account.unlink(privPath)
-    }
-
-
-    // ------- FiatToken Resources -------
-
-    pub resource Vault:
-        ResourceId,
-        FungibleToken.Provider,
-        FungibleToken.Receiver,
-        FungibleToken.Balance {
-        
-        pub var balance: UFix64
-
-        pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
-            pre {
-                !FiatToken.paused: "FiatToken contract paused"
-                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
-            }
-            self.balance = self.balance - amount
-            emit FiatTokenWithdrawn(amount: amount, from: self.uuid)
-            emit TokensWithdrawn(amount: amount, from: self.owner?.address)
-            return <-create Vault(balance: amount)
-        }
-
-        pub fun deposit(from: @FungibleToken.Vault) {
-            pre {
-                !FiatToken.paused: "FiatToken contract paused"
-                FiatToken.blocklist[from.uuid] == nil: "Receiving Vault Blocklisted"
-                FiatToken.blocklist[self.uuid] == nil: "Vault Blocklisted"
-            }
-            let vault <- from as! @FiatToken.Vault
-            self.balance = self.balance + vault.balance
-            emit FiatTokenDeposited(amount: vault.balance, to: self.uuid)
-            emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
-            vault.balance = 0.0
-            destroy vault
-        }
-
-        pub fun UUID(): UInt64 {
+	// ------- FungibleToken Events -------
+	access(all)	event TokensWithdrawn(amount: UFix64, from: Address?)
+	access(all)	event TokensDeposited(amount: UFix64, to: Address?)
+	
+	// ------- FiatToken Paths -------
+	access(all)	let VaultStoragePath: StoragePath
+	access(all)	let VaultBalancePubPath: PublicPath
+	access(all)	let VaultUUIDPubPath: PublicPath
+	access(all)	let VaultReceiverPubPath: PublicPath
+	access(all)	let BlocklistExecutorStoragePath: StoragePath
+	access(all)	let BlocklisterStoragePath: StoragePath
+	access(all)	let BlocklisterCapReceiverPubPath: PublicPath
+	access(all)	let BlocklisterUUIDPubPath: PublicPath
+	access(all)	let BlocklisterPubSigner: PublicPath
+	access(all)	let PauseExecutorStoragePath: StoragePath
+	access(all)	let PauserStoragePath: StoragePath
+	access(all)	let PauserCapReceiverPubPath: PublicPath
+	access(all)	let PauserUUIDPubPath: PublicPath
+	access(all)	let PauserPubSigner: PublicPath
+	access(all)	let AdminExecutorStoragePath: StoragePath
+	access(all)	let AdminStoragePath: StoragePath
+	access(all)	let AdminCapReceiverPubPath: PublicPath
+	access(all)	let AdminUUIDPubPath: PublicPath
+	access(all)	let AdminPubSigner: PublicPath
+	access(all)	let OwnerExecutorStoragePath: StoragePath
+	access(all)	let OwnerStoragePath: StoragePath
+	access(all)	let OwnerCapReceiverPubPath: PublicPath
+	access(all)	let OwnerUUIDPubPath: PublicPath
+	access(all)	let OwnerPubSigner: PublicPath
+	access(all)	let MasterMinterExecutorStoragePath: StoragePath
+	access(all)	let MasterMinterStoragePath: StoragePath
+	access(all)	let MasterMinterCapReceiverPubPath: PublicPath
+	access(all)	let MasterMinterUUIDPubPath: PublicPath
+	access(all)	let MasterMinterPubSigner: PublicPath
+	access(all)	let MinterControllerStoragePath: StoragePath
+	access(all)	let MinterControllerUUIDPubPath: PublicPath
+	access(all)	let MinterControllerPubSigner: PublicPath
+	access(all)	let MinterStoragePath: StoragePath
+	access(all)	let MinterUUIDPubPath: PublicPath
+	
+	// ------- FiatToken States / Variables -------
+	access(all)	let name: String
+	
+	access(all)	var version: String
+	
+	// Set to true if the contract is paused
+	access(all)	var paused: Bool
+	
+	// The token total supply
+	access(all)	var totalSupply: UFix64
+	
+	// Blocked resources dictionary {resourceId: Block Height}
+	access(contract) let blocklist: {UInt64: UInt64}
+	
+	// Managed minters dictionary {MinterController: Minter}
+	access(contract) let managedMinters: {UInt64: UInt64}
+	
+	// Minter allowance dictionary {Minter: Allowance}
+	access(contract) let minterAllowances: {UInt64: UFix64}
+	
+	// ------- FiatToken Interfaces  -------
+	access(all)	resource interface ResourceId { 
+		access(all) view fun UUID(): UInt64 {
             return self.uuid
         }
+	}
 
-        access(contract) fun burn() {
-            pre {
-                self.balance > 0.0: "Cannot burn USDC Vault with zero balance"
+    access(all) resource interface MultiSigManagerDefaultImpl {
+        access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+
+        access(all) fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) { 
+			self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
+		}
+        access(all) fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) { 
+			self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
+		}
+        access(all) view fun getTxIndex(): UInt64 { 
+			return self.multiSigManager.txIndex
+		}
+        access(all) fun getSignerKeys(): [String] { 
+			return self.multiSigManager.getSignerKeys()
+		}
+        access(all) fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? { 
+			return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
+		}
+    }
+	
+	access(all)	resource interface AdminCapReceiver { 
+		access(all) fun setAdminCap(cap: Capability<&FiatToken.AdminExecutor>): Void
+	}
+	
+	access(all)	resource interface OwnerCapReceiver { 
+		access(all) fun setOwnerCap(cap: Capability<&FiatToken.OwnerExecutor>): Void
+	}
+	
+	access(all)	resource interface MasterMinterCapReceiver { 
+		access(all) fun setMasterMinterCap(cap: Capability<&FiatToken.MasterMinterExecutor>): Void
+	}
+	
+	access(all)	resource interface BlocklisterCapReceiver { 
+		access(all) fun setBlocklistCap(cap: Capability<&FiatToken.BlocklistExecutor>): Void
+	}
+	
+	access(all)	resource interface PauseCapReceiver { 
+		access(all) fun setPauseCap(cap: Capability<&FiatToken.PauseExecutor>): Void
+	}
+	
+	// ------- Capability Destruction -------
+	access(contract) fun unlinkPrivateCapabilities(_ storagePath: StoragePath) {
+        // Iterate through FiatToken account capability controllers
+        // for the specified storage path and delete them
+        // so a new one can be created
+        // Private Paths do not exist any more in Cadence
+        // so we use capability controllers now
+        let controllers = self.account.capabilities.storage.getControllers(forPath: storagePath)
+        for controller in controllers {
+            controller.delete()
+        }
+    }
+	
+	// ------- FiatToken Resources -------
+	access(all) resource Vault: ResourceId, FungibleToken.Vault {
+
+		access(all)	var balance: UFix64
+
+        /// Called when a fungible token is burned via the `Burner.burn()` method
+        access(contract) fun burnCallback() {
+            pre { 
+				!FiatToken.paused:
+					"Cannot burn USDC while the FiatToken contract is paused"
+				FiatToken.blocklist[self.uuid] == nil:
+					"Cannot burn USDC while the owner's Vault is Blocklisted"
+			}
+            if self.balance > 0.0 {
+                FiatToken.totalSupply = FiatToken.totalSupply - self.balance
             }
-            FiatToken.totalSupply = FiatToken.totalSupply - self.balance
             self.balance = 0.0
         }
 
-        destroy() {
-            pre {
-                self.balance == 0.0: "Cannot destroy USDC Vault with non-zero balance"
-            }
-            emit DestroyVault(resourceId: self.uuid)
+        access(all) view fun getViews(): [Type] {
+            return FiatToken.getContractViews(resourceType: nil)
         }
 
-        init(balance: UFix64) {
-            self.balance = balance
+        access(all) fun resolveView(_ view: Type): AnyStruct? {
+            return FiatToken.resolveContractView(resourceType: nil, viewType: view)
         }
 
+        /// getSupportedVaultTypes optionally returns a list of vault types that this receiver accepts
+        access(all) view fun getSupportedVaultTypes(): {Type: Bool} {
+            let supportedTypes: {Type: Bool} = {}
+            supportedTypes[self.getType()] = true
+            return supportedTypes
+        }
+
+        /// Returns whether the specified type can be deposited
+        access(all) view fun isSupportedVaultType(type: Type): Bool {
+            return self.getSupportedVaultTypes()[type] ?? false
+        }
+
+        /// Asks if the amount can be withdrawn from this vault
+        access(all) view fun isAvailableToWithdraw(amount: UFix64): Bool {
+            return amount <= self.balance
+        }
+		
+		access(FungibleToken.Withdraw) fun withdraw(amount: UFix64): @{FungibleToken.Vault} {
+			pre { 
+				!FiatToken.paused:
+					"Cannot withdraw USDC while the FiatToken contract is paused"
+				FiatToken.blocklist[self.uuid] == nil:
+					"Cannot withdraw USDC while the owner's Vault is Blocklisted"
+			}
+			self.balance = self.balance - amount
+			emit FiatTokenWithdrawn(amount: amount, from: self.uuid)
+			emit TokensWithdrawn(amount: amount, from: self.owner?.address)
+			return <-create Vault(balance: amount)
+		}
+		
+		access(all)	fun deposit(from: @{FungibleToken.Vault}): Void { 
+			pre{ 
+				!FiatToken.paused:
+					"Cannot deposit USDC while the FiatToken contract is paused"
+				FiatToken.blocklist[from.uuid] == nil:
+					"Cannot deposit USDC while the deposited Vault is Blocklisted"
+				FiatToken.blocklist[self.uuid] == nil:
+					"Cannot deposit USDC while the receiving Vault is Blocklisted"
+			}
+			let vault <- from as! @FiatToken.Vault
+			self.balance = self.balance + vault.balance
+			emit FiatTokenDeposited(amount: vault.balance, to: self.uuid)
+			emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
+			destroy vault
+		}
+		
+		access(all)	fun createEmptyVault(): @{FungibleToken.Vault} { 
+			return <-create Vault(balance: 0.0)
+		}
+		
+		init(balance: UFix64) { 
+			self.balance = balance
+		}
+	}
+	
+    /// Resource that lives in the FiatToken account
+    /// that performs the explicit Admin actions
+    /// after a successful on chain multisig has routed a call to it
+    /// from the Admin resource
+	access(all)	resource AdminExecutor {
+		
+		access(all) fun upgradeContract(name: String, code: [UInt8], version: String) { 
+			FiatToken.upgradeContract(name: name, code: code, version: version)
+		}
+		
+        /// Revokes access to all existing AdminExecutor capabilities
+        /// and assigns a new AdminExecutor capability to a new account
+		access(all) fun changeAdmin(to: Address) { 
+
+			FiatToken.unlinkPrivateCapabilities(FiatToken.AdminExecutorStoragePath)
+
+			let newCap = FiatToken.account.capabilities.storage.issue<&AdminExecutor>(FiatToken.AdminExecutorStoragePath)
+
+			let receiver = getAccount(to).capabilities.get<&Admin>(FiatToken.AdminCapReceiverPubPath).borrow()
+                ?? panic("could not borrow AdminCapReceiver capability")
+			let idRef = getAccount(to).capabilities.get<&Admin>(FiatToken.AdminUUIDPubPath).borrow()
+                ?? panic("could not borrow Admin ResourceId capability")
+
+			receiver.setAdminCap(cap: newCap)
+
+			emit AdminChanged(address: to, resourceId: idRef.UUID())
+		}
+	}
+	
+    /// Multisig signers call public functions in this resource
+    /// to submit signatures to execute AdminExecutor functionality
+	access(all)	resource Admin: OnChainMultiSig.PublicSigner, ResourceId, AdminCapReceiver, MultiSigManagerDefaultImpl { 
+
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(self) var adminExecutorCapability: Capability<&AdminExecutor>?
+		
+		access(all) fun setAdminCap(cap: Capability<&AdminExecutor>) { 
+			pre { 
+				self.adminExecutorCapability == nil:
+					"Capability has already been set"
+				cap.borrow() != nil:
+					"Invalid capability"
+			}
+			self.adminExecutorCapability = cap
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method { 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "removePayload":
+					let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic("cannot downcast txIndex")
+					let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex)
+					destroy payloadToRemove
+				case "upgradeContract":
+					let name = p.getArg(i: 0)! as? String ?? panic("cannot downcast contract name")
+					let code = p.getArg(i: 1)! as? String ?? panic("cannot downcast contract code")
+					let version = p.getArg(i: 2)! as? String ?? panic("cannot downcast contract version")
+					let executor = (self.adminExecutorCapability!).borrow() ?? panic("cannot borrow AdminExecutor capability")
+					executor.upgradeContract(name: name, code: code.decodeHex(), version: version)
+				case "changeAdmin":
+					let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
+					let executor = (self.adminExecutorCapability!).borrow() ?? panic("cannot borrow AdminExecutor capability")
+					executor.changeAdmin(to: to)
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+			self.adminExecutorCapability = nil
+		}
+	}
+	
+	access(all)	resource OwnerExecutor { 
+		
+		access(all) fun reassignOwner(to: Address) { 
+            FiatToken.unlinkPrivateCapabilities(FiatToken.OwnerExecutorStoragePath)
+
+			let newCap = FiatToken.account.capabilities.storage.issue<&OwnerExecutor>(FiatToken.OwnerExecutorStoragePath)
+
+			let receiver = getAccount(to).capabilities.get<&Owner>(FiatToken.OwnerCapReceiverPubPath).borrow()
+                ?? panic("could not borrow the OwnerCapReceiver capability")
+			let idRef = getAccount(to).capabilities.get<&Owner>(FiatToken.OwnerUUIDPubPath).borrow()
+                ?? panic("could not borrow the Owner ResourceId capability")
+			receiver.setOwnerCap(cap: newCap)
+
+			emit OwnerChanged(address: to, resourceId: idRef.UUID())
+		}
+		
+		access(all) fun reassignMasterMinter(to: Address) { 
+            FiatToken.unlinkPrivateCapabilities(FiatToken.MasterMinterExecutorStoragePath)
+
+			let newCap = FiatToken.account.capabilities.storage.issue<&MasterMinterExecutor>(FiatToken.MasterMinterExecutorStoragePath)
+
+			let receiver = getAccount(to).capabilities.get<&MasterMinter>(FiatToken.MasterMinterCapReceiverPubPath).borrow()
+                ?? panic("could not borrow the MasterMinterCapReceiver capability")
+			let idRef = getAccount(to).capabilities.get<&MasterMinter>(FiatToken.MasterMinterUUIDPubPath).borrow()
+                ?? panic("could not borrow the MasterMinter ResourceId capability")
+			receiver.setMasterMinterCap(cap: newCap)
+
+			emit MasterMinterChanged(address: to, resourceId: idRef.UUID())
+		}
+		
+		access(all) fun reassignBlocklister(to: Address) { 
+            FiatToken.unlinkPrivateCapabilities(FiatToken.BlocklistExecutorStoragePath)
+
+			let newCap = FiatToken.account.capabilities.storage.issue<&BlocklistExecutor>(FiatToken.BlocklistExecutorStoragePath)
+
+			let receiver = getAccount(to).capabilities.get<&Blocklister>(FiatToken.BlocklisterCapReceiverPubPath).borrow()
+                ?? panic("could not borrow the BlocklisterCapReceiver capability ")
+			let idRef = getAccount(to).capabilities.get<&Blocklister>(FiatToken.BlocklisterUUIDPubPath).borrow()
+                ?? panic("could not borrow the Blocklister ResourceId capability")
+			receiver.setBlocklistCap(cap: newCap)
+
+			emit BlocklisterChanged(address: to, resourceId: idRef.UUID())
+		}
+		
+		access(all) fun reassignPauser(to: Address) { 
+            FiatToken.unlinkPrivateCapabilities(FiatToken.PauseExecutorStoragePath)
+
+			let newCap = FiatToken.account.capabilities.storage.issue<&FiatToken.PauseExecutor>(FiatToken.PauseExecutorStoragePath)
+			let receiver = getAccount(to).capabilities.get<&Pauser>(FiatToken.PauserCapReceiverPubPath).borrow()
+                ?? panic("could not borrow the PauseCapReceiver capability")
+			let idRef = getAccount(to).capabilities.get<&Pauser>(FiatToken.PauserUUIDPubPath).borrow()
+                ?? panic("could not borrow the Pauser ResourceId capability")
+			receiver.setPauseCap(cap: newCap)
+
+			emit PauserChanged(address: to, resourceId: idRef.UUID())
+		}
+	}
+	
+	access(all)	resource Owner: OnChainMultiSig.PublicSigner, ResourceId, OwnerCapReceiver, MultiSigManagerDefaultImpl { 
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(self) var ownerExecutorCapability: Capability<&OwnerExecutor>?
+		
+		access(all) fun setOwnerCap(cap: Capability<&OwnerExecutor>) { 
+			pre{ 
+				self.ownerExecutorCapability == nil:
+					"Capability has already been set"
+				cap.borrow() != nil:
+					"Invalid capability"
+			}
+			self.ownerExecutorCapability = cap
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method{ 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "reassignOwner":
+					let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
+					let executor = (self.ownerExecutorCapability!).borrow() ?? panic("cannot borrow OwnerExecutor capability")
+					executor.reassignOwner(to: to)
+				case "reassignMasterMinter":
+					let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
+					let executor = (self.ownerExecutorCapability!).borrow() ?? panic("cannot borrow OwnerExecutor capability")
+					executor.reassignMasterMinter(to: to)
+				case "reassignBlocklister":
+					let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
+					let executor = (self.ownerExecutorCapability!).borrow() ?? panic("cannot borrow OwnerExecutor capability")
+					executor.reassignBlocklister(to: to)
+				case "reassignPauser":
+					let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
+					let executor = (self.ownerExecutorCapability!).borrow() ?? panic("cannot borrow OwnerExecutor capability")
+					executor.reassignPauser(to: to)
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+			self.ownerExecutorCapability = nil
+		}
+	}
+	
+	access(all)	resource MasterMinterExecutor { 
+		access(all) fun configureMinterController(minter: UInt64, minterController: UInt64) { 
+			// Overwrite the minter if the MinterController is already configured (a MinterController can only control 1 minter)
+			FiatToken.managedMinters.insert(key: minterController, minter)
+			emit ControllerConfigured(controller: minterController, minter: minter)
+		}
+		
+		access(all) fun removeMinterController(minterController: UInt64) { 
+			pre{ 
+				FiatToken.managedMinters.containsKey(minterController):
+					"cannot remove unknown MinterController"
+			}
+			FiatToken.managedMinters.remove(key: minterController)
+			emit ControllerRemoved(controller: minterController)
+		}
+	}
+	
+	access(all)	resource MasterMinter: ResourceId, OnChainMultiSig.PublicSigner, MasterMinterCapReceiver, MultiSigManagerDefaultImpl { 
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(self) var masterMinterExecutorCapability: Capability<&MasterMinterExecutor>?
+		
+		access(all) fun setMasterMinterCap(cap: Capability<&MasterMinterExecutor>) { 
+			pre{ 
+				self.masterMinterExecutorCapability == nil:
+					"Capability has already been set"
+				cap.borrow() != nil:
+					"Invalid capability"
+			}
+			self.masterMinterExecutorCapability = cap
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method{ 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "configureMinterController":
+					let m = p.getArg(i: 0)! as? UInt64 ?? panic("cannot downcast minter id")
+					let mc = p.getArg(i: 1)! as? UInt64 ?? panic("cannot downcast MinterController id")
+					let executor = (self.masterMinterExecutorCapability!).borrow() ?? panic("cannot borrow MasterMinterExecutor capability")
+					executor.configureMinterController(minter: m, minterController: mc)
+				case "removeMinterController":
+					let mc = p.getArg(i: 0)! as? UInt64 ?? panic("cannot downcast MinterController id")
+					let executor = (self.masterMinterExecutorCapability!).borrow() ?? panic("cannot borrow MasterMinterExecutor capability")
+					executor.removeMinterController(minterController: mc)
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+			self.masterMinterExecutorCapability = nil
+		}
+	}
+	
+	access(all) resource MinterController: ResourceId, OnChainMultiSig.PublicSigner, MultiSigManagerDefaultImpl { 
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(OnChainMultiSig.Owner) fun configureMinterAllowance(allowance: UFix64) { 
+			let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
+			FiatToken.minterAllowances[managedMinter] = allowance
+			emit MinterConfigured(controller: self.uuid, minter: managedMinter, allowance: allowance)
+		}
+		
+		access(OnChainMultiSig.Owner) fun increaseMinterAllowance(increment: UFix64) { 
+			let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
+			let allowance = FiatToken.minterAllowances[managedMinter] ?? 0.0
+			let newAllowance = allowance.saturatingAdd(increment)
+			self.configureMinterAllowance(allowance: newAllowance)
+		}
+		
+		access(OnChainMultiSig.Owner) fun decreaseMinterAllowance(decrement: UFix64) { 
+			let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
+			let allowance = FiatToken.minterAllowances[managedMinter] ?? panic("Cannot decrease nil MinterAllowance")
+			let newAllowance = (allowance!).saturatingSubtract(decrement)
+			self.configureMinterAllowance(allowance: newAllowance)
+		}
+		
+		access(OnChainMultiSig.Owner) fun removeMinter() { 
+			let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
+			assert(FiatToken.minterAllowances.containsKey(managedMinter), message: "cannot remove unknown Minter")
+			FiatToken.minterAllowances.remove(key: managedMinter)
+			emit MinterRemoved(controller: self.uuid, minter: managedMinter)
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method{ 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "configureMinterAllowance":
+					let allowance = p.getArg(i: 0)! as? UFix64 ?? panic("cannot downcast allowance amount")
+					self.configureMinterAllowance(allowance: allowance)
+				case "increaseMinterAllowance":
+					let increment = p.getArg(i: 0)! as? UFix64 ?? panic("cannot downcast increment amount")
+					self.increaseMinterAllowance(increment: increment)
+				case "decreaseMinterAllowance":
+					let decrement = p.getArg(i: 0)! as? UFix64 ?? panic("cannot downcast decrement amount")
+					self.decreaseMinterAllowance(decrement: decrement)
+				case "removeMinter":
+					self.removeMinter()
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+		}
+	}
+	
+	access(all)	resource Minter: ResourceId { 
+		access(OnChainMultiSig.Owner) fun mint(amount: UFix64): @{FungibleToken.Vault} { 
+			pre{ 
+				!FiatToken.paused:
+					"FiatToken contract paused"
+				FiatToken.blocklist[self.uuid] == nil:
+					"Minter Blocklisted"
+				FiatToken.minterAllowances.containsKey(self.uuid):
+					"minter does not have allowance set"
+			}
+			let mintAllowance = FiatToken.minterAllowances[self.uuid]!
+			assert(mintAllowance >= amount, message: "insufficient mint allowance")
+			FiatToken.minterAllowances.insert(key: self.uuid, mintAllowance - amount)
+			let newTotalSupply = FiatToken.totalSupply + amount
+			FiatToken.totalSupply = newTotalSupply
+			emit Mint(minter: self.uuid, amount: amount)
+			return <-create Vault(balance: amount)
+		}
+	}
+	
+	access(all)	resource BlocklistExecutor { 
+		access(all) fun blocklist(resourceId: UInt64) { 
+			let block = getCurrentBlock()
+			FiatToken.blocklist.insert(key: resourceId, block.height)
+			emit Blocklisted(resourceId: resourceId)
+		}
+		
+		access(all) fun unblocklist(resourceId: UInt64) { 
+			FiatToken.blocklist.remove(key: resourceId)
+			emit Unblocklisted(resourceId: resourceId)
+		}
+	}
+	
+	access(all) resource Blocklister: ResourceId, BlocklisterCapReceiver, OnChainMultiSig.PublicSigner, MultiSigManagerDefaultImpl { 
+		access(self) var blocklistCap: Capability<&BlocklistExecutor>?
+		
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(OnChainMultiSig.Owner) fun blocklist(resourceId: UInt64) { 
+			post{ 
+				FiatToken.blocklist.containsKey(resourceId):
+					"Resource not blocklisted"
+			}
+			((self.blocklistCap!).borrow()!).blocklist(resourceId: resourceId)
+		}
+		
+		access(OnChainMultiSig.Owner) fun unblocklist(resourceId: UInt64) { 
+			post{ 
+				!FiatToken.blocklist.containsKey(resourceId):
+					"Resource still on blocklist"
+			}
+			((self.blocklistCap!).borrow()!).unblocklist(resourceId: resourceId)
+		}
+		
+		access(all) fun setBlocklistCap(cap: Capability<&BlocklistExecutor>) { 
+			pre{ 
+				self.blocklistCap == nil:
+					"Capability has already been set"
+				cap.borrow() != nil:
+					"Invalid BlocklistCap capability"
+			}
+			self.blocklistCap = cap
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method{ 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "blocklist":
+					let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic("cannot downcast resourceId")
+					self.blocklist(resourceId: resourceId)
+				case "unblocklist":
+					let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic("cannot downcast resourceId")
+					self.unblocklist(resourceId: resourceId)
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.blocklistCap = nil
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+		}
+	}
+	
+	access(all)	resource PauseExecutor { 
+		access(all) fun pause() { 
+			FiatToken.paused = true
+			emit Paused()
+		}
+		
+		access(all) fun unpause() { 
+			FiatToken.paused = false
+			emit Unpaused()
+		}
+	}
+	
+	access(all)	resource Pauser: ResourceId, PauseCapReceiver, OnChainMultiSig.PublicSigner, MultiSigManagerDefaultImpl { 
+		access(self) var pauseCap: Capability<&PauseExecutor>?
+		
+		access(OnChainMultiSig.Owner) let multiSigManager: @OnChainMultiSig.Manager
+		
+		access(all) fun setPauseCap(cap: Capability<&PauseExecutor>) { 
+			pre{ 
+				self.pauseCap == nil:
+					"Capability has already been set"
+				cap.borrow() != nil:
+					"Invalid PauseCap capability"
+			}
+			self.pauseCap = cap
+		}
+		
+		access(OnChainMultiSig.Owner) fun pause() { 
+			let cap = (self.pauseCap!).borrow()!
+			cap.pause()
+		}
+		
+		access(OnChainMultiSig.Owner) fun unpause() { 
+			let cap = (self.pauseCap!).borrow()!
+			cap.unpause()
+		}
+		
+		// ------- OnChainMultiSig.PublicSigner interfaces -------
+		
+		access(all) fun executeTx(txIndex: UInt64): @AnyResource? { 
+			let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic("no ready transaction payload at given txIndex")
+			switch p.method{ 
+				case "configureKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					let weight = p.getArg(i: 1)! as? UFix64 ?? panic("cannot downcast weight")
+					let sa = p.getArg(i: 2)! as? UInt8 ?? panic("cannot downcast sig algo")
+					self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
+				case "removeKey":
+					let pubKey = p.getArg(i: 0)! as? String ?? panic("cannot downcast public key")
+					self.multiSigManager.removeKeys(pks: [pubKey])
+				case "pause":
+					self.pause()
+				case "unpause":
+					self.unpause()
+				default:
+					panic("Unknown transaction method")
+			}
+			destroy p
+			return nil
+		}
+		
+		init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) { 
+			self.pauseCap = nil
+			self.multiSigManager <- OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
+		}
+	}
+	
+	// ------- FiatToken functions -------
+	access(all)	fun createEmptyVault(vaultType: Type): @{FungibleToken.Vault} { 
+		let r <- create Vault(balance: 0.0)
+		emit NewVault(resourceId: r.uuid)
+		return <-r
+	}
+	
+	access(all) fun createNewAdmin(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Admin { 
+		let admin <- create Admin(pk: publicKeys, pka: pubKeyAttrs)
+		emit AdminCreated(resourceId: admin.uuid)
+		return <-admin
+	}
+	
+	access(all) fun createNewOwner(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Owner { 
+		let owner <- create Owner(pk: publicKeys, pka: pubKeyAttrs)
+		emit OwnerCreated(resourceId: owner.uuid)
+		return <-owner
+	}
+	
+	access(all) fun createNewPauser(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Pauser { 
+		let pauser <- create Pauser(pk: publicKeys, pka: pubKeyAttrs)
+		emit PauserCreated(resourceId: pauser.uuid)
+		return <-pauser
+	}
+	
+	access(all) fun createNewMasterMinter(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @MasterMinter { 
+		let masterMinter <- create MasterMinter(pk: publicKeys, pka: pubKeyAttrs)
+		emit MasterMinterCreated(resourceId: masterMinter.uuid)
+		return <-masterMinter
+	}
+	
+	access(all) fun createNewMinterController(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @MinterController { 
+		let minterController <- create MinterController(pk: publicKeys, pka: pubKeyAttrs)
+		emit MinterControllerCreated(resourceId: minterController.uuid)
+		return <-minterController
+	}
+	
+	access(all) fun createNewMinter(): @Minter { 
+		let minter <- create Minter()
+		emit MinterCreated(resourceId: minter.uuid)
+		return <-minter
+	}
+	
+	access(all) fun createNewBlocklister(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Blocklister { 
+		let blocklister <- create Blocklister(pk: publicKeys, pka: pubKeyAttrs)
+		emit BlocklisterCreated(resourceId: blocklister.uuid)
+		return <-blocklister
+	}
+	
+	access(all) fun getBlocklist(resourceId: UInt64): UInt64? { 
+		return FiatToken.blocklist[resourceId]
+	}
+	
+	access(all) fun getManagedMinter(resourceId: UInt64): UInt64? { 
+		return FiatToken.managedMinters[resourceId]
+	}
+	
+	access(all) fun getMinterAllowance(resourceId: UInt64): UFix64? { 
+		return FiatToken.minterAllowances[resourceId]
+	}
+	
+	access(self) fun upgradeContract(name: String, code: [UInt8], version: String) { 
+		self.account.contracts.update(name: name, code: code)
+		self.version = version
+	}
+
+    // -------- ViewResolver Functions for MetadataViews --------
+
+    access(all) view fun getContractViews(resourceType: Type?): [Type] {
+        return [
+            Type<FungibleTokenMetadataViews.FTView>(),
+            Type<FungibleTokenMetadataViews.FTDisplay>(),
+            Type<FungibleTokenMetadataViews.FTVaultData>(),
+            Type<FungibleTokenMetadataViews.TotalSupply>()
+        ]
     }
 
-    pub resource AdminExecutor {
-
-        access(self) var currentCapPath: PrivatePath?
-
-        pub fun upgradeContract(name: String, code: [UInt8], version: String) {
-            FiatToken.upgradeContract(name: name, code: code, version: version)
+    access(all) fun resolveContractView(resourceType: Type?, viewType: Type): AnyStruct? {
+        switch viewType {
+            case Type<FungibleTokenMetadataViews.FTView>():
+                return FungibleTokenMetadataViews.FTView(
+                    ftDisplay: self.resolveContractView(resourceType: nil, viewType: Type<FungibleTokenMetadataViews.FTDisplay>()) as! FungibleTokenMetadataViews.FTDisplay?,
+                    ftVaultData: self.resolveContractView(resourceType: nil, viewType: Type<FungibleTokenMetadataViews.FTVaultData>()) as! FungibleTokenMetadataViews.FTVaultData?
+                )
+            case Type<FungibleTokenMetadataViews.FTDisplay>():
+                let media = MetadataViews.Media(
+                        file: MetadataViews.HTTPFile(
+                        url: ""
+                    ),
+                    mediaType: ""
+                )
+                let medias = MetadataViews.Medias([media])
+                return FungibleTokenMetadataViews.FTDisplay(
+                    name: "Circle USDC",
+                    symbol: "USDC",
+                    description: "This is the Flow Cadence version of USDC",
+                    externalURL: MetadataViews.ExternalURL("https://www.circle.com/en/usdc"),
+                    logos: medias,
+                    socials: {
+                        "twitter": MetadataViews.ExternalURL("https://twitter.com/circle")
+                    }
+                )
+            case Type<FungibleTokenMetadataViews.FTVaultData>():
+                return FungibleTokenMetadataViews.FTVaultData(
+                    storagePath: self.VaultStoragePath,
+                    receiverPath: self.VaultReceiverPubPath,
+                    metadataPath: self.VaultBalancePubPath,
+                    receiverLinkedType: Type<&FiatToken.Vault>(),
+                    metadataLinkedType: Type<&FiatToken.Vault>(),
+                    createEmptyVaultFunction: (fun(): @{FungibleToken.Vault} {
+                        return <-FiatToken.createEmptyVault(vaultType: Type<@FiatToken.Vault>())
+                    })
+                )
+            case Type<FungibleTokenMetadataViews.TotalSupply>():
+                return FungibleTokenMetadataViews.TotalSupply(
+                    totalSupply: FiatToken.totalSupply
+                )
         }
-
-        pub fun changeAdmin(to: Address, newPath: PrivatePath) {
-            let newCap = FiatToken.linkAdminExec(newPath)
-            let receiver = getAccount(to)
-                .getCapability<&Admin{AdminCapReceiver}>(FiatToken.AdminCapReceiverPubPath)
-                .borrow() ?? panic("could not borrow AdminCapReceiver capability")
-            let idRef = getAccount(to)
-                .getCapability<&Admin{ResourceId}>(FiatToken.AdminUUIDPubPath)
-                .borrow() ?? panic("could not borrow Admin ResourceId capability")
-            receiver.setAdminCap(cap: newCap)
-            if self.currentCapPath != nil {
-                FiatToken.unlinkPriv(self.currentCapPath!)
-            }
-            self.currentCapPath = newPath
-            emit AdminChanged(address: to, resourceId: idRef.UUID())
-        }
-
-        init () {
-            self.currentCapPath = nil
-        }
-
+        return nil
     }
-
-    pub resource Admin: OnChainMultiSig.PublicSigner, ResourceId, AdminCapReceiver {
-
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-        access(self) var adminExecutorCapability: Capability<&AdminExecutor>?
-
-        pub fun setAdminCap(cap: Capability<&AdminExecutor>) {
-            pre {
-                self.adminExecutorCapability == nil: "Capability has already been set"
-                cap.borrow() != nil: "Invalid capability"
-            }
-            self.adminExecutorCapability = cap
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "removePayload":
-                    let txIndex = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast txIndex")
-                    let payloadToRemove <- self.multiSigManager.removePayload(txIndex: txIndex)
-                    destroy(payloadToRemove)
-                case "upgradeContract":
-                    let name = p.getArg(i: 0)! as? String ?? panic ("cannot downcast contract name")
-                    let code = p.getArg(i: 1)! as? String ?? panic ("cannot downcast contract code")
-                    let version = p.getArg(i: 2)! as? String ?? panic ("cannot downcast contract version")
-                    let executor = self.adminExecutorCapability!.borrow() ?? panic("cannot borrow AdminExecutor capability")
-                    executor.upgradeContract(name: name, code: code.decodeHex(), version: version)
-                case "changeAdmin":
-                    let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
-                    let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
-                    let executor = self.adminExecutorCapability!.borrow() ?? panic("cannot borrow AdminExecutor capability")
-                    executor.changeAdmin(to: to, newPath: path)
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy (p)
-            return nil
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-            self.adminExecutorCapability = nil
-        }
-
-    }
-
-    pub resource OwnerExecutor {
-
-        access(self) var ownerCapPath: PrivatePath?
-        access(self) var masterMinterCapPath: PrivatePath?
-        access(self) var blocklisterCapPath: PrivatePath?
-        access(self) var pauserCapPath: PrivatePath?
-
-        pub fun reassignOwner(to: Address, newPath: PrivatePath) {
-            let newCap = FiatToken.linkOwnerExec(newPath)
-            let receiver = getAccount(to)
-                .getCapability<&Owner{OwnerCapReceiver}>(FiatToken.OwnerCapReceiverPubPath)
-                .borrow() ?? panic("could not borrow the OwnerCapReceiver capability")
-            let idRef = getAccount(to)
-                .getCapability<&Owner{ResourceId}>(FiatToken.OwnerUUIDPubPath)
-                .borrow() ?? panic("could not borrow the Owner ResourceId capability")
-            receiver.setOwnerCap(cap: newCap)
-            if self.ownerCapPath != nil {
-                FiatToken.unlinkPriv(self.ownerCapPath!)
-            }
-            self.ownerCapPath = newPath
-            emit OwnerChanged(address: to, resourceId: idRef.UUID())
-        }
-
-        pub fun reassignMasterMinter(to: Address, newPath: PrivatePath) {
-            let newCap = FiatToken.linkMasterMinterExec(newPath)
-            let receiver = getAccount(to)
-                .getCapability<&MasterMinter{MasterMinterCapReceiver}>(FiatToken.MasterMinterCapReceiverPubPath)
-                .borrow() ?? panic("could not borrow the MasterMinterCapReceiver capability")
-            let idRef = getAccount(to)
-                .getCapability<&MasterMinter{ResourceId}>(FiatToken.MasterMinterUUIDPubPath)
-                .borrow() ?? panic("could not borrow the MasterMinter ResourceId capability")    
-            receiver.setMasterMinterCap(cap: newCap)
-            if self.masterMinterCapPath != nil {
-                FiatToken.unlinkPriv(self.masterMinterCapPath!)
-            }
-            self.masterMinterCapPath = newPath
-            emit MasterMinterChanged(address: to, resourceId: idRef.UUID())
-        }
-
-        pub fun reassignBlocklister(to: Address, newPath: PrivatePath) {
-            let newCap = FiatToken.linkBlocklistExec(newPath)
-            let receiver = getAccount(to)
-                .getCapability<&Blocklister{BlocklisterCapReceiver}>(FiatToken.BlocklisterCapReceiverPubPath)
-                .borrow() ?? panic("could not borrow the BlocklisterCapReceiver capability ")
-            let idRef = getAccount(to)
-                .getCapability<&Blocklister{ResourceId}>(FiatToken.BlocklisterUUIDPubPath)
-                .borrow() ?? panic("could not borrow the Blocklister ResourceId capability")  
-            receiver.setBlocklistCap(cap: newCap)
-            if self.blocklisterCapPath != nil {
-                FiatToken.unlinkPriv(self.blocklisterCapPath!)
-            }
-            self.blocklisterCapPath = newPath
-            emit BlocklisterChanged(address: to, resourceId: idRef.UUID())
-        }
-
-        pub fun reassignPauser(to: Address, newPath: PrivatePath) {
-            let newCap = FiatToken.linkPauserExec(newPath)
-            let receiver = getAccount(to)
-                .getCapability<&Pauser{PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath)
-                .borrow() ?? panic("could not borrow the PauseCapReceiver capability")
-            let idRef = getAccount(to)
-                .getCapability<&Pauser{ResourceId}>(FiatToken.PauserUUIDPubPath)
-                .borrow() ?? panic("could not borrow the Pauser ResourceId capability") 
-            receiver.setPauseCap(cap: newCap)
-            if self.pauserCapPath != nil {
-                FiatToken.unlinkPriv(self.pauserCapPath!)
-            }
-            self.pauserCapPath = newPath
-            emit PauserChanged(address: to, resourceId: idRef.UUID())
-        }
-
-        init() {
-            self.ownerCapPath = nil
-            self.masterMinterCapPath = nil
-            self.blocklisterCapPath = nil
-            self.pauserCapPath = nil
-        }
-
-    }
-
-    pub resource Owner: OnChainMultiSig.PublicSigner, ResourceId, OwnerCapReceiver {
-
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-        access(self) var ownerExecutorCapability: Capability<&OwnerExecutor>?
-
-        pub fun setOwnerCap(cap: Capability<&OwnerExecutor>) {
-            pre {
-                self.ownerExecutorCapability == nil: "Capability has already been set"
-                cap.borrow() != nil: "Invalid capability"
-            }
-            self.ownerExecutorCapability = cap
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "reassignOwner":
-                    let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
-                    let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
-                    let executor = self.ownerExecutorCapability!.borrow() ?? panic("cannot borrow OwnerExecutor capability")
-                    executor.reassignOwner(to: to, newPath: path)
-                case "reassignMasterMinter":
-                    let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
-                    let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
-                    let executor = self.ownerExecutorCapability!.borrow() ?? panic("cannot borrow OwnerExecutor capability")
-                    executor.reassignMasterMinter(to: to, newPath: path)
-                case "reassignBlocklister":
-                    let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
-                    let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
-                    let executor = self.ownerExecutorCapability!.borrow() ?? panic("cannot borrow OwnerExecutor capability")
-                    executor.reassignBlocklister(to: to, newPath: path)
-                case "reassignPauser":
-                    let to = p.getArg(i: 0)! as? Address ?? panic("cannot downcast receiver address")
-                    let path = p.getArg(i: 1)! as? PrivatePath ?? panic("cannot downcast new link path")
-                    let executor = self.ownerExecutorCapability!.borrow() ?? panic("cannot borrow OwnerExecutor capability")
-                    executor.reassignPauser(to: to, newPath: path)
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy (p)
-            return nil
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-            self.ownerExecutorCapability = nil
-        }
-    }
-
-    pub resource MasterMinterExecutor {
-
-        pub fun configureMinterController(minter: UInt64, minterController: UInt64) {
-            // Overwrite the minter if the MinterController is already configured (a MinterController can only control 1 minter)
-            FiatToken.managedMinters.insert(key: minterController, minter)
-            emit ControllerConfigured(controller: minterController, minter: minter)
-        }
-
-        pub fun removeMinterController(minterController: UInt64){
-            pre {
-                FiatToken.managedMinters.containsKey(minterController): "cannot remove unknown MinterController"
-            }
-            FiatToken.managedMinters.remove(key: minterController)
-            emit ControllerRemoved(controller: minterController)
-        }
-    }
-
-    pub resource MasterMinter: ResourceId, OnChainMultiSig.PublicSigner, MasterMinterCapReceiver {
-
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-        access(self) var masterMinterExecutorCapability: Capability<&MasterMinterExecutor>?
-
-        pub fun setMasterMinterCap(cap: Capability<&MasterMinterExecutor>) {
-            pre {
-                self.masterMinterExecutorCapability == nil: "Capability has already been set"
-                cap.borrow() != nil: "Invalid capability"
-            }
-            self.masterMinterExecutorCapability = cap
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "configureMinterController":
-                    let m = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast minter id")
-                    let mc = p.getArg(i: 1)! as? UInt64 ?? panic ("cannot downcast MinterController id")
-                    let executor = self.masterMinterExecutorCapability!.borrow() ?? panic("cannot borrow MasterMinterExecutor capability")
-                    executor.configureMinterController(minter: m, minterController: mc)
-                case "removeMinterController":
-                    let mc = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast MinterController id")
-                    let executor = self.masterMinterExecutorCapability!.borrow() ?? panic("cannot borrow MasterMinterExecutor capability")
-                    executor.removeMinterController(minterController: mc)
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy (p)
-            return nil
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-            self.masterMinterExecutorCapability = nil
-        }
-    }
-
-    pub resource MinterController: ResourceId, OnChainMultiSig.PublicSigner  {
-
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun configureMinterAllowance(allowance: UFix64) {
-            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
-            FiatToken.minterAllowances[managedMinter] = allowance
-            emit MinterConfigured(controller: self.uuid, minter: managedMinter, allowance: allowance)
-        }
-
-        pub fun increaseMinterAllowance(increment: UFix64) {
-            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
-            let allowance = FiatToken.minterAllowances[managedMinter] ?? 0.0
-            let newAllowance = allowance.saturatingAdd(increment)
-            self.configureMinterAllowance(allowance: newAllowance)
-        }
-
-        pub fun decreaseMinterAllowance(decrement: UFix64) {
-            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
-            let allowance = FiatToken.minterAllowances[managedMinter] ?? panic("Cannot decrease nil MinterAllowance")
-            let newAllowance = allowance!.saturatingSubtract(decrement)
-            self.configureMinterAllowance(allowance: newAllowance)
-        }
-
-        pub fun removeMinter() {
-            let managedMinter = FiatToken.managedMinters[self.uuid] ?? panic("MinterController does not manage any minters")
-            assert(FiatToken.minterAllowances.containsKey(managedMinter), message: "cannot remove unknown Minter")
-            FiatToken.minterAllowances.remove(key: managedMinter)
-            emit MinterRemoved(controller: self.uuid, minter: managedMinter)
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <-payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "configureMinterAllowance":
-                    let allowance = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast allowance amount")
-                    self.configureMinterAllowance(allowance: allowance)
-                case "increaseMinterAllowance":
-                    let increment = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast increment amount")
-                    self.increaseMinterAllowance(increment: increment)
-                case "decreaseMinterAllowance":
-                    let decrement = p.getArg(i: 0)! as? UFix64 ?? panic ("cannot downcast decrement amount")
-                    self.decreaseMinterAllowance(decrement: decrement)
-                case "removeMinter":
-                    self.removeMinter()
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy (p)
-            return nil
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-        }
-    }
-
-    pub resource Minter: ResourceId {
-
-        pub fun mint(amount: UFix64): @FungibleToken.Vault{
-            pre {
-                !FiatToken.paused: "FiatToken contract paused"
-                FiatToken.blocklist[self.uuid] == nil: "Minter Blocklisted"
-                FiatToken.minterAllowances.containsKey(self.uuid): "minter does not have allowance set"
-            }
-            let mintAllowance = FiatToken.minterAllowances[self.uuid]!
-            assert(mintAllowance >= amount, message: "insufficient mint allowance")
-            FiatToken.minterAllowances.insert(key: self.uuid, mintAllowance - amount)
-            let newTotalSupply = FiatToken.totalSupply + amount
-            FiatToken.totalSupply = newTotalSupply
-
-            emit Mint(minter: self.uuid, amount: amount)
-            return <-create Vault(balance: amount)
-        }
-
-        pub fun burn(vault: @FungibleToken.Vault) {
-            pre {
-                !FiatToken.paused: "FiatToken contract paused"
-                FiatToken.blocklist[self.uuid] == nil: "Minter Blocklisted"
-                FiatToken.minterAllowances.containsKey(self.uuid): "minter is not configured"
-            }
-            let toBurn <- vault as! @FiatToken.Vault
-            let amount = toBurn.balance
-
-            assert(FiatToken.totalSupply >= amount, message: "burning more than total supply")
-
-            // This function updates FiatToken.totalSupply and sets the Vault's value to 0.0
-            toBurn.burn()
-            // Destroys the now empty Vault
-            destroy toBurn
-            emit Burn(minter: self.uuid, amount: amount)
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-    }
-
-    pub resource BlocklistExecutor {
-        
-        pub fun blocklist(resourceId: UInt64){
-            let block = getCurrentBlock()
-            FiatToken.blocklist.insert(key: resourceId, block.height)
-            emit Blocklisted(resourceId: resourceId)
-        }
-
-        pub fun unblocklist(resourceId: UInt64){
-            FiatToken.blocklist.remove(key: resourceId)
-            emit Unblocklisted(resourceId: resourceId)
-        }
-    }
-
-    pub resource Blocklister: ResourceId, BlocklisterCapReceiver, OnChainMultiSig.PublicSigner {
-
-        access(self) var blocklistCap: Capability<&BlocklistExecutor>?
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-
-        pub fun blocklist(resourceId: UInt64){
-            post {
-                FiatToken.blocklist.containsKey(resourceId): "Resource not blocklisted"
-            }
-            self.blocklistCap!.borrow()!.blocklist(resourceId: resourceId)
-        }
-
-        pub fun unblocklist(resourceId: UInt64){
-            post {
-                !FiatToken.blocklist.containsKey(resourceId): "Resource still on blocklist"
-            }
-            self.blocklistCap!.borrow()!.unblocklist(resourceId: resourceId)
-        }
-
-        pub fun setBlocklistCap(cap: Capability<&BlocklistExecutor>){
-            pre {
-                self.blocklistCap == nil: "Capability has already been set"
-                cap.borrow() != nil: "Invalid BlocklistCap capability"
-            }
-            self.blocklistCap = cap
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "blocklist":
-                    let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast resourceId")
-                    self.blocklist(resourceId: resourceId)
-                case "unblocklist":
-                    let resourceId = p.getArg(i: 0)! as? UInt64 ?? panic ("cannot downcast resourceId")
-                    self.unblocklist(resourceId: resourceId)
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy(p)
-            return nil
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.blocklistCap = nil
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-        }
-    }
-
-    pub resource PauseExecutor {
-
-        pub fun pause() {
-            FiatToken.paused = true
-            emit Paused()
-        }
-
-        pub fun unpause() {
-            FiatToken.paused = false
-            emit Unpaused()
-        }
-    }
-
-    pub resource Pauser: ResourceId, PauseCapReceiver, OnChainMultiSig.PublicSigner {
-        
-        access(self) var pauseCap:  Capability<&PauseExecutor>?
-        access(self) let multiSigManager: @OnChainMultiSig.Manager
-
-        pub fun setPauseCap(cap: Capability<&PauseExecutor>) {
-            pre {
-                self.pauseCap == nil: "Capability has already been set"
-                cap.borrow() != nil: "Invalid PauseCap capability"
-            }
-            self.pauseCap = cap
-        }
-
-        pub fun pause(){
-            let cap = self.pauseCap!.borrow()!
-            cap.pause()
-        }
-
-        pub fun unpause(){
-            let cap = self.pauseCap!.borrow()!
-            cap.unpause()
-        }
-
-        // ------- OnChainMultiSig.PublicSigner interfaces -------
-
-        pub fun addNewPayload(payload: @OnChainMultiSig.PayloadDetails, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addNewPayload(resourceId: self.uuid, payload: <- payload, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun addPayloadSignature (txIndex: UInt64, publicKey: String, sig: [UInt8]) {
-            self.multiSigManager.addPayloadSignature(resourceId: self.uuid, txIndex: txIndex, publicKey: publicKey, sig: sig)
-        }
-
-        pub fun executeTx(txIndex: UInt64): @AnyResource? {
-            let p <- self.multiSigManager.readyForExecution(txIndex: txIndex) ?? panic ("no ready transaction payload at given txIndex")
-            switch p.method {
-                case "configureKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    let weight = p.getArg(i: 1)! as? UFix64 ?? panic ("cannot downcast weight")
-                    let sa = p.getArg(i: 2)! as? UInt8 ?? panic ("cannot downcast sig algo")
-                    self.multiSigManager.configureKeys(pks: [pubKey], kws: [weight], sa: [sa])
-                case "removeKey":
-                    let pubKey = p.getArg(i: 0)! as? String ?? panic ("cannot downcast public key")
-                    self.multiSigManager.removeKeys(pks: [pubKey])
-                case "pause":
-                    self.pause()
-                case "unpause":
-                    self.unpause()
-                default:
-                    panic("Unknown transaction method")
-            }
-            destroy(p)
-            return nil
-        }
-
-        pub fun UUID(): UInt64 {
-            return self.uuid
-        }
-
-        pub fun getTxIndex(): UInt64 {
-            return self.multiSigManager.txIndex
-        }
-
-        pub fun getSignerKeys(): [String] {
-            return self.multiSigManager.getSignerKeys()
-        }
-
-        pub fun getSignerKeyAttr(publicKey: String): OnChainMultiSig.PubKeyAttr? {
-            return self.multiSigManager.getSignerKeyAttr(publicKey: publicKey)
-        }
-
-        destroy() {
-            destroy self.multiSigManager
-        }
-
-        init(pk: [String], pka: [OnChainMultiSig.PubKeyAttr]) {
-            self.pauseCap = nil
-            self.multiSigManager <-  OnChainMultiSig.createMultiSigManager(publicKeys: pk, pubKeyAttrs: pka)
-        }
-    }
-
-    // ------- FiatToken functions -------
-
-    pub fun createEmptyVault(): @Vault {
-        let r <-create Vault(balance: 0.0)
-        emit NewVault(resourceId: r.uuid)
-        return <-r
-    }
-
-    pub fun createNewAdmin(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Admin{
-        let admin <-create Admin(pk: publicKeys, pka: pubKeyAttrs)
-        emit AdminCreated(resourceId: admin.uuid)
-        return <- admin
-    }
-
-    pub fun createNewOwner(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Owner{
-        let owner <-create Owner(pk: publicKeys, pka: pubKeyAttrs)
-        emit OwnerCreated(resourceId: owner.uuid)
-        return <- owner
-    }
-
-    pub fun createNewPauser(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Pauser{
-        let pauser <-create Pauser(pk: publicKeys, pka: pubKeyAttrs)
-        emit PauserCreated(resourceId: pauser.uuid)
-        return <- pauser
-    }
-
-    pub fun createNewMasterMinter(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @MasterMinter{
-        let masterMinter <- create MasterMinter(pk: publicKeys, pka: pubKeyAttrs)
-        emit MasterMinterCreated(resourceId: masterMinter.uuid)
-        return <- masterMinter
-    }
-
-    pub fun createNewMinterController(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @MinterController{
-        let minterController <- create MinterController(pk: publicKeys, pka: pubKeyAttrs)
-        emit MinterControllerCreated(resourceId: minterController.uuid)
-        return <- minterController
-    }
-
-    pub fun createNewMinter(): @Minter{
-        let minter <- create Minter()
-        emit MinterCreated(resourceId: minter.uuid)
-        return <- minter
-    }
-
-    pub fun createNewBlocklister(publicKeys: [String], pubKeyAttrs: [OnChainMultiSig.PubKeyAttr]): @Blocklister{
-        let blocklister <-create Blocklister(pk: publicKeys, pka: pubKeyAttrs)
-        emit BlocklisterCreated(resourceId: blocklister.uuid)
-        return <-blocklister
-    }
-
-    pub fun getBlocklist(resourceId: UInt64): UInt64?{
-        return FiatToken.blocklist[resourceId]
-    }
-
-    pub fun getManagedMinter(resourceId: UInt64): UInt64?{
-        return FiatToken.managedMinters[resourceId]
-    }
-
-    pub fun getMinterAllowance(resourceId: UInt64): UFix64?{
-        return FiatToken.minterAllowances[resourceId]
-    }
-
-    access(self) fun upgradeContract( name: String, code: [UInt8], version: String,) {
-        self.account.contracts.update__experimental(name: name, code: code)
-        self.version = version
-    }
-
-    // ------- FiatToken Initializer -------
+	
+	// ------- FiatToken Initializer -------
     init(
-        contractAccount: AuthAccount,
-        VaultStoragePath: StoragePath,
-        VaultBalancePubPath: PublicPath,
-        VaultUUIDPubPath: PublicPath,
-        VaultReceiverPubPath: PublicPath,
-        BlocklistExecutorStoragePath: StoragePath,
-        BlocklisterStoragePath: StoragePath,
-        BlocklisterCapReceiverPubPath: PublicPath,
-        BlocklisterUUIDPubPath: PublicPath,
-        BlocklisterPubSigner: PublicPath,
-        PauseExecutorStoragePath: StoragePath,
-        PauserStoragePath: StoragePath,
-        PauserCapReceiverPubPath: PublicPath,
-        PauserUUIDPubPath: PublicPath,
-        PauserPubSigner: PublicPath,
-        AdminExecutorStoragePath: StoragePath,
-        AdminStoragePath: StoragePath,
-        AdminCapReceiverPubPath: PublicPath,
-        AdminUUIDPubPath: PublicPath,
-        AdminPubSigner: PublicPath,
-        OwnerExecutorStoragePath: StoragePath,
-        OwnerStoragePath: StoragePath,
-        OwnerCapReceiverPubPath: PublicPath,
-        OwnerUUIDPubPath: PublicPath,
-        OwnerPubSigner: PublicPath,
-        MasterMinterExecutorStoragePath: StoragePath,
-        MasterMinterStoragePath: StoragePath,
-        MasterMinterCapReceiverPubPath: PublicPath,
-        MasterMinterPubSigner: PublicPath,
-        MasterMinterUUIDPubPath: PublicPath,
-        MinterControllerStoragePath: StoragePath,
-        MinterControllerUUIDPubPath: PublicPath,
-        MinterControllerPubSigner: PublicPath,
-        MinterStoragePath: StoragePath,
-        MinterUUIDPubPath: PublicPath,
-        initialAdminCapabilityPrivPath: PrivatePath,
-        initialOwnerCapabilityPrivPath: PrivatePath,
-        initialMasterMinterCapabilityPrivPath: PrivatePath,
-        initialPauserCapabilityPrivPath: PrivatePath,
-        initialBlocklisterCapabilityPrivPath: PrivatePath,
-        tokenName: String,
-        version: String,
-        initTotalSupply: UFix64,
-        initPaused: Bool,
+        // VaultStoragePath: StoragePath,
+        // VaultBalancePubPath: PublicPath,
+        // VaultUUIDPubPath: PublicPath,
+        // VaultReceiverPubPath: PublicPath,
+        // BlocklistExecutorStoragePath: StoragePath,
+        // BlocklisterStoragePath: StoragePath,
+        // BlocklisterCapReceiverPubPath: PublicPath,
+        // BlocklisterUUIDPubPath: PublicPath,
+        // BlocklisterPubSigner: PublicPath,
+        // PauseExecutorStoragePath: StoragePath,
+        // PauserStoragePath: StoragePath,
+        // PauserCapReceiverPubPath: PublicPath,
+        // PauserUUIDPubPath: PublicPath,
+        // PauserPubSigner: PublicPath,
+        // AdminExecutorStoragePath: StoragePath,
+        // AdminStoragePath: StoragePath,
+        // AdminCapReceiverPubPath: PublicPath,
+        // AdminUUIDPubPath: PublicPath,
+        // AdminPubSigner: PublicPath,
+        // OwnerExecutorStoragePath: StoragePath,
+        // OwnerStoragePath: StoragePath,
+        // OwnerCapReceiverPubPath: PublicPath,
+        // OwnerUUIDPubPath: PublicPath,
+        // OwnerPubSigner: PublicPath,
+        // MasterMinterExecutorStoragePath: StoragePath,
+        // MasterMinterStoragePath: StoragePath,
+        // MasterMinterCapReceiverPubPath: PublicPath,
+        // MasterMinterPubSigner: PublicPath,
+        // MasterMinterUUIDPubPath: PublicPath,
+        // MinterControllerStoragePath: StoragePath,
+        // MinterControllerUUIDPubPath: PublicPath,
+        // MinterControllerPubSigner: PublicPath,
+        // MinterStoragePath: StoragePath,
+        // MinterUUIDPubPath: PublicPath,
+        // tokenName: String,
+        // version: String,
+        // initTotalSupply: UFix64,
+        // initPaused: Bool,
         adminPubKeys: [String],
         adminPubKeysWeights: [UFix64],
         adminPubKeysAlgos: [UInt8],
@@ -1070,218 +926,217 @@ pub contract FiatToken: FungibleToken {
         pauserPubKeys: [String],
         pauserPubKeysWeights: [UFix64],
         pauserPubKeysAlgos: [UInt8],
-    ) {
+    ) {	
 
-        // Validate the keys
-        assert(adminPubKeys.length == adminPubKeysWeights.length, message: "Admin pub keys length and weights mismatched")
-        assert(ownerPubKeys.length == ownerPubKeysWeights.length, message: "Owner pub keys length and weights mismatched")
-        assert(masterMinterPubKeys.length == masterMinterPubKeysWeights.length, message: "MasterMinter pub keys length and weights mismatched")
-        assert(blocklisterPubKeys.length == blocklisterPubKeysWeights.length, message: "Blocklister pub keys length and weights mismatched")
-        assert(pauserPubKeys.length == pauserPubKeysWeights.length, message: "Pauser pub keys length and weights mismatched")
+		// Validate the keys
+		// assert(adminPubKeys.length == adminPubKeysWeights.length, message: "Admin pub keys length and weights mismatched")
+		// assert(ownerPubKeys.length == ownerPubKeysWeights.length, message: "Owner pub keys length and weights mismatched")
+		// assert(masterMinterPubKeys.length == masterMinterPubKeysWeights.length, message: "MasterMinter pub keys length and weights mismatched")
+		// assert(blocklisterPubKeys.length == blocklisterPubKeysWeights.length, message: "Blocklister pub keys length and weights mismatched")
+		// assert(pauserPubKeys.length == pauserPubKeysWeights.length, message: "Pauser pub keys length and weights mismatched")
+		
+        let VaultStoragePath = StoragePath(identifier: "USDCVault")!
+        let VaultBalancePubPath = PublicPath(identifier: "USDCVaultBalance")!
+        let VaultReceiverPubPath = PublicPath(identifier: "USDCVaultReceiver")!
+        let VaultUUIDPubPath = PublicPath(identifier: "USDCVaultUUID")!
 
-        // Set the State
-        self.name = tokenName
-        self.version = version
-        self.paused = initPaused
-        self.totalSupply = initTotalSupply
-        self.blocklist = {}
-        self.minterAllowances = {}
-        self.managedMinters = {}
+        let BlocklistExecutorStoragePath = StoragePath(identifier: "USDCBlocklistExe")!
+        let BlocklisterStoragePath = StoragePath(identifier: "USDCBlocklister")!
+        let BlocklisterCapReceiverPubPath = PublicPath(identifier: "USDCBlocklisterCapReceiver")!
+        let BlocklisterUUIDPubPath = PublicPath(identifier: "USDCBlocklisterUUID")!
+        let BlocklisterPubSigner = PublicPath(identifier: "USDCBlocklisterPublicSigner")!
 
-        self.VaultStoragePath = VaultStoragePath
-        self.VaultBalancePubPath = VaultBalancePubPath
-        self.VaultUUIDPubPath = VaultUUIDPubPath
-        self.VaultReceiverPubPath = VaultReceiverPubPath
+        let PauseExecutorStoragePath = StoragePath(identifier: "USDCPauseExe")!
+        let PauserStoragePath = StoragePath(identifier: "USDCPauser")!
+        let PauserCapReceiverPubPath = PublicPath(identifier: "USDCPauserCapReceiver")!
+        let PauserUUIDPubPath = PublicPath(identifier: "USDCPauserUUID")!
+        let PauserPubSigner = PublicPath(identifier: "USDCPauserPublicSigner")!
 
-        self.BlocklistExecutorStoragePath =  BlocklistExecutorStoragePath
+        let AdminExecutorStoragePath = StoragePath(identifier: "USDCAdminExe")!
+        let AdminStoragePath = StoragePath(identifier: "USDCAdmin")!
+        let AdminCapReceiverPubPath = PublicPath(identifier: "USDCAdminCapReceiver")!
+        let AdminUUIDPubPath = PublicPath(identifier: "USDCAdminUUID")!
+        let AdminPubSigner = PublicPath(identifier: "USDCAdminPublicSigner")!
 
-        self.BlocklisterStoragePath =  BlocklisterStoragePath
-        self.BlocklisterCapReceiverPubPath = BlocklisterCapReceiverPubPath
-        self.BlocklisterUUIDPubPath = BlocklisterUUIDPubPath
-        self.BlocklisterPubSigner = BlocklisterPubSigner
+        let OwnerExecutorStoragePath = StoragePath(identifier: "USDCOwnerExe")!
+        let OwnerStoragePath = StoragePath(identifier: "USDCOwner")!
+        let OwnerCapReceiverPubPath = PublicPath(identifier: "USDCOwnerCapReceiver")!
+        let OwnerUUIDPubPath = PublicPath(identifier: "USDCOwnerUUID")!
+        let OwnerPubSigner = PublicPath(identifier: "USDCOwnerPubSigner")!
 
-        self.PauseExecutorStoragePath = PauseExecutorStoragePath
+        let MasterMinterExecutorStoragePath = StoragePath(identifier: "USDCMasterMinterExe")!
+        let MasterMinterStoragePath = StoragePath(identifier: "USDCMasterMinter")!
+        let MasterMinterCapReceiverPubPath = PublicPath(identifier: "USDCMasterMinterCapReceiver")!
+        let MasterMinterPubSigner = PublicPath(identifier: "USDCMasterMinterPublicSigner")!
+        let MasterMinterUUIDPubPath = PublicPath(identifier: "USDCMasterMinterUUID")!
 
-        self.PauserStoragePath = PauserStoragePath
-        self.PauserCapReceiverPubPath = PauserCapReceiverPubPath
-        self.PauserUUIDPubPath = PauserUUIDPubPath
-        self.PauserPubSigner = PauserPubSigner
+        let MinterControllerStoragePath = StoragePath(identifier: "USDCMinterController")!
+        let MinterControllerUUIDPubPath = PublicPath(identifier: "USDCMinterControllerUUID")!
+        let MinterControllerPubSigner = PublicPath(identifier: "USDCMinterControllerPublicSigner")!
 
-        self.AdminExecutorStoragePath = AdminExecutorStoragePath
+        let MinterStoragePath = StoragePath(identifier: "USDCMinter")!
+        let MinterUUIDPubPath = PublicPath(identifier: "USDCMinterUUID")!
 
-        self.AdminStoragePath = AdminStoragePath
-        self.AdminCapReceiverPubPath = AdminCapReceiverPubPath
-        self.AdminUUIDPubPath = AdminUUIDPubPath
-        self.AdminPubSigner = AdminPubSigner
+        let tokenName = "USDC"
+        let version = "2.0.0"
+        let initTotalSupply = 1000.0
+        let initPaused = false
 
-        self.OwnerExecutorStoragePath = OwnerExecutorStoragePath
+		// Set the State
+		self.name = tokenName
+		self.version = version
+		self.paused = initPaused
+		self.totalSupply = initTotalSupply
+		self.blocklist ={} 
+		self.minterAllowances ={} 
+		self.managedMinters ={} 
+		self.VaultStoragePath = VaultStoragePath
+		self.VaultBalancePubPath = VaultBalancePubPath
+		self.VaultUUIDPubPath = VaultUUIDPubPath
+		self.VaultReceiverPubPath = VaultReceiverPubPath
+		self.BlocklistExecutorStoragePath = BlocklistExecutorStoragePath
+		self.BlocklisterStoragePath = BlocklisterStoragePath
+		self.BlocklisterCapReceiverPubPath = BlocklisterCapReceiverPubPath
+		self.BlocklisterUUIDPubPath = BlocklisterUUIDPubPath
+		self.BlocklisterPubSigner = BlocklisterPubSigner
+		self.PauseExecutorStoragePath = PauseExecutorStoragePath
+		self.PauserStoragePath = PauserStoragePath
+		self.PauserCapReceiverPubPath = PauserCapReceiverPubPath
+		self.PauserUUIDPubPath = PauserUUIDPubPath
+		self.PauserPubSigner = PauserPubSigner
+		self.AdminExecutorStoragePath = AdminExecutorStoragePath
+		self.AdminStoragePath = AdminStoragePath
+		self.AdminCapReceiverPubPath = AdminCapReceiverPubPath
+		self.AdminUUIDPubPath = AdminUUIDPubPath
+		self.AdminPubSigner = AdminPubSigner
+		self.OwnerExecutorStoragePath = OwnerExecutorStoragePath
+		self.OwnerStoragePath = OwnerStoragePath
+		self.OwnerCapReceiverPubPath = OwnerCapReceiverPubPath
+		self.OwnerUUIDPubPath = OwnerUUIDPubPath
+		self.OwnerPubSigner = OwnerPubSigner
+		self.MasterMinterExecutorStoragePath = MasterMinterExecutorStoragePath
+		self.MasterMinterStoragePath = MasterMinterStoragePath
+		self.MasterMinterCapReceiverPubPath = MasterMinterCapReceiverPubPath
+		self.MasterMinterPubSigner = MasterMinterPubSigner
+		self.MasterMinterUUIDPubPath = MasterMinterUUIDPubPath
+		self.MinterControllerStoragePath = MinterControllerStoragePath
+		self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath
+		self.MinterControllerPubSigner = MinterControllerPubSigner
+		self.MinterStoragePath = MinterStoragePath
+		self.MinterUUIDPubPath = MinterUUIDPubPath
+		
+		// Create admin accounts
+		let adminAccount = self.account // Account(payer: self.account)
+		let ownerAccount = self.account // Account(payer: self.account)
+		let masterMinterAccount = self.account // Account(payer: self.account)
+		let blocklisterAccount = self.account // Account(payer: self.account)
+		let pauserAccount = self.account // Account(payer: self.account)
+		
+		// Create the Executors
+		self.account.storage.save(<-create AdminExecutor(), to: self.AdminExecutorStoragePath)
+		self.account.storage.save(<-create OwnerExecutor(), to: self.OwnerExecutorStoragePath)
+		self.account.storage.save(<-create MasterMinterExecutor(), to: self.MasterMinterExecutorStoragePath)
+		self.account.storage.save(<-create BlocklistExecutor(), to: self.BlocklistExecutorStoragePath)
+		self.account.storage.save(<-create PauseExecutor(), to: self.PauseExecutorStoragePath)
+		
+		// Setup the Admin
+		var pubKeyAttrs: [OnChainMultiSig.PubKeyAttr] = []
+		// var i = 0
+		// while i < adminPubKeys.length{ 
+		// 	let pka = OnChainMultiSig.PubKeyAttr(sa: adminPubKeysAlgos[i], w: adminPubKeysWeights[i])
+		// 	pubKeyAttrs.append(pka)
+		// 	let key = PublicKey(publicKey: adminPubKeys[i].decodeHex(), signatureAlgorithm: SignatureAlgorithm(rawValue: adminPubKeysAlgos[i]) ?? panic("Invalid signature algo"))
+		// 	adminAccount.keys.add(publicKey: key, hashAlgorithm: HashAlgorithm.SHA3_256, weight: adminPubKeysWeights[i])
+		// 	i = i + 1
+		// }
 
-        self.OwnerStoragePath = OwnerStoragePath
-        self.OwnerCapReceiverPubPath = OwnerCapReceiverPubPath
-        self.OwnerUUIDPubPath = OwnerUUIDPubPath
-        self.OwnerPubSigner = OwnerPubSigner
-
-        self.MasterMinterExecutorStoragePath = MasterMinterExecutorStoragePath
-
-        self.MasterMinterStoragePath = MasterMinterStoragePath
-        self.MasterMinterCapReceiverPubPath = MasterMinterCapReceiverPubPath
-        self.MasterMinterPubSigner = MasterMinterPubSigner
-        self.MasterMinterUUIDPubPath = MasterMinterUUIDPubPath
-
-        self.MinterControllerStoragePath = MinterControllerStoragePath
-        self.MinterControllerUUIDPubPath = MinterControllerUUIDPubPath
-        self.MinterControllerPubSigner = MinterControllerPubSigner
-
-        self.MinterStoragePath = MinterStoragePath
-        self.MinterUUIDPubPath = MinterUUIDPubPath
-
-        // Create admin accounts
-        let adminAccount = AuthAccount(payer: contractAccount)
-        let ownerAccount = AuthAccount(payer: contractAccount)
-        let masterMinterAccount = AuthAccount(payer: contractAccount)
-        let blocklisterAccount = AuthAccount(payer: contractAccount)
-        let pauserAccount = AuthAccount(payer: contractAccount)
-        
-        // Create the Executors
-        contractAccount.save(<- create AdminExecutor(), to: self.AdminExecutorStoragePath)
-        contractAccount.save(<- create OwnerExecutor(), to: self.OwnerExecutorStoragePath)
-        contractAccount.save(<- create MasterMinterExecutor(), to: self.MasterMinterExecutorStoragePath)
-        contractAccount.save(<- create BlocklistExecutor(), to: self.BlocklistExecutorStoragePath)
-        contractAccount.save(<- create PauseExecutor(), to: self.PauseExecutorStoragePath)
-
-        // Setup the Admin
-        var pubKeyAttrs: [OnChainMultiSig.PubKeyAttr] = []
-        var i = 0
-        while i < adminPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: adminPubKeysAlgos[i], w: adminPubKeysWeights[i])
-            pubKeyAttrs.append(pka)
-            let key = PublicKey(
-                publicKey: adminPubKeys[i].decodeHex(), 
-                signatureAlgorithm: SignatureAlgorithm(rawValue: adminPubKeysAlgos[i]) ?? panic ("Invalid signature algo")
-            )
-            adminAccount.keys.add(
-                publicKey: key,
-                hashAlgorithm: HashAlgorithm.SHA3_256,
-                weight: adminPubKeysWeights[i]
-            )
-            i = i + 1
-        }
-        adminAccount.save(<- self.createNewAdmin(publicKeys: adminPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.AdminStoragePath)
-        adminAccount.link<&Admin{OnChainMultiSig.PublicSigner}>(self.AdminPubSigner, target: self.AdminStoragePath)
-        adminAccount.link<&Admin{ResourceId}>(self.AdminUUIDPubPath, target: self.AdminStoragePath)
-        adminAccount.link<&Admin{AdminCapReceiver}>(self.AdminCapReceiverPubPath, target: self.AdminStoragePath)
-
-        // Setup the Owner
-        pubKeyAttrs = []
-        i = 0
-        while i < ownerPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: ownerPubKeysAlgos[i], w: ownerPubKeysWeights[i])
-            pubKeyAttrs.append(pka)
-            let key = PublicKey(
-                publicKey: ownerPubKeys[i].decodeHex(), 
-                signatureAlgorithm: SignatureAlgorithm(rawValue: ownerPubKeysAlgos[i]) ?? panic ("Invalid signature algo")
-            )
-            ownerAccount.keys.add(
-                publicKey: key,
-                hashAlgorithm: HashAlgorithm.SHA3_256,
-                weight: ownerPubKeysWeights[i]
-            )
-            i = i + 1
-        }
-        ownerAccount.save(<- self.createNewOwner(publicKeys: ownerPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.OwnerStoragePath)
-        ownerAccount.link<&Owner{OnChainMultiSig.PublicSigner}>(self.OwnerPubSigner, target: self.OwnerStoragePath)
-        ownerAccount.link<&Owner{ResourceId}>(self.OwnerUUIDPubPath, target: self.OwnerStoragePath)
-        ownerAccount.link<&Owner{OwnerCapReceiver}>(self.OwnerCapReceiverPubPath, target: self.OwnerStoragePath)
-
-        // Setup the MasterMinter
-        pubKeyAttrs = []
-        i = 0
-        while i < masterMinterPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: masterMinterPubKeysAlgos[i], w: masterMinterPubKeysWeights[i])
-            pubKeyAttrs.append(pka)
-            let key = PublicKey(
-                publicKey: masterMinterPubKeys[i].decodeHex(), 
-                signatureAlgorithm: SignatureAlgorithm(rawValue: masterMinterPubKeysAlgos[i]) ?? panic ("Invalid signature algo")
-            )
-            masterMinterAccount.keys.add(
-                publicKey: key,
-                hashAlgorithm: HashAlgorithm.SHA3_256,
-                weight: masterMinterPubKeysWeights[i]
-            )
-            i = i + 1
-        }
-        masterMinterAccount.save(<- self.createNewMasterMinter(publicKeys: masterMinterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.MasterMinterStoragePath)
-        masterMinterAccount.link<&MasterMinter{OnChainMultiSig.PublicSigner}>(self.MasterMinterPubSigner, target: self.MasterMinterStoragePath)
-        masterMinterAccount.link<&MasterMinter{ResourceId}>(self.MasterMinterUUIDPubPath, target: self.MasterMinterStoragePath)
-        masterMinterAccount.link<&MasterMinter{MasterMinterCapReceiver}>(self.MasterMinterCapReceiverPubPath, target: self.MasterMinterStoragePath)
-
-        // Setup the Blocklister 
-        pubKeyAttrs = []
-        i = 0
-        while i < blocklisterPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: blocklisterPubKeysAlgos[i], w: blocklisterPubKeysWeights[i])
-            pubKeyAttrs.append(pka)
-            let key = PublicKey(
-                publicKey: blocklisterPubKeys[i].decodeHex(), 
-                signatureAlgorithm: SignatureAlgorithm(rawValue: blocklisterPubKeysAlgos[i]) ?? panic ("Invalid signature algo")
-            )
-            blocklisterAccount.keys.add(
-                publicKey: key,
-                hashAlgorithm: HashAlgorithm.SHA3_256,
-                weight: blocklisterPubKeysWeights[i]
-            )
-            i = i + 1
-        }
-        blocklisterAccount.save(<- self.createNewBlocklister(publicKeys: blocklisterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.BlocklisterStoragePath)
-        blocklisterAccount.link<&Blocklister{OnChainMultiSig.PublicSigner}>(self.BlocklisterPubSigner, target: self.BlocklisterStoragePath)
-        blocklisterAccount.link<&Blocklister{ResourceId}>(self.BlocklisterUUIDPubPath, target: self.BlocklisterStoragePath)
-        blocklisterAccount.link<&Blocklister{BlocklisterCapReceiver}>(self.BlocklisterCapReceiverPubPath, target: self.BlocklisterStoragePath)
-
-        // Setup the Pauser
-        pubKeyAttrs = []
-        i = 0
-        while i < pauserPubKeys.length {
-            let pka = OnChainMultiSig.PubKeyAttr(sa: pauserPubKeysAlgos[i], w: pauserPubKeysWeights[i])
-            pubKeyAttrs.append(pka)
-            let key = PublicKey(
-                publicKey: pauserPubKeys[i].decodeHex(), 
-                signatureAlgorithm: SignatureAlgorithm(rawValue: pauserPubKeysAlgos[i]) ?? panic ("Invalid signature algo")
-            )
-            pauserAccount.keys.add(
-                publicKey: key,
-                hashAlgorithm: HashAlgorithm.SHA3_256,
-                weight: pauserPubKeysWeights[i]
-            )
-            i = i + 1
-        }
-        pauserAccount.save(<- self.createNewPauser(publicKeys: pauserPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.PauserStoragePath)
-        pauserAccount.link<&Pauser{OnChainMultiSig.PublicSigner}>(self.PauserPubSigner, target: self.PauserStoragePath)
-        pauserAccount.link<&Pauser{ResourceId}>(self.PauserUUIDPubPath, target: self.PauserStoragePath)
-        pauserAccount.link<&Pauser{PauseCapReceiver}>(self.PauserCapReceiverPubPath, target: self.PauserStoragePath)
-
-        // Assign the admin capabilities
-        let adminExecutorRef = contractAccount.borrow<&FiatToken.AdminExecutor>(from: self.AdminExecutorStoragePath)
-            ?? panic("cannot borrow AdminExecutor from storage")
-        let ownerExecutorRef = contractAccount.borrow<&FiatToken.OwnerExecutor>(from: self.OwnerExecutorStoragePath)
-            ?? panic("cannot borrow OwnerExecutor from storage")
-        adminExecutorRef.changeAdmin(to: adminAccount.address, newPath: initialAdminCapabilityPrivPath)
-        ownerExecutorRef.reassignOwner(to: ownerAccount.address, newPath: initialOwnerCapabilityPrivPath)
-        ownerExecutorRef.reassignMasterMinter(to: masterMinterAccount.address, newPath: initialMasterMinterCapabilityPrivPath)
-        ownerExecutorRef.reassignBlocklister(to: blocklisterAccount.address, newPath: initialBlocklisterCapabilityPrivPath)
-        ownerExecutorRef.reassignPauser(to: pauserAccount.address, newPath: initialPauserCapabilityPrivPath) 
-
-        // Create a Vault with the initial totalSupply
-        let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: self.VaultStoragePath)
-
-        // Create public capabilities to the vault
-        contractAccount.link<&FiatToken.Vault{FungibleToken.Receiver}>(self.VaultReceiverPubPath, target: self.VaultStoragePath)
-        contractAccount.link<&FiatToken.Vault{FungibleToken.Balance}>(self.VaultBalancePubPath, target: self.VaultStoragePath)
-        contractAccount.link<&FiatToken.Vault{FiatToken.ResourceId}>(self.VaultUUIDPubPath, target: self.VaultStoragePath)
-
-        // Emit the TokensInitialized event
-        emit TokensInitialized(initialSupply: self.totalSupply)
-
-    }
-
+		adminAccount.storage.save(<-self.createNewAdmin(publicKeys: adminPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.AdminStoragePath)
+		let adminCap = adminAccount.capabilities.storage.issue<&Admin>(self.AdminStoragePath)
+        adminAccount.capabilities.publish(adminCap, at: self.AdminPubSigner)
+        adminAccount.capabilities.publish(adminCap, at: self.AdminUUIDPubPath)
+        adminAccount.capabilities.publish(adminCap, at: self.AdminCapReceiverPubPath)
+		
+		// Setup the Owner
+		pubKeyAttrs = []
+		// i = 0
+		// while i < ownerPubKeys.length{ 
+		// 	let pka = OnChainMultiSig.PubKeyAttr(sa: ownerPubKeysAlgos[i], w: ownerPubKeysWeights[i])
+		// 	pubKeyAttrs.append(pka)
+		// 	let key = PublicKey(publicKey: ownerPubKeys[i].decodeHex(), signatureAlgorithm: SignatureAlgorithm(rawValue: ownerPubKeysAlgos[i]) ?? panic("Invalid signature algo"))
+		// 	ownerAccount.keys.add(publicKey: key, hashAlgorithm: HashAlgorithm.SHA3_256, weight: ownerPubKeysWeights[i])
+		// 	i = i + 1
+		// }
+		ownerAccount.storage.save(<-self.createNewOwner(publicKeys: ownerPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.OwnerStoragePath)
+		let ownerCap = ownerAccount.capabilities.storage.issue<&Owner>(self.OwnerStoragePath)
+        ownerAccount.capabilities.publish(ownerCap, at: self.OwnerPubSigner)
+		ownerAccount.capabilities.publish(ownerCap, at: self.OwnerUUIDPubPath)
+		ownerAccount.capabilities.publish(ownerCap, at: self.OwnerCapReceiverPubPath)
+		
+		// Setup the MasterMinter
+		pubKeyAttrs = []
+		// i = 0
+		// while i < masterMinterPubKeys.length{ 
+		// 	let pka = OnChainMultiSig.PubKeyAttr(sa: masterMinterPubKeysAlgos[i], w: masterMinterPubKeysWeights[i])
+		// 	pubKeyAttrs.append(pka)
+		// 	let key = PublicKey(publicKey: masterMinterPubKeys[i].decodeHex(), signatureAlgorithm: SignatureAlgorithm(rawValue: masterMinterPubKeysAlgos[i]) ?? panic("Invalid signature algo"))
+		// 	masterMinterAccount.keys.add(publicKey: key, hashAlgorithm: HashAlgorithm.SHA3_256, weight: masterMinterPubKeysWeights[i])
+		// 	i = i + 1
+		// }
+        masterMinterAccount.storage.save(<-self.createNewMasterMinter(publicKeys: masterMinterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.MasterMinterStoragePath)
+		let masterMinterCap = masterMinterAccount.capabilities.storage.issue<&MasterMinter>(self.MasterMinterStoragePath)
+        masterMinterAccount.capabilities.publish(masterMinterCap, at: self.MasterMinterPubSigner)
+		masterMinterAccount.capabilities.publish(masterMinterCap, at: self.MasterMinterUUIDPubPath)
+		masterMinterAccount.capabilities.publish(masterMinterCap, at: self.MasterMinterCapReceiverPubPath)
+		
+		// Setup the Blocklister 
+		pubKeyAttrs = []
+		// i = 0
+		// while i < blocklisterPubKeys.length{ 
+		// 	let pka = OnChainMultiSig.PubKeyAttr(sa: blocklisterPubKeysAlgos[i], w: blocklisterPubKeysWeights[i])
+		// 	pubKeyAttrs.append(pka)
+		// 	let key = PublicKey(publicKey: blocklisterPubKeys[i].decodeHex(), signatureAlgorithm: SignatureAlgorithm(rawValue: blocklisterPubKeysAlgos[i]) ?? panic("Invalid signature algo"))
+		// 	blocklisterAccount.keys.add(publicKey: key, hashAlgorithm: HashAlgorithm.SHA3_256, weight: blocklisterPubKeysWeights[i])
+		// 	i = i + 1
+		// }
+        blocklisterAccount.storage.save(<-self.createNewBlocklister(publicKeys: blocklisterPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.BlocklisterStoragePath)
+		let blocklisterCap = blocklisterAccount.capabilities.storage.issue<&Blocklister>(self.BlocklisterStoragePath)
+        blocklisterAccount.capabilities.publish(blocklisterCap, at: self.BlocklisterPubSigner)
+		blocklisterAccount.capabilities.publish(blocklisterCap, at: self.BlocklisterUUIDPubPath)
+		blocklisterAccount.capabilities.publish(blocklisterCap, at: self.BlocklisterCapReceiverPubPath)
+		
+		// Setup the Pauser
+		pubKeyAttrs = []
+		// i = 0
+		// while i < pauserPubKeys.length{ 
+		// 	let pka = OnChainMultiSig.PubKeyAttr(sa: pauserPubKeysAlgos[i], w: pauserPubKeysWeights[i])
+		// 	pubKeyAttrs.append(pka)
+		// 	let key = PublicKey(publicKey: pauserPubKeys[i].decodeHex(), signatureAlgorithm: SignatureAlgorithm(rawValue: pauserPubKeysAlgos[i]) ?? panic("Invalid signature algo"))
+		// 	pauserAccount.keys.add(publicKey: key, hashAlgorithm: HashAlgorithm.SHA3_256, weight: pauserPubKeysWeights[i])
+		// 	i = i + 1
+		// }
+        pauserAccount.storage.save(<-self.createNewPauser(publicKeys: pauserPubKeys, pubKeyAttrs: pubKeyAttrs), to: self.PauserStoragePath)
+		let pauserCap = pauserAccount.capabilities.storage.issue<&Pauser>(self.BlocklisterStoragePath)
+        pauserAccount.capabilities.publish(pauserCap, at: self.PauserPubSigner)
+		pauserAccount.capabilities.publish(pauserCap, at: self.PauserUUIDPubPath)
+		pauserAccount.capabilities.publish(pauserCap, at: self.PauserCapReceiverPubPath)
+		
+		// Assign the admin capabilities
+		let adminExecutorRef = self.account.storage.borrow<&FiatToken.AdminExecutor>(from: self.AdminExecutorStoragePath) ?? panic("cannot borrow AdminExecutor from storage")
+		let ownerExecutorRef = self.account.storage.borrow<&FiatToken.OwnerExecutor>(from: self.OwnerExecutorStoragePath) ?? panic("cannot borrow OwnerExecutor from storage")
+		adminExecutorRef.changeAdmin(to: adminAccount.address)
+		ownerExecutorRef.reassignOwner(to: ownerAccount.address)
+		ownerExecutorRef.reassignMasterMinter(to: masterMinterAccount.address)
+		ownerExecutorRef.reassignBlocklister(to: blocklisterAccount.address)
+		ownerExecutorRef.reassignPauser(to: pauserAccount.address)
+		
+		// Create a Vault with the initial totalSupply
+		let vault <- create Vault(balance: self.totalSupply)
+		self.account.storage.save(<-vault, to: self.VaultStoragePath)
+		
+		// Create public capabilities to the vault
+        let tokenCap = self.account.capabilities.storage.issue<&FiatToken.Vault>(self.VaultStoragePath)
+        self.account.capabilities.publish(tokenCap, at: self.VaultReceiverPubPath)
+        self.account.capabilities.publish(tokenCap, at: self.VaultBalancePubPath)
+		self.account.capabilities.publish(tokenCap, at: self.VaultUUIDPubPath)
+	}
 }

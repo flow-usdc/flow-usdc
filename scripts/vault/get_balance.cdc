@@ -3,10 +3,10 @@
 import FungibleToken from 0x{{.FungibleToken}}
 import FiatToken from 0x{{.FiatToken}}
 
-pub fun main(account: Address): UFix64 {
+access(all) fun main(account: Address): UFix64 {
     let acct = getAccount(account)
-    let vaultRef = acct.getCapability(FiatToken.VaultBalancePubPath)
-        .borrow<&FiatToken.Vault{FungibleToken.Balance}>()
+    let vaultRef = acct.capabilities.get<&{FungibleToken.Balance}>(FiatToken.VaultBalancePubPath)
+        .borrow()
         ?? panic("Could not borrow Balance reference to the Vault")
 
     return vaultRef.balance

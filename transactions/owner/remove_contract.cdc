@@ -1,9 +1,9 @@
 // remove contract 
 
-import FiatToken from 0x{{.FiatToken}}
+import "FiatToken"
 
 transaction (name: String) {
-    prepare(owner: AuthAccount) {
+    prepare(owner: auth(Contracts) &Account) {
         owner.contracts.remove(name: name)
     }
 }

@@ -5,19 +5,19 @@
 // Minter are granted allowance by the UUID.
 // If a new one is created, the UUID will be different and will not have the same allowance. 
 
-import FungibleToken from 0x{{.FungibleToken}}
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FungibleToken"
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction(minterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
-    prepare (minter: AuthAccount) {
+    prepare (minter: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
         
         // Check and return if they already have a minter resource
         //assert(minter.borrow<&FiatToken.Minter>(from: FiatToken.MinterStoragePath) != nil, message: "account already has minter resource")
         // DANGER: Remove existing minter if present
-        if minter.borrow<&FiatToken.Minter>(from: FiatToken.MinterStoragePath) != nil {
+        if minter.storage.borrow<&FiatToken.Minter>(from: FiatToken.MinterStoragePath) != nil {
             minter.unlink(FiatToken.MinterUUIDPubPath)
-            let m <- minter.load<@FiatToken.Minter>(from: FiatToken.MinterStoragePath) 
+            let m <- minter.storage.load<@FiatToken.Minter>(from: FiatToken.MinterStoragePath) 
             destroy m
         }
         
@@ -29,7 +29,7 @@ transaction(minterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
             i = i + 1;
         }
 
-        minter.save(<- FiatToken.createNewMinter(), to: FiatToken.MinterStoragePath);
+        minter.storage.save(<- FiatToken.createNewMinter(), to: FiatToken.MinterStoragePath);
 
         minter.link<&FiatToken.Minter{FiatToken.ResourceId}>(FiatToken.MinterUUIDPubPath, target: FiatToken.MinterStoragePath)
         ??  panic("Could not link minter uuid");
@@ -37,7 +37,7 @@ transaction(minterAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
     } 
 
     post {
-        getAccount(minterAddr).getCapability<&{FiatToken.ResourceId}>(FiatToken.MinterUUIDPubPath).check() :
+        getAccount(minterAddr).capabilities.get<&{FiatToken.ResourceId}>(FiatToken.MinterUUIDPubPath).check() :
         "MinterUUID link not set"
     }
 }

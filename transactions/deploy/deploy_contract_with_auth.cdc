@@ -1,6 +1,6 @@
 // This transactions deploys the FiatToken contract
 //
-// Owner (AuthAccount) of this script is the owner of the contract
+// Owner (auth(BorrowValue) &Account) of this script is the owner of the contract
 //
 transaction(
     contractName: String, 
@@ -64,14 +64,13 @@ transaction(
     pauserAccountKeyWeights: [UFix64],
     pauserAccountKeyAlgos: [UInt8],
 ) {
-    prepare(contractAccount: AuthAccount) {
+    prepare(contractAccount: auth(Contracts) &Account) {
         let existingContract = contractAccount.contracts.get(name: contractName)
 
         if (existingContract == nil) {
             contractAccount.contracts.add(
                 name: contractName, 
-                code: code.decodeHex(), 
-                contractAccount,
+                code: code.decodeHex(),
                 VaultStoragePath: VaultStoragePath,
                 VaultBalancePubPath: VaultBalancePubPath,
                 VaultUUIDPubPath: VaultUUIDPubPath,
@@ -132,7 +131,7 @@ transaction(
                 pauserAccountKeyAlgos: pauserAccountKeyAlgos,
             )
         } else {
-            contractAccount.contracts.update__experimental(name: contractName, code: code.decodeHex())
+            contractAccount.contracts.update(name: contractName, code: code.decodeHex())
         }
     }
 }

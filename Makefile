@@ -8,6 +8,7 @@ endif
 
 test:
 	./lib/go/test.sh
+	flow-c1 test --cover --covercode="contracts" tests/*.cdc
 
 .PHONY: docs 
 

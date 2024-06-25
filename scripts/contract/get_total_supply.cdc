@@ -1,9 +1,10 @@
 // This script reads the total supply field
 // of the FiatToken smart contract
 
-import FiatToken from 0x{{.FiatToken}}
+// import FiatToken from 0x{{.FiatToken}}
+import "FiatToken"
 
-pub fun main(): UFix64 {
+access(all) fun main(): UFix64 {
 
     let supply = FiatToken.totalSupply
 

@@ -2,12 +2,12 @@
 // `resourcePubSignerPath` must have been linked by the resource owner
 // `txIndex` must be the current resource index incremented by 1
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction (sig: String, txIndex: UInt64, method: String, args: [AnyStruct], publicKey: String, resourceAddr: Address, resourcePubSignerPath: PublicPath) {
     let rsc: @AnyResource?
-    prepare(oneOfMultiSig: AuthAccount) {
+    prepare(oneOfMultiSig: &Account) {
         self.rsc <- nil
     }
 

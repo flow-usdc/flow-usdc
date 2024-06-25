@@ -1,19 +1,20 @@
-// This creates an account and adds the public key with the weight
+import Crypto
 
-transaction(publicKey: String, weight: UFix64) {
-    prepare(signer: AuthAccount) {
-        let key = PublicKey(
-            publicKey: publicKey.decodeHex(),
-            signatureAlgorithm: SignatureAlgorithm.ECDSA_P256
-        )
+transaction(key: String, signatureAlgorithm: UInt8, hashAlgorithm: UInt8, weight: UFix64) {
+	prepare(signer: auth(BorrowValue, Storage) &Account) {
+		pre {
+			signatureAlgorithm >= 1 && signatureAlgorithm <= 3: "Must provide a signature algorithm raw value that is 1, 2, or 3"
+			hashAlgorithm >= 1 && hashAlgorithm <= 6: "Must provide a hash algorithm raw value that is between 1 and 6"
+			weight <= 1000.0: "The key weight must be between 0 and 1000"
+		}
 
-        let account = AuthAccount(payer: signer)
+		let publicKey = PublicKey(
+			publicKey: key.decodeHex(),
+			signatureAlgorithm: SignatureAlgorithm(rawValue: signatureAlgorithm)!
+		)
 
-        account.keys.add(
-            publicKey: key,
-            hashAlgorithm: HashAlgorithm.SHA3_256,
-            weight: weight
-        )
-    }
+		let account = Account(payer: signer)
+
+		account.keys.add(publicKey: publicKey, hashAlgorithm: HashAlgorithm(rawValue: hashAlgorithm)!, weight: weight)
+	}
 }
-

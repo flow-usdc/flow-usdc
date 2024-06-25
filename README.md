@@ -10,15 +10,20 @@
 
 <!-- TODO: Banner? -->
 
-A [`FiatToken`] on the Flow blockchain, written in Cadence, which implements interfaces defined
-in the following contracts:
+A [`FiatToken`] on the Flow blockchain, written in Cadence,
+which implements interfaces defined in the following contracts:
 
-* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault (a.k.a Ownable) resource
-and interfaces for compatibility.
-* **[`FiatTokenInterface`]**, implemented in this codebase. It provides resource interfaces,
-as well as the related states and events for [`FiatToken`] to support the following functionalities:
+* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault (a.k.a Ownable) 
+resource and interfaces for compatibility.
+* **[OnChainMultiSig]**, are implemented for `MasterMinter`, `MinterController`,
+`Minter`, `Pauser`, `Blocklister`, and `Vault` resources which allows
+for multiple signatures to authorize transactions without time restrictions.
+
+`FiatToken` includes the following admin functionality that makes use
+of the `OnChainMultiSig` functionality to execute:
+
   * **Delegated Minting: MasterMinter, MinterControllers and Minters**:
-  `MasterMinter` can set states in `managedMinter` to  delegate
+  `MasterMinter` can set states in `managedMinter` to delegate
   `MinterControllers` to control the allowance / removal of a `Minter`.
   Both `MinterController` and `Minter` resources are created by the users
   and the unique resource uuid is stored in the `managedMinter` and `minterAllowances` states.
@@ -39,19 +44,26 @@ as well as the related states and events for [`FiatToken`] to support the follow
   * **Allowance: Vault**: In addition to `FungibleToken` interfaces,
   the `Vault` is enhanced with with the `Allowance` which allows the vault owner to set a withdrawal
   limit for other vaults.
-* **[OnChainMultiSig]**, are implemented for `MasterMinter`, `MinterController`, `Minter`, `Pauser`,
-`Blocklister`, and `Vault` resources which allows for multiple signatures to authorise transactions
-without time restrictions.
 
 [`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
-[`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
 [OnChainMultiSig]: https://github.com/flow-hydraulics/onchain-multisig
 
 ## Usage
 
-The `FiatToken`, `FiatTokenInterface`, and `OnChainMultiSig` contracts are currently deployed to
-the Flow Testnet account [`0xa983fecbed621163`].
+The `FiatToken` contract is currently deployed to the following accounts:
+
+| Network         | Contract Address     |
+| --------------- | -------------------- |
+| Testnet         | `0xa983fecbed621163` |
+| Mainnet         | `0xb19436aae4d94622` |
+
+The `OnChainMultiSig` contract is currently deployed to the following accounts:
+
+| Network         | Contract Address     |
+| --------------- | -------------------- |
+| Testnet         | `0x5a5b0a73a29e83f1` |
+| Mainnet         | `0x220c1b4155f86f2f` |
 
 ### Transactions and Scripts
 

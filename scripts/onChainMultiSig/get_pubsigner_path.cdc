@@ -1,7 +1,7 @@
-// This gets the pubsigner path for different resources
-import FiatToken from 0x{{.FiatToken}}
+// This gets the publi signer path for different resources
+import "FiatToken"
 
-pub fun main(resourceName: String): PublicPath {
+access(all) fun main(resourceName: String): PublicPath {
     switch resourceName {
         case "MasterMinter":
             return FiatToken.MasterMinterPubSigner

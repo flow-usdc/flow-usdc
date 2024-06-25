@@ -5,18 +5,18 @@
 // Pauser does not have capability to blocklist until granted by owner of PauseExecutor.
 // If a new one is created, the capability will be lost
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction(pauserAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], multiSigAlgos: [UInt8]) {
 
-    prepare (pauser: AuthAccount) {
+    prepare (pauser: auth(BorrowValue) &Account) {
         
         // Check if account already have a pauser resource, if so destroy it
-        if pauser.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) != nil {
+        if pauser.storage.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) != nil {
             pauser.unlink(FiatToken.PauserCapReceiverPubPath)
             pauser.unlink(FiatToken.PauserPubSigner)
-            let p <- pauser.load<@FiatToken.Pauser>(from: FiatToken.PauserStoragePath) 
+            let p <- pauser.storage.load<@FiatToken.Pauser>(from: FiatToken.PauserStoragePath) 
             destroy p
         }
         
@@ -28,7 +28,7 @@ transaction(pauserAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
             i = i + 1;
         }
 
-        pauser.save(<- FiatToken.createNewPauser(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.PauserStoragePath);
+        pauser.storage.save(<- FiatToken.createNewPauser(publicKeys: publicKeys, pubKeyAttrs: pka), to: FiatToken.PauserStoragePath);
         log("created new pauser")
         
         pauser.link<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath, target: FiatToken.PauserStoragePath)
@@ -42,10 +42,10 @@ transaction(pauserAddr: Address, publicKeys: [String], pubKeyWeights: [UFix64], 
     } 
 
     post {
-        getAccount(pauserAddr).getCapability<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath).check() :
+        getAccount(pauserAddr).capabilities.get<&FiatToken.Pauser{FiatToken.PauseCapReceiver}>(FiatToken.PauserCapReceiverPubPath).check() :
         "PauserCapReceiver link not set"
 
-        getAccount(pauserAddr).getCapability<&FiatToken.Pauser{OnChainMultiSig.PublicSigner}>(FiatToken.PauserPubSigner).check() :
+        getAccount(pauserAddr).capabilities.get<&FiatToken.Pauser{OnChainMultiSig.PublicSigner}>(FiatToken.PauserPubSigner).check() :
         "PauserPubSigner link not set"
     }
 }

@@ -1,5 +1,8 @@
 import FungibleToken from "./FungibleToken.cdc"
 
+// This contract was never used on testnet or mainnet,
+// so it is not updated to Cadence 1.0
+
 pub contract interface FiatTokenInterface {
 
     // ===== Token Info =====

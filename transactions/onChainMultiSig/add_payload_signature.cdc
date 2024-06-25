@@ -1,16 +1,16 @@
 // New payload signature to be added to multiSigManager for a particular txIndex 
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
+import "FiatToken"
+import "OnChainMultiSig"
 
 transaction (sig: String, txIndex: UInt64, publicKey: String, resourceAddr: Address, resourcePubSignerPath: PublicPath) {
-    prepare(oneOfMultiSig: AuthAccount) {
+    prepare(oneOfMultiSig: &Account) {
     }
 
     execute {
        let resourceAcct = getAccount(resourceAddr)
 
-        let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
+        let pubSigRef = resourceAcct.capabilities.get(resourcePubSignerPath)
             .borrow<&{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow master minter pub sig reference")
             

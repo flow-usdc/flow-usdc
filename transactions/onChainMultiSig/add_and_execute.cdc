@@ -4,17 +4,17 @@
 // `resourcePubSignerPath` must have been linked by the resource owner
 // `txIndex` must be the current resource index incremented by 1
 
-import FiatToken from 0x{{.FiatToken}}
-import OnChainMultiSig from 0x{{.OnChainMultiSig}}
-import FungibleToken from 0x{{.FungibleToken}}
+import "FiatToken"
+import "OnChainMultiSig"
+import "FungibleToken"
 
 transaction (sig: [String], txIndex: UInt64, method: String, args: [AnyStruct], publicKey: [String], resourceAddr: Address, resourcePubSignerPath: PublicPath) {
     let rsc: @AnyResource?
     let recv: &{FungibleToken.Receiver}
-    prepare(oneOfMultiSig: AuthAccount) {
+    prepare(oneOfMultiSig: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
         self.rsc <- nil
         // Get a reference to the signer's stored vault
-        self.recv = oneOfMultiSig.getCapability(FiatToken.VaultReceiverPubPath)!
+        self.recv = oneOfMultiSig.capabilities.get(FiatToken.VaultReceiverPubPath)!
             .borrow<&{FungibleToken.Receiver}>()
             ?? panic("Unable to borrow receiver reference for recipient")
     }
@@ -25,7 +25,7 @@ transaction (sig: [String], txIndex: UInt64, method: String, args: [AnyStruct], 
         // adds new payload with the first sig and pub key 
         let resourceAcct = getAccount(resourceAddr)
 
-        let pubSigRef = resourceAcct.getCapability(resourcePubSignerPath)
+        let pubSigRef = resourceAcct.capabilities.get(resourcePubSignerPath)
             .borrow<&{OnChainMultiSig.PublicSigner}>()
             ?? panic("Could not borrow Public Signer reference")
         
@@ -43,7 +43,7 @@ transaction (sig: [String], txIndex: UInt64, method: String, args: [AnyStruct], 
         let r <- pubSigRef.executeTx(txIndex: txIndex)
         if r != nil {
             // Withdraw tokens from the signer's stored vault
-            let vault <- r! as! @FungibleToken.Vault
+            let vault <- r! as! @{FungibleToken.Vault}
             self.recv.deposit(from: <- vault)
         } else {
             destroy(r)

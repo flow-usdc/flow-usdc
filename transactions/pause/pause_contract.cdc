@@ -1,11 +1,11 @@
 // This pauses the contract by a Pauser if capability was granted
 
-import FiatToken from 0x{{.FiatToken}}
+import "FiatToken"
 
 transaction {
-    prepare (pauser: AuthAccount) {
+    prepare (pauser: auth(BorrowValue) &Account) {
 
-        let pauser = pauser.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) ?? panic("cannot borrow own private path")
+        let pauser = pauser.storage.borrow<&FiatToken.Pauser>(from: FiatToken.PauserStoragePath) ?? panic("cannot borrow own private path")
         pauser.pause();
     } 
 
