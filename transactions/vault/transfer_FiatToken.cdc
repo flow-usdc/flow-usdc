@@ -5,18 +5,18 @@
 // The withdraw amount and the account from getAccount
 // would be the parameters to the transaction
 
-import FungibleToken from 0x{{.FungibleToken}}
-import FiatToken from 0x{{.FiatToken}}
+import "FungibleToken"
+import "FiatToken"
 
 transaction(amount: UFix64, to: Address) {
 
     // The Vault resource that holds the tokens that are being transferred
-    let sentVault: @FungibleToken.Vault
+    let sentVault: @{FungibleToken.Vault}
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage, BorrowValue, Capabilities, AddContract) &Account) {
 
         // Get a reference to the signer's stored vault
-        let vaultRef = signer.borrow<&FiatToken.Vault>(from: FiatToken.VaultStoragePath)
+        let vaultRef = signer.storage.borrow<auth(FungibleToken.Withdraw) &FiatToken.Vault>(from: FiatToken.VaultStoragePath)
             ?? panic("Could not borrow reference to the owner's Vault!")
 
         // Withdraw tokens from the signer's stored vault
@@ -29,8 +29,7 @@ transaction(amount: UFix64, to: Address) {
         let recipient = getAccount(to)
 
         // Get a reference to the recipient's Receiver
-        let receiverRef = recipient.getCapability(FiatToken.VaultReceiverPubPath)
-            .borrow<&{FungibleToken.Receiver}>()
+        let receiverRef = recipient.capabilities.borrow<&{FungibleToken.Receiver}>(FiatToken.VaultReceiverPubPath)
             ?? panic("Could not borrow receiver reference to the recipient's Vault")
 
         // Deposit the withdrawn tokens in the recipient's receiver

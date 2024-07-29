@@ -17,3 +17,6 @@
 .env
 
 .local*
+
+
+coverage.json

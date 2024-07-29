@@ -1,6 +1,7 @@
-# The CENTRE Fiat Token, on Flow _(flow-usdc)_
+# The Bridged Fiat Token, on Flow _(flow-usdc-c)_
 
-> An implementation of the CENTRE Fiat Token in Cadence, on the Flow Blockchain.
+> An implementation of a bridged CENTRE Fiat Token in Cadence, on the Flow Blockchain.
+> This is not the official Flow USDC. It is the Cadence bridged version of the official USDC which is deployed to Flow EVM.
 
 <!-- markdownlint-configure-file { "MD013": { "line_length": 100 } } -->
 
@@ -13,50 +14,27 @@
 A [`FiatToken`] on the Flow blockchain, written in Cadence, which implements interfaces defined
 in the following contracts:
 
-* **[`FungibleToken`] (a.k.a. ERC20)**, which provides the baseline Vault (a.k.a Ownable) resource
+* **[`FungibleToken`] (equivalent to ERC20)**, which provides the baseline Vault resource
 and interfaces for compatibility.
-* **[`FiatTokenInterface`]**, implemented in this codebase. It provides resource interfaces,
-as well as the related states and events for [`FiatToken`] to support the following functionalities:
-  * **Delegated Minting: MasterMinter, MinterControllers and Minters**:
-  `MasterMinter` can set states in `managedMinter` to  delegate
-  `MinterControllers` to control the allowance / removal of a `Minter`.
-  Both `MinterController` and `Minter` resources are created by the users
-  and the unique resource uuid is stored in the `managedMinter` and `minterAllowances` states.
-  Please see [delegation process](./doc/resource-interactions.md) for details.
-  * **Pausing and Unpausing: PauseExecutor and Pauser**: If a situation like a major bug discovery
-  or a serious key compromise,
-  a `Pauser` will be able to halt all transfers and approvals contract-wide,
-  until a mitigation takes place.
-  `Pauser` is granted the capability to pause / unpause a contract by the contract owner by
-  sharing the `PauseExecutor` capability.
-  Please see [delegation process](./doc/resource-interactions.md) for details.
-  * **Blocklisting: BlocklistExecutor and Blocklister**: If a resource (`Vault`, `Minter`, etc)
-  has been flagged and required to be blocked, the `Blocklister` will be able to such resource to
-  the `blocklist`. The contract owner shares the `BlocklistExecutor` capabilities with the
-  Blocklist to delegate such action.
-  Blocklisted resources are prevented from minting, burning, transferring or approving token transfers.
-  Please see [delegation process](./doc/resource-interactions.md) for details.
-  * **Allowance: Vault**: In addition to `FungibleToken` interfaces,
-  the `Vault` is enhanced with with the `Allowance` which allows the vault owner to set a withdrawal
-  limit for other vaults.
-* **[OnChainMultiSig]**, are implemented for `MasterMinter`, `MinterController`, `Minter`, `Pauser`,
-`Blocklister`, and `Vault` resources which allows for multiple signatures to authorise transactions
-without time restrictions.
 
 [`FiatToken`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatToken.cdc
-[`FiatTokenInterface`]: https://github.com/flow-usdc/flow-usdc/blob/main/contracts/FiatTokenInterface.cdc
 [`FungibleToken`]: https://docs.onflow.org/core-contracts/fungible-token/
-[OnChainMultiSig]: https://github.com/flow-hydraulics/onchain-multisig
 
 ## Usage
 
-The `FiatToken`, `FiatTokenInterface`, and `OnChainMultiSig` contracts are currently deployed to
-the Flow Testnet account [`0xa983fecbed621163`].
+The `FiatToken` contract is currently deployed to the following accounts on the important networks:
+
+| Network         | Contract Address     |
+| --------------- | -------------------- |
+| Emulator/Canary | Coming Soon!         |
+| Testnet         | `0xa983fecbed621163` |
+| Mainnet         | `0xb19436aae4d94622` |
 
 ### Transactions and Scripts
 
-You can interact with the `FiatToken` contract using **transactions** and **scripts**. Examples
-of each can be found in the `doc/` folder:
+You can interact with the `FiatToken` contract using **transactions** and **scripts**. 
+These can be found in the `transactions/` and `scripts/` directories, respectively,
+and some examples can be found in the `doc/` directory:
 
 * [Transactions](./doc/TRANSACTIONS.md)
 * [Scripts](./doc/SCRIPTS.md)
@@ -65,7 +43,7 @@ of each can be found in the `doc/` folder:
 
 If you're developing an app using the `FiatToken` contract, you should only need to reference the
 Cadence code in this repo. However, if you're looking to try it out locally or run the tests,
-you will a couple other tools.
+you will need a couple other tools.
 
 ## Install
 
@@ -73,7 +51,7 @@ you will a couple other tools.
 
 To run and test the code in this repo, it's required that you install:
 
-* The [Flow CLI](https://docs.onflow.org/flow-cli/) tool, for manual usage
+* The [Flow CLI](https://developers.flow.com/tools/flow-cli) tool, for manual usage
 * The [Go](https://golang.org/doc/install) programming language, to run the automated tests
 
 ### Installing `flow-usdc`
@@ -84,7 +62,8 @@ Once you have `flow` and `go` installed, then simply clone the repo to get start
 git clone https://github.com/flow-usdc/flow-usdc
 ```
 
-[`0xa983fecbed621163`]: https://flow-view-source.com/testnet/account/0xa983fecbed621163/
+[`0xa983fecbed621163`]: https://testnet.flowdiver.io/account/0xa983fecbed621163/
+[`0xb19436aae4d94622`]: https://www.flowdiver.io/account/b19436aae4d94622
 
 ### Environment Variables
 
@@ -142,8 +121,8 @@ Issues and PRs accepted. Over time more details will be added here.
 * `contracts` - contains all of the contracts and the scripts required to interact with them
 * `doc` - contains manual and auto-generated documentation for contracts, scripts, and transactions
 * `lib/go` - Test code in Golang.
-* `scripts` - contains examples of scripts used to interact with the contract
-* `transactions` - contains examples of transactions one can perform with the contract
+* `tests` - Test code in Cadence.
+* `transactions` - contains examples of transactions and scripts one can use with the contract
 * `env.example` - example file to be populated with values and copied to `./test/.env`
 * `flow.json` - configuration file for the `flow` CLI tool.
 
